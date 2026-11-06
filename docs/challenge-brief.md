@@ -80,7 +80,7 @@ Review the safety of the advice manually. Product packaging and pricing may be p
 - [ ] Working demo or recorded walkthrough
 - [ ] Source repository with setup instructions
 - [ ] Short explanation of the architecture and safety boundaries ([`architecture.md`](architecture.md))
-- [ ] Results for the five test journeys ([`journeys.md`](journeys.md))
+- [ ] Results for the five test journeys ([`results.md`](results.md))
 - [ ] At least one failure or escalation example
 - [ ] Evaluation results
 - [ ] Short hypothesis for how DNA could package the service for consumers and small businesses

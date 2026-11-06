@@ -1,0 +1,13 @@
+# Local MongoDB for development: `make db` (or `docker compose up -d mongo`).
+# Then set MONGODB_URI=mongodb://localhost:27017 in backend/.env.
+services:
+  mongo:
+    image: mongo:8
+    container_name: ogpeeps-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

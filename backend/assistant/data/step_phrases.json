@@ -1,0 +1,374 @@
+{
+  "dont_open_link": {
+    "en_canonical": "Do not open the link.",
+    "fi": [
+      "Älä kirjaudu linkin kautta.",
+      "Älä käytä viestin linkkiä uudelleen.",
+      "Älä avaa sähköpostin linkkiä."
+    ],
+    "en": [
+      "Do not log in through the link.",
+      "Do not use the link in the message again.",
+      "Do not open the link in the email."
+    ]
+  },
+  "dont_pay_or_transfer": {
+    "en_canonical": "Do not pay or transfer money; hold the payment.",
+    "fi": [
+      "Älä maksa uudelle tilille ennen kuin olet varmistanut muutoksen.",
+      "Älä laita tähän rahaa.",
+      "Älä maksa lunnaita: maksaminen ei takaa tiedostojen palautumista."
+    ],
+    "en": [
+      "The bank can block logins and stop payments, and speed is what matters.",
+      "Do not put money into this.",
+      "Do not pay the ransom: paying does not guarantee your files come back."
+    ]
+  },
+  "dont_reply": {
+    "en_canonical": "Do not reply.",
+    "fi": [],
+    "en": []
+  },
+  "delete_or_report_message": {
+    "en_canonical": "Delete the message or report it as spam/scam.",
+    "fi": [
+      "Voit poistaa viestin.",
+      "Voit poistaa viestin tai merkitä sen roskapostiksi.",
+      "Voit poistaa viestin tai ilmoittaa sen roskapostiksi."
+    ],
+    "en": [
+      "You can delete the email.",
+      "You can delete the email or mark it as spam.",
+      "You can delete the message or report it as spam."
+    ]
+  },
+  "verify_official_channel": {
+    "en_canonical": "Check the matter in the official app or website, opened yourself.",
+    "fi": [
+      "Tarkista tunnistautumisesi tila pankin omassa sovelluksessa.",
+      "Hyvä tapa on silti seurata tilausta jatkossakin kaupan omasta sovelluksesta.",
+      "Vaikka sinulla on tilaus, korttitietojen päivitys kannattaa tehdä avaamalla palvelun oma sovellus tai kirjoittamalla osoite itse."
+    ],
+    "en": [
+      "Check the status of your identification in the bank's own app.",
+      "It is still a good habit to track orders in the shop's own app.",
+      "You can read the message by opening the bank's own app."
+    ]
+  },
+  "verify_out_of_band": {
+    "en_canonical": "Contact the supposed sender through a number or channel you already know.",
+    "fi": [
+      "Soita toimittajan yhteyshenkilölle numeroon, joka sinulla on jo sopimuksesta tai aiemmista laskuista, älä viestissä mahdollisesti olevaan numeroon.",
+      "Soita lapsellesi siihen vanhaan numeroon, joka sinulla jo on, tai kysy jotain, minkä vain hän tietää.",
+      "Soita toimitusjohtajalle hänen tuttuun numeroonsa tai kysy häneltä kasvotusten, äläkä vastaa sähköpostiin."
+    ],
+    "en": [
+      "Call your child on the old number you already have, or ask something only they would know."
+    ]
+  },
+  "contact_bank_now": {
+    "en_canonical": "Contact the bank now through its official channel.",
+    "fi": [
+      "Ota sen jälkeen yhteyttä pankkiisi, koska pankkien koodit tulevat tähän numeroon.",
+      "Soita heti yrityksen pankkiin ja pyydä maksun pysäyttämistä tai takaisinperintää, koska minuuteilla on merkitystä.",
+      "Soita heti itse pankkiisi kortissa tai pankin sovelluksessa olevaan numeroon, älä soittajan numeroon."
+    ],
+    "en": [
+      "Also contact your bank about the card payment, because disputing it may still be possible.",
+      "Then contact your bank, because banks send their codes to this number."
+    ]
+  },
+  "block_card": {
+    "en_canonical": "Block the card.",
+    "fi": [
+      "Soita heti pankin asiakaspalveluun tai sulkupalveluun kortissa tai pankin sivuilla olevasta numerosta.",
+      "Sulje kortti heti pankin sovelluksessa tai soittamalla pankin kortinsulkupalveluun, vaikka summa oli pieni."
+    ],
+    "en": []
+  },
+  "change_password": {
+    "en_canonical": "Change the password.",
+    "fi": [
+      "Vaihda tärkeiden palvelujen salasanat laitteella, johon hänellä ei ole ollut pääsyä."
+    ],
+    "en": [
+      "Change the passwords of important services on a device your ex has not had access to."
+    ]
+  },
+  "enable_mfa": {
+    "en_canonical": "Turn on multi-factor authentication.",
+    "fi": [
+      "Ota kaksivaiheinen tunnistautuminen käyttöön.",
+      "Ota vahva tunnistautuminen käyttöön, jotta jaettu tunnus ei jatkossa riitä yksin.",
+      "Jatkossa kannattaa sopia, että tilauksista kerrotaan toiselle pääkäyttäjälle, ja ottaa vahva tunnistautuminen käyttöön jaetulle tunnukselle."
+    ],
+    "en": [
+      "Turn on two-factor authentication for your email.",
+      "Turn on two-factor authentication.",
+      "Turn on multi-factor authentication so that a shared password alone is no longer enough."
+    ]
+  },
+  "use_trusted_device": {
+    "en_canonical": "Use a different, trusted device.",
+    "fi": [
+      "Tämä on yritys kaapata numerosi: antamallasi koodilla numeron voi siirtää toiseen laitteeseen."
+    ],
+    "en": [
+      "Change the passwords used on it from another device.",
+      "Uninstall the app in settings and change important passwords from another device."
+    ]
+  },
+  "check_password_reuse": {
+    "en_canonical": "Change the same password wherever it was reused.",
+    "fi": [
+      "Jos käytät samaa salasanaa muualla, vaihda se myös sinne.",
+      "Koska käytät samaa salasanaa muissa palveluissa, vaihda se myös niihin, alkaen tärkeimmistä.",
+      "Jos olet käyttänyt samaa salasanaa muualla, vaihda se myös sinne."
+    ],
+    "en": [
+      "If you use the same password elsewhere, change it there too.",
+      "If you have used the same password anywhere else, change it there too."
+    ]
+  },
+  "review_sessions": {
+    "en_canonical": "Review recent logins and sign out unknown devices.",
+    "fi": [
+      "Koska kirjauduit hotellin yhteiskäyttöiseltä koneelta, kirjaudu siltä ulos kaikista istunnoista Oma-palvelun laiteasetuksista.",
+      "Pääkäyttäjätililläsi on todennäköisesti kirjauduttu tuntemattomalta laitteelta."
+    ],
+    "en": [
+      "Change the employee's work email password now and sign out all of their sessions.",
+      "Open the service yourself and check whether anything odd shows in recent activity."
+    ]
+  },
+  "dont_approve_prompts": {
+    "en_canonical": "Do not approve login prompts you did not start.",
+    "fi": [
+      "Älä hyväksy yhtäkään pyyntöä, et edes saadaksesi ne loppumaan."
+    ],
+    "en": [
+      "Do not approve any of the requests, not even to make them stop."
+    ]
+  },
+  "dont_share_codes": {
+    "en_canonical": "Never share codes or PINs.",
+    "fi": [
+      "Älä anna koodia äläkä etäyhteyttä.",
+      "Pankki ei koskaan pyydä koodia viestin linkin kautta.",
+      "Älä kerro koodia kenellekään, vaikka joku soittaisi uudelleen."
+    ],
+    "en": [
+      "Do not give the code or remote access.",
+      "A bank never asks for a code through a link in a message.",
+      "We never ask you to read out a code over the phone."
+    ]
+  },
+  "disconnect_device": {
+    "en_canonical": "Disconnect the device from the network.",
+    "fi": [
+      "Irrota läppäri heti verkosta, myös Wi-Fistä, jotta salaus ei leviä kassakoneeseen tai muihin laitteisiin.",
+      "Irrota tietokone heti verkosta."
+    ],
+    "en": [
+      "Disconnect the computer from the network now."
+    ]
+  },
+  "remove_app_or_profile": {
+    "en_canonical": "Remove the app, profile or program.",
+    "fi": [
+      "Poista sovellus asetuksista ja vaihda tärkeät salasanat toisella laitteella.",
+      "Irrota kone silti internetistä ja poista etätukiohjelma, koska soittaja on voinut jättää koneelle jotain muuta."
+    ],
+    "en": [
+      "Uninstall the app in settings and change important passwords from another device."
+    ]
+  },
+  "get_device_checked": {
+    "en_canonical": "Run a security check or get technical help.",
+    "fi": [
+      "Voin ohjata sinut tietoturva-asiantuntijalle.",
+      "Voin ohjata sinut tietoturva-asiantuntijalle, joka auttaa puhelimen tarkistamisessa.",
+      "Jos haluat varmistaa, aja koneella tietoturvatarkistus."
+    ],
+    "en": [
+      "If you want to be sure, run a security scan on the computer."
+    ]
+  },
+  "avoid_banking_on_device": {
+    "en_canonical": "Do not use banking or important logins on the device until it is checked.",
+    "fi": [
+      "Älä käytä konetta pankkiasiointiin ennen kuin se on tarkistettu, ja tee rikosilmoitus.",
+      "Laita puhelin heti lentotilaan, äläkä käytä sillä verkkopankkia tai muita tärkeitä palveluja."
+    ],
+    "en": [
+      "Do not pay to the new account until you have verified the change.",
+      "Do not use the computer for banking until it has been checked, and file a police report."
+    ]
+  },
+  "contact_operator": {
+    "en_canonical": "Contact the operator's support, or be connected to an agent.",
+    "fi": [
+      "Soita heti pankin asiakaspalveluun tai sulkupalveluun kortissa tai pankin sivuilla olevasta numerosta.",
+      "Yhdistän sinut nyt yritysasiakaspalvelumme ihmiselle, joka voi pysäyttää toimituksen ja sulkea liittymät ennen noutoa."
+    ],
+    "en": [
+      "I can also connect you to a person to talk this through.",
+      "I can connect you to business security support."
+    ]
+  },
+  "lock_subscription": {
+    "en_canonical": "Ask the operator to lock or freeze the SIM/eSIM or number.",
+    "fi": [
+      "Puheluvaroitus kertoo vain todennäköisyydestä, ja myös terveysasemien numeroita merkitään joskus väärin."
+    ],
+    "en": []
+  },
+  "report_police": {
+    "en_canonical": "Report the crime to the police.",
+    "fi": [
+      "Poliisi voi tutkia asiaa, joten tee rikosilmoitus ja liitä mukaan numero ja maksun tiedot.",
+      "Jos tililtä on lähtenyt rahaa, tee myös rikosilmoitus.",
+      "Tee myös rikosilmoitus."
+    ],
+    "en": [
+      "The police can investigate, so file a police report and include the number and the payment details.",
+      "If money has left your account, also file a police report.",
+      "Also file a police report."
+    ]
+  },
+  "report_cyber_authority": {
+    "en_canonical": "Report to the National Cyber Security Centre.",
+    "fi": [
+      "Voin ohjata teidät yritysten tietoturvatukeen, ja asiasta kannattaa tehdä ilmoitus Kyberturvallisuuskeskukselle."
+    ],
+    "en": []
+  },
+  "keep_evidence": {
+    "en_canonical": "Keep the message, screenshots or receipts as evidence.",
+    "fi": [
+      "Säilytä vahvistusviesti siltä varalta, että tarvitset sitä myöhemmin."
+    ],
+    "en": [
+      "Keep the confirmation message in case you need it later."
+    ]
+  },
+  "hang_up_dont_call_back": {
+    "en_canonical": "Hang up and do not call back.",
+    "fi": [
+      "Jos sama numero soittaa uudelleen, lopeta puhelu äläkä soita takaisin.",
+      "Tee juuri niin, älä soita numeroon, josta sinulle soitettiin.",
+      "Älä soita takaisin numeroon, josta soitettiin."
+    ],
+    "en": [
+      "Do not call back the number that called you.",
+      "If the same number calls again, hang up and do not call back."
+    ]
+  },
+  "two_person_approval": {
+    "en_canonical": "Use two-person approval for payments and bank-detail changes.",
+    "fi": [
+      "Jatkossa kahden henkilön hyväksyntä suurille maksuille pysäyttää tällaiset yritykset."
+    ],
+    "en": [
+      "In future, two-person approval for large payments stops attempts like this."
+    ]
+  },
+  "revoke_access": {
+    "en_canonical": "Remove or disable access for people who should no longer have it.",
+    "fi": [
+      "Pankki voi estää tunnukset ja pysäyttää maksut."
+    ],
+    "en": []
+  },
+  "check_forwarding_rules": {
+    "en_canonical": "Check mailbox forwarding and inbox rules.",
+    "fi": [
+      "Tarkistakaa, ettei hänen postilaatikkoonsa ole lisätty edelleenlähetyssääntöjä, koska niitä käytetään laskupetoksiin.",
+      "Tarkista samalla, ettei sähköpostiin ole lisätty edelleenlähetyssääntöjä.",
+      "Tarkista lopuksi, ettei postiisi ole lisätty edelleenlähetyssääntöjä."
+    ],
+    "en": [
+      "Check that no forwarding rules have been added to their mailbox, because they are used for invoice fraud.",
+      "Check at the same time that no forwarding rules have been added to the mailbox.",
+      "Finally, check that no forwarding rules have been added to your mailbox."
+    ]
+  },
+  "inform_staff": {
+    "en_canonical": "Warn colleagues, staff or affected customers.",
+    "fi": [
+      "Kerro asiasta myös muille kassalla työskenteleville.",
+      "Kerro asiasta myös kollegoille, koska sama viesti on voinut tulla muillekin.",
+      "Kerro asiasta myös muille, jotka lukevat kaupan sähköpostia."
+    ],
+    "en": [
+      "Let your colleagues know too, because the same message may have reached them.",
+      "Let the others who read the shop's email know too."
+    ]
+  },
+  "dont_open_attachment": {
+    "en_canonical": "Do not open the attachment or enable content.",
+    "fi": [
+      "Älä avaa tiedostoa nytkään, ja poista sähköposti ja purettu tiedosto."
+    ],
+    "en": [
+      "Do not open the document now either, and delete the email and the extracted file."
+    ]
+  },
+  "secure_router": {
+    "en_canonical": "Change the router admin password and update it.",
+    "fi": [],
+    "en": []
+  },
+  "explain_benign": {
+    "en_canonical": "Explain that this looks legitimate or harmless, and why.",
+    "fi": [
+      "Muuta ei tarvitse tehdä.",
+      "Mitään ei tarvitse tehdä.",
+      "Tämä vaikuttaa aidolta puhelulta."
+    ],
+    "en": [
+      "Nothing else needs to be done.",
+      "Nothing needs to be done.",
+      "This seems to be a genuine call."
+    ]
+  },
+  "seek_support_org": {
+    "en_canonical": "Point to a trusted person or a victim-support service.",
+    "fi": [],
+    "en": []
+  },
+  "plan_before_removing": {
+    "en_canonical": "Plan safely before removing a monitoring app, as removal can alert the other person.",
+    "fi": [],
+    "en": []
+  },
+  "notify_data_protection": {
+    "en_canonical": "If personal data may have leaked, report the breach to the Data Protection Ombudsman within 72 hours.",
+    "fi": [],
+    "en": []
+  },
+  "decline_request": {
+    "en_canonical": "Decline the out-of-scope request briefly.",
+    "fi": [
+      "Ymmärrän harmituksesi, mutta en voi selvittää numeron omistajaa enkä auttaa julkaisemaan kenenkään tietoja.",
+      "Tekstiviestin lähettäjänimen voi väärentää, joten viesti voi näkyä samassa ketjussa kuin pankin aidot viestit."
+    ],
+    "en": []
+  },
+  "check_statements": {
+    "en_canonical": "Check bank transactions or invoices for unknown charges.",
+    "fi": [
+      "Tarkista samalla tilitapahtumista, ettei muita outoja veloituksia ole."
+    ],
+    "en": [
+      "Also check your transactions for any other odd charges.",
+      "Ask the bank to block your credentials and check recent transactions."
+    ]
+  },
+  "update_device": {
+    "en_canonical": "Update the device or software.",
+    "fi": [],
+    "en": []
+  }
+}

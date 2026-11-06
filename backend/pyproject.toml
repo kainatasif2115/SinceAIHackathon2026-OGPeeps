@@ -11,3 +11,7 @@ select = ["E", "F", "I", "B", "UP"]
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 testpaths = ["tests"]
+
+[tool.ruff.lint.per-file-ignores]
+# Prompt prose reads better unwrapped.
+"assistant/prompt.py" = ["E501"]

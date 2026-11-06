@@ -138,5 +138,3 @@ MAILERS = {
 # Conversations and consent records live in MongoDB (Django's own tables stay in SQLite).
 MONGODB_URI = os.environ.get("MONGODB_URI", "")
 MONGODB_DB = os.environ.get("MONGODB_DB", "security_assistant")
-
-CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-opus-5-5")
