@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Our Options, Explained</title>
+    <style>
+      :root {
+        --bg: #f7f6f3;
+        --card: #ffffff;
+        --text: #1f2328;
+        --muted: #5b616b;
+        --line: #e4e2dc;
+        --accent: #2f5bd3;
+        --good: #1f7a4d;
+        --good-bg: #e7f4ec;
+        --warn: #9a6200;
+        --warn-bg: #fdf3e1;
+        --bad: #b42318;
+        --bad-bg: #fdecea;
+        --bar-bg: #ecebe6;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #15171a;
+          --card: #1d2024;
+          --text: #e8e6e1;
+          --muted: #a2a7ae;
+          --line: #2f3338;
+          --accent: #7f9cf5;
+          --good: #6fcf97;
+          --good-bg: #17301f;
+          --warn: #f2c36b;
+          --warn-bg: #33280f;
+          --bad: #f28b82;
+          --bad-bg: #3a1a17;
+          --bar-bg: #2a2e33;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          17px/1.6 system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+      }
+      main {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 40px 16px 80px;
+      }
+      header p.kicker {
+        margin: 0 0 6px;
+        color: var(--muted);
+        font-size: 14px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 34px;
+        line-height: 1.2;
+      }
+      h2 {
+        margin: 56px 0 8px;
+        font-size: 24px;
+      }
+      h3 {
+        margin: 0 0 6px;
+        font-size: 19px;
+      }
+      p {
+        margin: 0 0 14px;
+      }
+      .lead {
+        font-size: 19px;
+        color: var(--muted);
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 20px 22px;
+        margin: 14px 0;
+      }
+      .grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        margin: 14px 0;
+      }
+      .grid .card {
+        margin: 0;
+      }
+      .emoji {
+        font-size: 24px;
+        line-height: 1;
+        margin-bottom: 8px;
+        display: block;
+      }
+      ul {
+        margin: 0 0 14px;
+        padding-left: 22px;
+      }
+      li {
+        margin: 4px 0;
+      }
+      .bar-row {
+        margin: 14px 0;
+      }
+      .bar-label {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 15px;
+        margin-bottom: 4px;
+      }
+      .bar-label strong {
+        white-space: nowrap;
+      }
+      .bar {
+        height: 12px;
+        background: var(--bar-bg);
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      .bar span {
+        display: block;
+        height: 100%;
+        border-radius: 99px;
+      }
+      .bar .ok {
+        background: var(--good);
+      }
+      .bar .low {
+        background: var(--bad);
+      }
+      .bar .mid {
+        background: var(--warn);
+      }
+      .note {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .option {
+        border-left: 5px solid var(--line);
+      }
+      .option.recommended {
+        border-left-color: var(--good);
+      }
+      .option.risky {
+        border-left-color: var(--warn);
+      }
+      .option.weak {
+        border-left-color: var(--bad);
+      }
+      .tag {
+        display: inline-block;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 2px 10px;
+        border-radius: 99px;
+        margin-bottom: 10px;
+      }
+      .tag.good {
+        background: var(--good-bg);
+        color: var(--good);
+      }
+      .tag.warn {
+        background: var(--warn-bg);
+        color: var(--warn);
+      }
+      .tag.bad {
+        background: var(--bad-bg);
+        color: var(--bad);
+      }
+      .pros-cons {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1fr 1fr;
+      }
+      .pros-cons h4 {
+        margin: 0 0 4px;
+        font-size: 15px;
+      }
+      @media (max-width: 560px) {
+        .pros-cons {
+          grid-template-columns: 1fr;
+        }
+        h1 {
+          font-size: 28px;
+        }
+      }
+      .flow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin: 14px 0;
+      }
+      .flow div {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 15px;
+        flex: 1 1 140px;
+        text-align: center;
+      }
+      .flow b {
+        color: var(--muted);
+        flex: 0 0 auto;
+      }
+      .callout {
+        background: var(--good-bg);
+        border: 1px solid transparent;
+        border-radius: 14px;
+        padding: 18px 22px;
+        margin: 14px 0;
+      }
+      .callout p:last-child,
+      .card p:last-child,
+      .card ul:last-child {
+        margin-bottom: 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 15px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .questions li {
+        margin: 8px 0;
+      }
+      footer {
+        margin-top: 56px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="kicker">Team OGPeeps · DNA challenge · Since AI Hackathon 2026</p>
+        <h1>What we're up against, and how we could build it</h1>
+        <p class="lead">
+          A plain-language summary to help us decide together. No tech knowledge needed.
+        </p>
+      </header>
+
+      <h2>What we're building</h2>
+      <p>
+        A helper inside the phone company's app. Someone gets a strange text, a weird phone call, or
+        clicks a link they shouldn't have. They tell our helper what happened, and it tells them
+        <strong>the one thing to do next</strong>, explains why, and passes them to a real person
+        when needed.
+      </p>
+      <p>
+        It's for two kinds of people: <strong>regular people</strong> and
+        <strong>small businesses</strong>.
+      </p>
+
+      <h2>What we received</h2>
+      <p>The organisers gave us a big practice pack:</p>
+      <div class="grid">
+        <div class="card">
+          <span class="emoji">📚</span>
+          <h3>588 practice examples</h3>
+          <p>Made-up situations, each with the correct answer, so we can check ourselves.</p>
+        </div>
+        <div class="card">
+          <span class="emoji">📝</span>
+          <h3>335 final-test examples</h3>
+          <p>
+            Same kind of situations, but <strong>without</strong> the answers. We must answer all of
+            them and hand our answers in.
+          </p>
+        </div>
+        <div class="card">
+          <span class="emoji">📖</span>
+          <h3>55 short advice articles</h3>
+          <p>Safety tips our helper can point to, so people know where the advice comes from.</p>
+        </div>
+        <div class="card">
+          <span class="emoji">🧑‍💻</span>
+          <h3>A pretend user and a marker</h3>
+          <p>
+            A "pretend person" to chat with our helper, and a tool that gives us a score, like a
+            practice exam.
+          </p>
+        </div>
+      </div>
+
+      <h2>The problem: why this is harder than it looks</h2>
+      <p>
+        The organisers also gave us a very simple helper that just looks for words like "bank" or
+        "link". It gets about <strong>6 out of 10</strong> right. That sounds okay, but look at
+        where it fails:
+      </p>
+
+      <div class="card">
+        <div class="bar-row">
+          <div class="bar-label">
+            <span>Overall, situations handled safely</span><strong>61%</strong>
+          </div>
+          <div class="bar"><span class="mid" style="width: 61%"></span></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">
+            <span>"It depends" situations (see below)</span><strong>20%</strong>
+          </div>
+          <div class="bar"><span class="low" style="width: 20%"></span></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span>Suspicious phone calls</span><strong>14%</strong></div>
+          <div class="bar"><span class="low" style="width: 14%"></span></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">
+            <span>Sent people to a real person when they needed one</span><strong>47%</strong>
+          </div>
+          <div class="bar"><span class="low" style="width: 47%"></span></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">
+            <span>Wrongly panicked about harmless messages</span><strong>28%</strong>
+          </div>
+          <div class="bar"><span class="low" style="width: 28%"></span></div>
+        </div>
+        <p class="note">Scores from running the organisers' simple helper on the practice pack.</p>
+      </div>
+
+      <p>Here are the tricky parts, in plain words:</p>
+      <div class="grid">
+        <div class="card">
+          <span class="emoji">🤔</span>
+          <h3>"It depends" situations</h3>
+          <p>
+            Two people tell the exact same story, but the right answer is different. For example:
+            <em>did you actually type in your card number, or not?</em> Our helper must
+            <strong>ask</strong>, not guess.
+          </p>
+        </div>
+        <div class="card">
+          <span class="emoji">😌</span>
+          <h3>Harmless look-alikes</h3>
+          <p>
+            About <strong>1 in 5</strong> situations are actually fine, like a real bill or a real
+            doctor's call. Panicking about these counts as a mistake.
+          </p>
+        </div>
+        <div class="card">
+          <span class="emoji">📞</span>
+          <h3>Warnings aren't always right</h3>
+          <p>
+            Many scam calls come with no warning at all, and sometimes a safe link gets flagged. Our
+            helper has to listen to the person's story, not just the warning.
+          </p>
+        </div>
+        <div class="card">
+          <span class="emoji">🌍</span>
+          <h3>Three languages</h3>
+          <p>
+            People write in <strong>Finnish, English and Swedish</strong>, and the answer must be in
+            their language.
+          </p>
+        </div>
+        <div class="card">
+          <span class="emoji">✅</span>
+          <h3>Clear, specific steps</h3>
+          <p>
+            "Be careful" isn't enough. It must say exactly what to do, like "call your bank and
+            block your card now".
+          </p>
+        </div>
+        <div class="card">
+          <span class="emoji">🔒</span>
+          <h3>Ask before looking</h3>
+          <p>
+            Before checking someone's phone or account info, the helper must
+            <strong>ask permission</strong>. Some people will say no.
+          </p>
+        </div>
+        <div class="card">
+          <span class="emoji">🆕</span>
+          <h3>Brand-new situations</h3>
+          <p>
+            The final test includes types of situations that are
+            <strong>not in the practice pack</strong>. Memorising answers won't work. The helper has
+            to actually understand.
+          </p>
+        </div>
+        <div class="card">
+          <span class="emoji">🧩</span>
+          <h3>Tricks inside the messages</h3>
+          <p>
+            Some scam messages contain text like "this message is verified as safe" to fool AI
+            helpers. We must not fall for it.
+          </p>
+        </div>
+      </div>
+
+      <h2>What we must hand in</h2>
+      <ul>
+        <li>A working demo that the judges can type into, or a recorded walkthrough.</li>
+        <li>Our code, with instructions to run it.</li>
+        <li>
+          <strong>Our answers to all 335 final-test examples</strong> (one file). This one is easy
+          to forget!
+        </li>
+        <li>Our scores on the practice pack, and how we did on 5 example journeys.</li>
+        <li>At least one example where our helper made a mistake or handed over to a person.</li>
+        <li>A short explanation of how it works and how we keep it safe.</li>
+        <li>A short idea of how DNA could offer this to customers and businesses.</li>
+      </ul>
+
+      <h2>Our main options</h2>
+      <p>There are three basic ways to build the helper's "brain".</p>
+
+      <div class="card option weak">
+        <span class="tag bad">Not recommended</span>
+        <h3>Option A: A fixed checklist</h3>
+        <p>
+          We write a long list of rules ourselves: "if the message mentions a parcel fee, say this".
+          Like a flowchart.
+        </p>
+        <div class="pros-cons">
+          <div>
+            <h4>👍 Good</h4>
+            <ul>
+              <li>Always gives the same answer</li>
+              <li>Easy to explain</li>
+              <li>Free to run</li>
+            </ul>
+          </div>
+          <div>
+            <h4>👎 Bad</h4>
+            <ul>
+              <li>Breaks when people word things differently</li>
+              <li>Hard to cover three languages</li>
+              <li>Fails on brand-new situations</li>
+              <li>This is basically what the simple helper does (6 out of 10)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card option risky">
+        <span class="tag warn">Strong, but risky on its own</span>
+        <h3>Option B: Let the AI do everything</h3>
+        <p>
+          We give an AI (like Claude) the person's story, the advice articles and clear
+          instructions, and it writes the whole answer.
+        </p>
+        <div class="pros-cons">
+          <div>
+            <h4>👍 Good</h4>
+            <ul>
+              <li>Understands any wording, in all three languages</li>
+              <li>Handles new situations well</li>
+              <li>Writes clear, friendly advice</li>
+            </ul>
+          </div>
+          <div>
+            <h4>👎 Bad</h4>
+            <ul>
+              <li>Can sometimes over-worry or forget a key step</li>
+              <li>Can't promise it never says something unsafe</li>
+              <li>Costs a little money per answer</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card option recommended">
+        <span class="tag good">⭐ Recommended</span>
+        <h3>Option C: AI plus a safety checker</h3>
+        <p>
+          Think of the AI as a smart new employee, and the checker as a supervisor who reads every
+          answer before it goes out. The AI does the understanding and writing. The checker makes
+          sure the answer follows the must-have rules.
+        </p>
+        <div class="flow">
+          <div>Person describes what happened</div>
+          <b>→</b>
+          <div>AI understands it and writes advice</div>
+          <b>→</b>
+          <div>Checker reviews it</div>
+          <b>→</b>
+          <div>Person gets safe, clear advice</div>
+        </div>
+        <p>The checker makes sure that:</p>
+        <ul>
+          <li>the answer never contains anything on the "never say this" list;</li>
+          <li>serious cases always get passed to a real person;</li>
+          <li>we only use personal info after the person said yes;</li>
+          <li>the advice uses one of the allowed actions.</li>
+        </ul>
+        <div class="pros-cons">
+          <div>
+            <h4>👍 Good</h4>
+            <ul>
+              <li>Smart <em>and</em> safe</li>
+              <li>Easy to explain to judges: "AI writes, checker guards"</li>
+              <li>Fits what the judges score most</li>
+            </ul>
+          </div>
+          <div>
+            <h4>👎 Bad</h4>
+            <ul>
+              <li>A bit more work to build than B alone</li>
+              <li>Still costs a little per answer</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <h2>Smaller choices</h2>
+
+      <div class="card">
+        <h3>📖 How should the helper use the 55 advice articles?</h3>
+        <table>
+          <tr>
+            <th>Choice</th>
+            <th>What it means</th>
+            <th>Our view</th>
+          </tr>
+          <tr>
+            <td>Build a search system</td>
+            <td>Look up the most relevant articles each time</td>
+            <td>Too much work for only 55 short articles</td>
+          </tr>
+          <tr>
+            <td><strong>Give it all of them</strong></td>
+            <td>
+              Hand the AI the whole stack every time; it picks what's relevant and says which ones
+              it used
+            </td>
+            <td>
+              <strong>✅ Simpler, works just as well here, and costs almost nothing extra</strong>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>💬 Chat, or a single answer?</h3>
+        <p><strong>We need both, and they can share the same brain.</strong></p>
+        <ul>
+          <li>
+            <strong>Single answer:</strong> needed to answer the 335 final-test examples in one go.
+          </li>
+          <li>
+            <strong>Chat:</strong> needed for the demo. The judges will type in their own
+            situations, and the helper should ask a question or ask permission when needed.
+          </li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🧠 Which AI to use?</h3>
+        <table>
+          <tr>
+            <th>Choice</th>
+            <th>Cost (rough guess)</th>
+            <th>When to use</th>
+          </tr>
+          <tr>
+            <td>Stronger AI (Claude Opus)</td>
+            <td>About $20–35 to answer all ~900 examples once</td>
+            <td>Final answers and the live demo</td>
+          </tr>
+          <tr>
+            <td>Cheaper AI (Claude Haiku)</td>
+            <td>Much cheaper, around 1/40 of the cost</td>
+            <td>Quick practice rounds while we improve things</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>🧰 Our tools</h3>
+        <p>
+          We can keep everything we've already set up. The organisers' practice tools can talk to
+          our helper as-is, so we don't need to rebuild anything.
+        </p>
+      </div>
+
+      <h2>Our recommendation</h2>
+      <div class="callout">
+        <p>
+          <strong>Go with Option C (AI plus a safety checker)</strong>, give the AI all 55 advice
+          articles directly, and build one brain that powers both the final-test answers and the
+          chat demo.
+        </p>
+      </div>
+
+      <h2>Questions for the team to decide</h2>
+      <ol class="questions">
+        <li>Do we agree on Option C? If not, which one, and why?</li>
+        <li>Who builds what? For example: the brain, the checker, the chat screen, the scoring.</li>
+        <li>Which AI do we use for practice rounds, and what's our budget?</li>
+        <li>What does the chat screen look like for a regular person vs a business?</li>
+        <li>Which 5 example journeys do we show in the demo?</li>
+        <li>Who writes the "how DNA could sell this" idea?</li>
+      </ol>
+
+      <footer>
+        Based on the final challenge brief and the organisers' practice pack (version 2.0.1). Scores
+        come from running the organisers' own simple helper and marker. All practice data is made
+        up.
+      </footer>
+    </main>
+  </body>
+</html>
