@@ -12,6 +12,7 @@ A prototype assistant that turns a consumer's or small business's description of
 - Tailwind CSS + shadcn/ui
 - Claude API (`@anthropic-ai/sdk`) for fact extraction and plain-language explanation
 - Deterministic TypeScript rules engine for risk level, next action and escalation
+- MongoDB (official `mongodb` driver) for conversations, consent records, test cases and eval results
 - Zod for shared schemas (test cases, LLM output, rules output)
 - `tsx` for the evaluation script
 
@@ -21,9 +22,11 @@ Requires Node 20+.
 
 ```bash
 npm install
-cp .env.example .env.local   # then add your ANTHROPIC_API_KEY
+cp .env.example .env.local   # then add ANTHROPIC_API_KEY and MONGODB_URI
 npm run dev
 ```
+
+`MONGODB_URI` can point at the team's shared MongoDB Atlas cluster or a local instance (`mongodb://localhost:27017`). The connection helper is `src/lib/mongodb.ts`: call `getDb()` from server code (route handlers, server actions, scripts) only.
 
 Open http://localhost:3000.
 
