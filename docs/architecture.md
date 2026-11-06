@@ -1,22 +1,38 @@
 # Architecture and safety boundaries
 
-> **Status: to be decided by the team.** Record each choice in [`decisions.md`](decisions.md) and summarise the result here. This page is a required deliverable.
+> **Status: setup done, assistant not built yet.** Record each choice in [`decisions.md`](decisions.md) and summarise the result here. This page is a required deliverable.
 
-## What is fixed so far
+## Components
 
-- **App:** Next.js (App Router) + TypeScript, Tailwind CSS, shadcn/ui
-- **Database:** MongoDB, through the official `mongodb` driver ([`src/lib/mongodb.ts`](../src/lib/mongodb.ts))
-- **LLM provider:** Claude API (`@anthropic-ai/sdk`)
-- **Validation:** Zod
+| Part | Where | Tools |
+|---|---|---|
+| Chat page (demo) | `frontend/` | Next.js, TypeScript, Tailwind, shadcn/ui. Proxies `/api/*` to Django. |
+| API | `backend/api/` | Django + Django Ninja (Pydantic schemas) |
+| Brain and safety checker | `backend/assistant/` | Plain Python, Claude API (`anthropic` SDK), the organisers' `dsakit` |
+| Storage | MongoDB via `pymongo` | Conversations and consent records. Django's internal tables use SQLite. |
+| Data and scoring | `simset/` | The organisers' SimSet v2.0.1: 588 dev cases, 335 test inputs, simulated user, evaluator |
+
+## Planned design
+
+One brain, used three ways:
+
+1. **Brain.** Claude reads the case: the user's message, any forwarded message as untrusted data, the risk signals the user allowed, the 55 guidance passages and the official action, step and question-topic vocabularies. It proposes one of: ask one question, ask permission to use optional data, or give the final answer.
+2. **Safety checker.** Code, not an LLM, runs on every proposed answer before the user sees it. It:
+   - rejects answers with unsafe statements (the organisers' `unsafe_claims` patterns via `dsakit`);
+   - forces a human handoff when the risk is critical;
+   - makes sure consent-gated signals were only used with permission and reports them correctly;
+   - checks the required steps are recognisable;
+   - keeps questions to at most three topics.
+3. **Uses of the brain:**
+   - a batch run that writes `test_predictions.jsonl` (single-turn);
+   - a bot for the organisers' simulated user (multi-turn);
+   - the chat API behind the demo page.
 
 ## Open questions
 
-- How the assistant is structured: a chat flow or a guided form, and how much of the decision is rules versus LLM.
-- Whether to use retrieval over safety guidance (RAG), and if so, which sources and how they're stored.
-- How risk signals (call warning, link risk, device status, account context) are combined.
-- When the assistant asks a follow-up question, and when it hands off to a human.
-- What is stored in MongoDB, for how long, and with what consent.
-- How the five journeys are evaluated (see [`journeys.md`](journeys.md)).
+- Which 5 journeys we show in the demo.
+- What exactly is stored in MongoDB, for how long, and how we explain it to the user.
+- Which model we use for practice runs vs final runs.
 
 ## Safety boundaries (to fill in)
 

@@ -12,7 +12,7 @@
 
 ## Checklist
 
-- [ ] `npm run check` passes
+- [ ] `make check` passes
 - [ ] No secrets or real personal data committed
 - [ ] New env vars added to `.env.example`
 - [ ] Decision logged in `docs/decisions.md` (if it was a significant choice)

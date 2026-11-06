@@ -45,9 +45,15 @@ Constraints:
 
 ## Data
 
-Since AI provides a **synthetic test set** reviewed with DNA. It contains sample messages, calls, links, device states and account or subscription context. Teams may add licensed public safety guidance and their own synthetic cases.
+Since AI provides **SimSet v2.0.1**, now in [`simset/`](../simset/START_HERE.md):
+- 588 development cases with reference answers;
+- 335 test inputs without answers, which the organisers score;
+- five sample journeys;
+- a simulated user, a rules baseline and an evaluator.
 
-There is **no access** to DNA production systems, customer records, real browsing or message history, network telemetry or live DNA APIs. The final files, schema and delivery link will be published before the event. See [`data/README.md`](../data/README.md).
+Users write in Finnish, English and Swedish. Teams may add licensed public safety guidance and their own synthetic cases. All data is synthetic and is not DNA's advice.
+
+There is **no access** to DNA production systems, customer records, real browsing or message history, network telemetry or live DNA APIs.
 
 ## Evaluation criteria
 
@@ -70,6 +76,7 @@ Review the safety of the advice manually. Product packaging and pricing may be p
 
 ## Deliverables
 
+- [ ] `test_predictions.jsonl`: answers for all 335 test inputs
 - [ ] Working demo or recorded walkthrough
 - [ ] Source repository with setup instructions
 - [ ] Short explanation of the architecture and safety boundaries ([`architecture.md`](architecture.md))
