@@ -2,7 +2,7 @@
 # Then set MONGODB_URI=mongodb://localhost:27017 in backend/.env.
 services:
   mongo:
-    image: mongo:8
+    image: mongo:7.0  # 8.x crashes on Linux kernels 6.19+ (SERVER-121912)
     container_name: ogpeeps-mongo
     ports:
       - "27017:27017"
