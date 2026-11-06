@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [{ source: "/api/:path*", destination: `${backendUrl}/api/:path*` }];
   },
+  // Hide the Next.js "N" badge in dev so demo recordings look like the real app.
+  // Compile and runtime errors are still shown.
+  devIndicators: false,
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {
