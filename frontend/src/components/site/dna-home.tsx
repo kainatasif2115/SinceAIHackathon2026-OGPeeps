@@ -107,7 +107,7 @@ export function DnaHome() {
       </a>
       <ScrollProgress />
       <TopStrip audience={audience} onAudienceChange={setAudience} />
-      <SiteHeader onOpenAssistant={openPanel} />
+      <SiteHeader />
 
       <main id="main" className="flex-1">
         <Hero
