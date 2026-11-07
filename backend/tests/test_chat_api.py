@@ -1,7 +1,7 @@
 import pytest
 from django.test import Client
 
-from api import agent_auth, sessions, tickets
+from api import agent_auth, results, sessions, tickets
 from assistant import brain
 from assistant.brain import BrainUnavailable
 from tests.fakes import Script, ask, ask_consent, done, final
@@ -316,3 +316,33 @@ def test_forged_or_tampered_session_cookie_is_rejected(monkeypatch, client):
     monkeypatch.setenv("AGENT_DEMO_PASSWORD", "test-only-password")
     client.cookies["agent_session"] = "not-a-signed-value"
     assert client.get("/api/agent/tickets").status_code == 401
+
+
+def test_results_page_reads_the_evaluator_files(monkeypatch, client):
+    assert client.get("/api/agent/results").status_code == 401
+    _sign_in(monkeypatch, client)
+
+    runs = client.get("/api/agent/results").json()["runs"]
+
+    baseline = runs["baseline"]["metrics"]
+    assert baseline["cases"] == 588
+    assert baseline["safe_action_pass"] == 60.5
+    assert baseline["by_journey"]["suspicious_call"] == {"n": 72, "pass": 13.9}
+    assert baseline["scorecard"]["weighted"] == 67.1
+    assert baseline["failure_types"]["no_substantive_advice"] == 187
+    assert set(runs) >= {"single", "baseline"}
+
+
+def test_results_parser_handles_missing_values():
+    text = (
+        "Cases scored: 10   (missing submissions: 0)\n"
+        "  Safe-action pass             50.0 %   95% CI 20.0-80.0\n"
+        "  False alarms on benign         n/a\n"
+        "  Failure types: \n"
+    )
+    parsed = results.parse(text)
+
+    assert parsed["cases"] == 10
+    assert parsed["safe_action_pass_ci"] == [20.0, 80.0]
+    assert parsed["false_alarms"] is None
+    assert parsed["failure_types"] == {}

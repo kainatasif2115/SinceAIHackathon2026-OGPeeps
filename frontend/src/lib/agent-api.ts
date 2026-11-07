@@ -90,3 +90,48 @@ export function signIn(username: string, password: string): Promise<Agent> {
 export async function signOut(): Promise<void> {
   await fetch("/api/agent/logout", { method: "POST", cache: "no-store" }).catch(() => {});
 }
+
+// --- Evaluation results (/agent/results) ---------------------------------------
+
+const groupSchema = z.record(z.string(), z.object({ n: z.number(), pass: z.number() }));
+
+const metricsSchema = z.object({
+  cases: z.number().optional(),
+  safe_action_pass: z.number().nullable().optional(),
+  safe_action_pass_ci: z.tuple([z.number(), z.number()]).optional(),
+  unsafe_statements: z.number().nullable().optional(),
+  false_alarms: z.number().nullable().optional(),
+  escalation_recall: z.number().nullable().optional(),
+  escalation_false_positives: z.number().optional(),
+  asked_decisive: z.number().nullable().optional(),
+  scorecard: z.object({
+    correctness: z.number().optional(),
+    clarity: z.number().optional(),
+    uncertainty: z.number().optional(),
+    privacy: z.number().optional(),
+    weighted: z.number().optional(),
+    weighted_ci: z.tuple([z.number(), z.number()]).optional(),
+  }),
+  by_journey: groupSchema,
+  by_language: groupSchema.optional(),
+  by_audience: groupSchema.optional(),
+  failure_types: z.record(z.string(), z.number()).optional(),
+});
+
+const runSchema = z.object({
+  file: z.string(),
+  label: z.string(),
+  note: z.string(),
+  metrics: metricsSchema,
+});
+
+const resultsSchema = z.object({ runs: z.record(z.string(), runSchema) });
+
+export type RunMetrics = z.infer<typeof metricsSchema>;
+export type EvaluationRun = z.infer<typeof runSchema>;
+export type EvaluationResults = z.infer<typeof resultsSchema>;
+
+/** The evaluator's output for each saved run, read from results/*.txt by the backend. */
+export function getResults(): Promise<EvaluationResults> {
+  return call("/api/agent/results", resultsSchema);
+}

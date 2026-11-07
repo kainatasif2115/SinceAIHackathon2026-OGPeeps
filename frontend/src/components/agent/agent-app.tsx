@@ -5,11 +5,13 @@ import { Headset, Info, LoaderCircle, LockKeyhole } from "lucide-react";
 import { getMe, signIn, signOut, type Agent } from "@/lib/agent-api";
 import { ApiError } from "@/lib/api";
 import { AgentConsole } from "./agent-console";
+import { AgentHeader, type AgentView } from "./agent-header";
+import { ResultsView } from "./results-view";
 
 type Session = { status: "checking" } | { status: "signed-out" } | { status: "in"; agent: Agent };
 
 /** Staff sign-in in front of the support console (one demo account in the prototype). */
-export function AgentApp() {
+export function AgentApp({ view = "board" }: { view?: AgentView }) {
   const [session, setSession] = useState<Session>({ status: "checking" });
 
   useEffect(() => {
@@ -30,16 +32,29 @@ export function AgentApp() {
     return <SignIn onSignedIn={(agent) => setSession({ status: "in", agent })} />;
   }
 
-  return (
-    <AgentConsole
+  const header = (
+    <AgentHeader
+      active={view}
       agentName={session.agent.name}
       onSignOut={() => {
         void signOut();
         setSession({ status: "signed-out" });
       }}
-      onSessionExpired={() => setSession({ status: "signed-out" })}
     />
   );
+  const expire = () => setSession({ status: "signed-out" });
+
+  if (view === "results") {
+    return (
+      <div className="theme-dna flex min-h-full flex-1 flex-col bg-white">
+        {header}
+        <main className="flex-1">
+          <ResultsView onSessionExpired={expire} />
+        </main>
+      </div>
+    );
+  }
+  return <AgentConsole header={header} onSessionExpired={expire} />;
 }
 
 function SignIn({ onSignedIn }: { onSignedIn: (agent: Agent) => void }) {

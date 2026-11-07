@@ -8,7 +8,7 @@ from ninja.errors import HttpError
 from ninja.files import UploadedFile
 
 from api import agent_auth as agent_auth_mod
-from api import db, presenter, sessions, tickets, voice
+from api import db, presenter, results, sessions, tickets, voice
 from api.agent_auth import agent_auth
 from api.schemas import (
     AgentLoginIn,
@@ -159,6 +159,12 @@ def agent_me(request):
 @api.get("/agent/tickets", response=list[TicketOut], auth=agent_auth)
 def list_tickets(request):
     return tickets.all_tickets()
+
+
+@api.get("/agent/results", auth=agent_auth)
+def evaluation_results(request):
+    """The evaluator's output for each saved run (results/*.txt), as numbers."""
+    return results.load_all()
 
 
 @api.patch("/agent/tickets/{reference}", response=TicketOut, auth=agent_auth)

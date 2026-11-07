@@ -7,7 +7,6 @@ import {
   Clock,
   Headset,
   ImageIcon,
-  LogOut,
   RefreshCw,
   Search,
   ShieldCheck,
@@ -39,12 +38,11 @@ type Audience = "all" | Ticket["audience"];
  * Polls the backend so a "Talk to a person" in the chat appears here live.
  */
 export function AgentConsole({
-  agentName,
-  onSignOut,
+  header,
   onSessionExpired,
 }: {
-  agentName: string;
-  onSignOut: () => void;
+  /** The shared console header (brand, tabs, signed-in agent). */
+  header: React.ReactNode;
   onSessionExpired: () => void;
 }) {
   const [tickets, setTickets] = useState<Ticket[] | null>(null);
@@ -177,47 +175,7 @@ export function AgentConsole({
 
   return (
     <div className="theme-dna flex min-h-full flex-1 flex-col bg-white">
-      <header className="border-border sticky top-0 z-30 border-b bg-white">
-        <div className="flex h-16 flex-wrap items-center justify-between gap-3 px-4 sm:px-6">
-          <div className="flex items-center gap-2.5">
-            <span className="font-heading text-brand text-2xl leading-none font-bold tracking-tight">
-              DNA
-            </span>
-            <span className="bg-border h-6 w-px" aria-hidden />
-            <h1 className="font-heading flex items-center gap-1.5 text-base font-semibold">
-              <Headset aria-hidden className="text-brand size-4.5" />
-              Support console
-            </h1>
-            <span className="bg-brand-soft text-accent-foreground ml-1 hidden items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold sm:flex">
-              <span className="relative flex size-2">
-                <span className="bg-brand absolute inline-flex size-full animate-ping rounded-full opacity-50" />
-                <span className="bg-brand relative inline-flex size-2 rounded-full" />
-              </span>
-              Live
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground hidden md:inline">Prototype · demo account</span>
-            <span className="border-border flex items-center gap-2 rounded-full border py-1 pr-3 pl-1">
-              <span className="bg-brand text-brand-foreground flex size-7 items-center justify-center rounded-full text-xs font-bold">
-                {agentName
-                  .split(" ")
-                  .map((part) => part[0])
-                  .join("")}
-              </span>
-              <span className="font-medium">{agentName}</span>
-            </span>
-            <button
-              type="button"
-              onClick={onSignOut}
-              className="text-brand hover:bg-brand-soft inline-flex h-9 items-center gap-1.5 rounded-full px-3 font-semibold transition-colors duration-150"
-            >
-              <LogOut aria-hidden className="size-4" />
-              <span className="hidden sm:inline">Sign out</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      {header}
 
       <div className="border-border border-b bg-[#fdf8fb]">
         <div className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
