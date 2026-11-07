@@ -249,3 +249,46 @@ export function listCases(run: CaseRun) {
 export function getCase(run: CaseRun, caseId: string): Promise<CaseDetail> {
   return call(`/api/agent/cases/${run}/${encodeURIComponent(caseId)}`, caseDetailSchema);
 }
+
+// --- Twin explorer (/agent/twins) -------------------------------------------------
+
+const branchSchema = z.object({
+  case_id: z.string(),
+  branch: z.string().nullable(),
+  hidden_fact: z.string().nullable(),
+  question: z.string().nullable(),
+  reply: z.string().nullable(),
+  expected: z.object({
+    risk_level: z.string(),
+    action: z.string().nullable(),
+    handoff: z.boolean(),
+  }),
+  ours: z.object({
+    risk_level: z.string().nullable(),
+    action: z.string().nullable(),
+    handoff: z.boolean(),
+    advice_text: z.string(),
+  }),
+  passed: z.boolean(),
+  failures: z.array(z.string()),
+});
+
+const pairSchema = z.object({
+  group: z.string(),
+  journey: z.string(),
+  audience: z.string(),
+  language: z.enum(["fi", "en", "sv"]),
+  message: z.string(),
+  deciding_topics: z.array(z.string()),
+  branches: z.array(branchSchema),
+});
+
+export type TwinPair = z.infer<typeof pairSchema>;
+export type TwinBranch = z.infer<typeof branchSchema>;
+
+export function listTwins(run: "twins" | "single" = "twins") {
+  return call(
+    `/api/agent/twins?run=${run}`,
+    z.object({ run: z.string(), pairs: z.array(pairSchema) }),
+  );
+}

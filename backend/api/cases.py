@@ -20,6 +20,10 @@ RUNS = {
         "file": "dev_full_588_predictions.jsonl",
         "label": "Single-turn answers (588)",
     },
+    "twins": {
+        "file": "dev_twins_multi_108_predictions.jsonl",
+        "label": "Twin pairs as conversations (108)",
+    },
 }
 
 
