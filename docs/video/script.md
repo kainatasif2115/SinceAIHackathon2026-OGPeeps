@@ -23,7 +23,7 @@ Team OGPeeps · DNA × Since AI Hackathon 2026 · **3 min 30 s maximum.**
 3. **Voice clips in scene 8 need ElevenLabs credits.** If voice fails, drop those two clips.
 4. **Accounts:** one **private** and one **business** customer account on the live site, and the staff demo login for `/agent` in a second tab.
 5. **Browser:** Chrome, 1440×900, bookmarks bar hidden, Grammarly and other extensions off, zoom 100%.
-6. **Scene 3 is recorded live** (steps in `docs/five-journeys.md`); scene 4 uses the saved conversations on the public `/journeys` page, so nothing else needs to be run live.
+6. **Scene 3 is recorded live** from the homepage example; scene 4 uses the saved conversations on the public `/journeys` page, so nothing else needs to be run live.
 7. **Have ready:** a screenshot of a parcel-scam text for scene 8.
 
 ---
@@ -64,21 +64,20 @@ Team OGPeeps · DNA × Since AI Hackathon 2026 · **3 min 30 s maximum.**
 
 ### Scene 3: One journey, start to finish: a scam call (50 s)
 
-Case `DSA-D-0160`, **private** account. A caller claiming to be operator support wanted a text code "for a SIM upgrade", and the customer read it out. We show this journey in full because it covers every requirement at once: one question, permission, a critical answer and a handoff.
+Case `DSA-D-0003`, in English: the same scam as the **Suspicious call** tab on `/journeys`. A caller claiming to be the operator offered a "free SIM upgrade" and asked for the code sent by text. We show this journey in full because it covers every requirement at once: one question, permission, a critical answer and a handoff.
 
 **Show:**
-1. `/dashboard`, **New chat**, click **FI**, then the chip starting **"Soittaja sanoi olevansa teidän asiakaspalvelusta"**. Click **EN**, send.
+1. Homepage, signed in with the **private** account. Under the message box, click the chip **Suspicious or flagged phone call**. The sidebar opens with the English message in the box: "Someone called from 'my operator' offering a free SIM upgrade. I got a code by text and he asked me to read it out. Was that really you?" Send it.
 2. It asks **whether the code was read out**. Send:
-   `I read the code out to him before I got suspicious. It was about fifteen minutes ago. The phone still works normally.`
-3. A **permission card** asks to check recent SIM events. Hold 1 second, zoom in, click **Allow**.
-4. The answer card: **Critical**, **Right now**. Zoom on the badge and the first step.
+   `Yes, I read it out to him about ten minutes ago. My phone still works.`
+3. If a **permission card** asks to check recent SIM changes, hold 1 second, zoom in, click **Allow**.
+4. The answer card: **Critical**, act right now. Zoom on the badge and the first step.
 5. **Split screen, 5 seconds:** left, click **Talk to a person**; right, the ticket lands on the staff Board at `/agent` with its alarm clock.
 
 Speed up every wait for the AI; never speed up the answer card.
 
 **Say:**
-> A caller pretending to be your operator asks for a text code. The customer writes in Finnish. The assistant asks one question, the only one that matters: did you read it out? Yes. Before it looks at any account data, it asks permission. Then one clear answer: critical. Stop the eSIM transfer, lock the number, call the bank. And a DNA agent takes over, already knowing the whole story.
-
+> Here's how it works on a real scam. A caller pretending to be your operator offers a free SIM upgrade, and asks for the code you just got by text. The assistant doesn't guess. It asks one question, the only one that changes the answer: did you read it out? Yes. Before it looks at any account data, it asks permission. Then one clear answer: critical. Stop the transfer, lock the number, then call the bank. And a DNA agent takes over, already knowing the whole story.
 
 ### Scene 4: All five journeys (20 s)
 
