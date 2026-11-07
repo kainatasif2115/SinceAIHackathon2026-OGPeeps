@@ -86,9 +86,18 @@ export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Pro
       : [];
 
   return (
-    <section aria-labelledby="hero-heading" className="bg-brand text-brand-foreground">
-      <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-12 sm:px-6 md:py-16 lg:grid-cols-[1.15fr_1fr] lg:gap-14 lg:py-20">
-        <div className="flex flex-col gap-6">
+    <section
+      aria-labelledby="hero-heading"
+      className="bg-brand text-brand-foreground relative isolate overflow-hidden"
+    >
+      {/* Soft light from behind the phone and a deeper shade bottom-left, for depth. */}
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10 bg-[radial-gradient(60%_70%_at_82%_45%,rgb(255_255_255/0.16),transparent_70%),radial-gradient(50%_60%_at_0%_100%,rgb(90_0_45/0.35),transparent_70%)]"
+      />
+      {/* The first screen holds the whole hero: below the top strip and header. */}
+      <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 pt-10 pb-20 sm:px-6 lg:min-h-[calc(100svh-6.5rem)] lg:grid-cols-[1.4fr_1fr] lg:gap-12 lg:pt-4 lg:pb-10">
+        <div className="flex flex-col gap-5 lg:gap-4">
           <p className="inline-flex items-center gap-2 self-start rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
             <ShieldCheck aria-hidden className="size-3.5" />
             New: DNA Security Assistant
@@ -96,18 +105,18 @@ export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Pro
           <div className="flex flex-col gap-4">
             <h1
               id="hero-heading"
-              className="font-heading text-[2.25rem] leading-[1.08] font-bold tracking-tight sm:text-5xl"
+              className="font-heading text-[2.25rem] leading-[1.05] font-bold tracking-tight sm:text-5xl xl:text-[3.25rem]"
             >
               {copy.title}
             </h1>
-            <p className="max-w-xl text-lg leading-relaxed text-white">{copy.intro}</p>
+            <p className="max-w-2xl text-lg leading-relaxed text-white/90">{copy.intro}</p>
           </div>
 
           <form
             onSubmit={submit}
             noValidate
             className={cn(
-              "text-foreground relative flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-[0_12px_40px_rgb(0_0_0/0.18)] sm:p-5",
+              "text-foreground relative flex flex-col gap-3 rounded-3xl bg-white p-4 shadow-[0_24px_60px_rgb(70_0_35/0.35)] ring-1 ring-white/40 sm:p-5",
               drop.dragging && "outline-4 outline-offset-4 outline-white outline-dashed",
             )}
             {...drop.handlers}
@@ -179,34 +188,35 @@ export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Pro
             </div>
           </form>
 
-          <button
-            type="button"
-            onClick={onTalk}
-            className="inline-flex h-11 items-center gap-2 self-start rounded-full border-2 border-white/70 px-5 text-sm font-semibold transition-colors duration-150 hover:bg-white/15"
-          >
-            <PhoneCall aria-hidden className="size-4" />
-            Prefer to talk? Start a hands-free conversation
-          </button>
-
-          <Link
-            href="/call"
-            className="inline-flex items-center gap-2 self-start text-sm font-semibold underline-offset-4 hover:underline"
-          >
-            <Ear aria-hidden className="size-4" />
-            On a suspicious call right now? We’ll listen with you
-            <ArrowRight aria-hidden className="size-4" />
-          </Link>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={onTalk}
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-white/15 px-4 text-sm font-semibold ring-1 ring-white/50 backdrop-blur-sm transition-colors duration-150 hover:bg-white/25"
+            >
+              <PhoneCall aria-hidden className="size-4" />
+              Prefer to talk? Go hands-free
+            </button>
+            <Link
+              href="/call"
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-white/15 px-4 text-sm font-semibold ring-1 ring-white/50 backdrop-blur-sm transition-colors duration-150 hover:bg-white/25"
+            >
+              <Ear aria-hidden className="size-4" />
+              On a call right now? We’ll listen
+              <ArrowRight aria-hidden className="size-4" />
+            </Link>
+          </div>
 
           {examples.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <p className="text-sm font-semibold text-white">Or see how we handle:</p>
-              <ul className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="mr-1 text-sm font-semibold text-white/85">Or see how we handle:</p>
+              <ul className="contents">
                 {examples.map((scenario) => (
                   <li key={scenario.id}>
                     <button
                       type="button"
                       onClick={() => onPickScenario(scenario)}
-                      className="rounded-full border border-white/40 px-3.5 py-1.5 text-left text-sm font-medium transition-colors duration-150 hover:bg-white/15"
+                      className="rounded-full border border-dashed border-white/50 px-3 py-1 text-left text-[13px] font-medium transition-colors duration-150 hover:border-solid hover:bg-white/15"
                     >
                       {scenario.journey_label}
                     </button>
@@ -219,6 +229,14 @@ export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Pro
 
         <PhoneMock />
       </div>
+      <svg
+        aria-hidden
+        viewBox="0 0 1440 60"
+        preserveAspectRatio="none"
+        className="absolute inset-x-0 bottom-0 h-8 w-full text-white sm:h-12"
+      >
+        <path d="M0 60 C 360 0, 1080 0, 1440 60 Z" fill="currentColor" />
+      </svg>
     </section>
   );
 }
@@ -232,7 +250,7 @@ function PhoneMock() {
   return (
     <div aria-hidden className="relative mx-auto hidden w-full max-w-[340px] select-none lg:block">
       <SignalRings />
-      <div className="bg-ink relative rounded-[2.75rem] p-3 shadow-[0_30px_60px_rgb(0_0_0/0.3)]">
+      <div className="bg-ink relative rounded-[2.75rem] p-2.5 shadow-[0_30px_60px_rgb(0_0_0/0.3)]">
         <div className="flex flex-col gap-3 rounded-[2.1rem] bg-[#f4f4f6] px-4 pt-8 pb-6 text-[#121212]">
           <div className="mx-auto mb-1 h-1.5 w-20 rounded-full bg-black/15" />
           <p className="text-center text-[11px] font-semibold text-black/50">Messages · 09:41</p>
