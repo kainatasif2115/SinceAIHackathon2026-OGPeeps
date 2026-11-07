@@ -8,6 +8,8 @@ type StatusStyle = {
   pill: string;
   /** Small dot, e.g. next to the status select. */
   dot: string;
+  /** Light wash and border for the whole column. */
+  column: string;
 };
 
 // Grey = waiting, blue = being worked on, red = stuck, green = finished.
@@ -17,24 +19,28 @@ export const STATUS_META: Record<TicketStatus, StatusStyle> = {
     icon: Inbox,
     pill: "bg-slate-100 text-slate-700 ring-slate-200",
     dot: "bg-slate-400",
+    column: "border-slate-200 bg-slate-50/80",
   },
   in_progress: {
     label: "In progress",
     icon: CircleDashed,
     pill: "bg-sky-50 text-sky-700 ring-sky-200",
     dot: "bg-sky-500",
+    column: "border-sky-200/80 bg-sky-50/70",
   },
   blocked: {
     label: "Blocked",
     icon: Ban,
     pill: "bg-rose-50 text-rose-700 ring-rose-200",
     dot: "bg-rose-500",
+    column: "border-rose-200/80 bg-rose-50/70",
   },
   done: {
     label: "Done",
     icon: CircleCheck,
     pill: "bg-emerald-50 text-emerald-700 ring-emerald-200",
     dot: "bg-emerald-500",
+    column: "border-emerald-200/80 bg-emerald-50/70",
   },
 };
 

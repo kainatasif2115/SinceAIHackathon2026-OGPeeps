@@ -339,7 +339,8 @@ export function AgentConsole({
                     setDropTarget(null);
                   }}
                   className={cn(
-                    "flex min-h-[60vh] flex-col gap-3 rounded-2xl border border-[#f3e4ec] bg-[#fdf6fa] p-3 transition-colors duration-150",
+                    "flex min-h-[60vh] flex-col gap-3 rounded-2xl border p-3 transition-colors duration-150",
+                    meta.column,
                     dropTarget === status && "bg-brand-soft outline-brand outline-2 outline-dashed",
                   )}
                 >
@@ -453,6 +454,8 @@ function TicketCard({
       className={cn(
         "flex w-full cursor-grab flex-col gap-2.5 rounded-xl border bg-white p-3.5 text-left shadow-sm transition-[box-shadow,opacity,border-color] duration-150 hover:shadow-md active:cursor-grabbing",
         fresh ? "border-brand ring-brand/30 ring-4" : "border-transparent",
+        // Finished work steps back so open tickets stand out.
+        ticket.status === "done" && "opacity-70 shadow-none hover:opacity-100",
         "border-l-4",
         severity.edge,
         dragging && "opacity-40",
