@@ -79,23 +79,19 @@ Speed up every wait for the AI; never speed up the answer card.
 **Say:**
 > Here's how it works on a real scam. A caller pretending to be your operator offers a free SIM upgrade, and asks for the code you just got by text. The assistant doesn't guess. It asks one question, the only one that changes the answer: did you read it out? Yes. Before it looks at any account data, it asks permission. Then one clear answer: critical. Stop the transfer, lock the number, then call the bank. And a DNA agent takes over, already knowing the whole story.
 
-### Scene 4: All five journeys (20 s)
+### Scene 4: The other four journeys (20 s)
 
-**Show:** the public `/journeys` page. It has one tab per journey, each a saved conversation from our final run with the organisers' simulated customer. Click through the tabs, about 3 seconds each, scrolling to the final answer each time:
+**Show:** type `/journeys` after the site address and open it, so the URL is visible. It has one tab per journey, each a saved conversation from our final run with the organisers' simulated customer. Click through the other four tabs, about 4 seconds each, scrolling to the final answer each time:
 
 | Tab | Case | What it shows |
 |---|---|---|
 | Suspicious message | `DSA-D-0053` | An email says the bank ID is expiring and claims it's "verified safe". Answer: don't log in through the link; the "safe" line is part of the scam. |
 | Clicked link | `DSA-D-0079` | A voicemail app installed from a text link. Answer: flight mode now, no banking or logins on that phone. |
-| Suspicious call | `DSA-D-0028` | The code read out to a fake operator. Answer: stop the eSIM transfer, lock the number, and an operator agent takes over. |
 | Breach notice | `DSA-D-0093` | No signal and an eSIM activated on a new device. Answer: an operator agent locks the number; don't wait for the signal. |
 | Small business | `DSA-D-0032` | Five subscriptions nobody ordered, delivered to another city. Answer: contact business support now to stop the delivery. |
 
-Zoom on the passed tick on each tab.
-
 **Say:**
-> Same flow for all five journeys in the challenge. A fake bank email that swears it's safe: don't log in. A dodgy app already installed: flight mode, now. A number being stolen: lock it, don't wait. And for a business, an order nobody placed: stop the delivery. All five passed the organisers' evaluator.
-
+> In this video we walked through one journey. The other four are all on our site, at slash journeys. A fake bank email that swears it's safe: don't log in. An app already installed from a link: flight mode, now. No signal and a surprise eSIM: lock the number, don't wait. And for a business, an order nobody placed: stop the delivery. All five passed the organisers' evaluator.
 
 ### Scene 5: Proof, and where it fails (21 s)
 
