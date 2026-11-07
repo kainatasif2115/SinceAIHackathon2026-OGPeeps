@@ -118,6 +118,7 @@ const en = {
   shareTeam: "Alert my team",
   shareHeadingTrusted: "Message to someone you trust",
   shareHeadingTeam: "Alert for your team",
+  shareDismiss: "Dismiss",
   shareIntroTrusted:
     "Hi! I got something suspicious and checked it with my operator’s security assistant. This is what it advised:",
   shareAskTrusted: "Could you help me with this?",
@@ -297,6 +298,7 @@ const fi: Dictionary = {
   shareTeam: "Varoita tiimiäni",
   shareHeadingTrusted: "Viesti luotetulle ihmiselle",
   shareHeadingTeam: "Varoitus tiimillesi",
+  shareDismiss: "Sulje",
   shareIntroTrusted:
     "Hei! Sain jotain epäilyttävää ja tarkistin sen operaattorini turva-avustajalta. Se neuvoi näin:",
   shareAskTrusted: "Voisitko auttaa minua tässä?",
@@ -475,6 +477,7 @@ const sv: Dictionary = {
   shareTeam: "Varna mitt team",
   shareHeadingTrusted: "Meddelande till någon du litar på",
   shareHeadingTeam: "Varning till ditt team",
+  shareDismiss: "Stäng",
   shareIntroTrusted:
     "Hej! Jag fick något misstänkt och kollade det med min operatörs säkerhetsassistent. Så här rådde den:",
   shareAskTrusted: "Kan du hjälpa mig med det här?",

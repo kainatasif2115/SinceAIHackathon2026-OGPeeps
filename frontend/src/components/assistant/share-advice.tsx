@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { Check, Copy, Mail, MessageSquareText, Send, Share2, Users } from "lucide-react";
+import { Check, Copy, Mail, MessageSquareText, Send, Share2, Users, X } from "lucide-react";
 import type { Answer, Audience } from "@/lib/api";
 import type { Dictionary } from "@/lib/i18n";
 import { useT } from "./i18n-context";
@@ -80,10 +80,20 @@ export function ShareAdvice({ answer, audience }: { answer: Answer; audience: Au
       aria-labelledby="share-heading"
       className="border-border bg-card flex flex-col gap-3 rounded-lg border p-4 sm:p-5"
     >
-      <h2 id="share-heading" className="flex items-center gap-2 text-base">
-        <Icon aria-hidden className="text-primary size-5 shrink-0" />
-        {team ? t.shareHeadingTeam : t.shareHeadingTrusted}
-      </h2>
+      <div className="flex items-start justify-between gap-3">
+        <h2 id="share-heading" className="flex items-center gap-2 text-base">
+          <Icon aria-hidden className="text-primary size-5 shrink-0" />
+          {team ? t.shareHeadingTeam : t.shareHeadingTrusted}
+        </h2>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="text-muted-foreground hover:text-foreground inline-flex h-9 shrink-0 items-center gap-1 rounded-sm text-sm"
+        >
+          <X aria-hidden className="size-4" />
+          {t.shareDismiss}
+        </button>
+      </div>
       <label htmlFor="share-text" className="sr-only">
         {team ? t.shareHeadingTeam : t.shareHeadingTrusted}
       </label>
