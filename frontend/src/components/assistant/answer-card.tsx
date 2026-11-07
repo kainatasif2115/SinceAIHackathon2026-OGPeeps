@@ -2,14 +2,17 @@
 
 import { BookOpen, Clock, Info, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Answer } from "@/lib/api";
+import type { Answer, Language } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { HandoffPanel } from "./handoff-panel";
 import { useT } from "./i18n-context";
+import { ReadAloudButton } from "./read-aloud-button";
 import { RISK_STYLES } from "./risk";
 
 type Props = {
   answer: Answer;
+  /** Conversation language, for reading the answer aloud. */
+  language: Language;
   sessionId: string;
   headingId: string;
   onStartOver: () => void;
@@ -20,7 +23,7 @@ type Props = {
  * the headline, plain-language reason, numbered steps, optional handoff, and
  * where the advice comes from.
  */
-export function AnswerCard({ answer, sessionId, headingId, onStartOver }: Props) {
+export function AnswerCard({ answer, language, sessionId, headingId, onStartOver }: Props) {
   const t = useT();
   const risk = RISK_STYLES[answer.risk_level];
   const RiskIcon = risk.icon;
@@ -48,6 +51,7 @@ export function AnswerCard({ answer, sessionId, headingId, onStartOver }: Props)
             {t.urgencyLabel}: <span className="font-medium">{t.urgency[answer.urgency]}</span>
           </span>
         </p>
+        <ReadAloudButton answer={answer} language={language} />
       </div>
 
       <div className="flex flex-col gap-6 px-4 py-5 sm:px-6 sm:py-6">

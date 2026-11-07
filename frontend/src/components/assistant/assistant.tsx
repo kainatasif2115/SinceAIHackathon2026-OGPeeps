@@ -309,6 +309,7 @@ export function Assistant({
                     {entry.kind === "final" && session && (
                       <AnswerCard
                         answer={entry.answer}
+                        language={language}
                         sessionId={session.id}
                         headingId={`${entry.id}-heading`}
                         onStartOver={startOver}
