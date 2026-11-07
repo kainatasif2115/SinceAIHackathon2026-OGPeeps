@@ -29,7 +29,11 @@ The five journeys below are the organisers' sample cases. The team ran each one 
 **Show:** the title card `cards/01-hook.png`. Optionally, a phone notification sound as it appears.
 
 **Say:**
-> Every day, DNA customers get messages like this one. A parcel fee. A call from "the bank". A code someone wants read out. Most warnings say "be careful". None of them say what to do next. We built the assistant that does.
+> Every day, DNA customers get messages like this one. A parcel fee. A call from "the bank". A code someone wants read out. Most warnings say "be careful". None of them say what to do next.
+>
+> *(one-second pause, cut to the homepage)*
+>
+> Until now.
 
 **Caption:** none, the card says it.
 
@@ -38,7 +42,7 @@ The five journeys below are the organisers' sample cases. The team ran each one 
 **Show:** the live homepage, top of the page. Let the phone animation in the hero play.
 
 **Say:**
-> This is the DNA Security Assistant. Before you click, pay or reply, you ask DNA. In under a minute you know how risky it is, why, and exactly what to do. In Finnish, Swedish or English, for private customers and small businesses.
+> Meet the DNA Security Assistant. Before you click, pay or reply, you ask DNA. In under a minute you know how risky it is, why, and exactly what to do. In Finnish, Swedish or English, for private customers and small businesses.
 
 **Caption:** `DNA Security Assistant · prototype`
 
