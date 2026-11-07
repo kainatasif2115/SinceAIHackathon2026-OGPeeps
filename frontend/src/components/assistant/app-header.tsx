@@ -23,32 +23,32 @@ export function AppHeader({
   const t = useT();
   return (
     <header className="border-border bg-card border-b">
-      <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-3">
+      <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3">
         <p className="font-heading flex items-center gap-2 text-lg font-medium">
           <ShieldCheck aria-hidden className="text-primary size-5" />
           {t.productName}
         </p>
-        <div className="flex flex-wrap items-center gap-2">
-          <SegmentedControl
-            legend={t.audienceLegend}
-            value={audience}
-            onChange={onAudienceChange}
-            disabled={audienceLocked}
-            disabledHint={t.audienceLocked}
-            options={AUDIENCES.map((value) => ({ value, label: t.audience[value] }))}
-          />
-          <SegmentedControl
-            legend={t.languageLegend}
-            value={language}
-            onChange={onLanguageChange}
-            options={LANGUAGES.map((value) => ({
-              value,
-              label: value.toUpperCase(),
-              srLabel: t.languageNames[value],
-              lang: value,
-            }))}
-          />
-        </div>
+        <SegmentedControl
+          legend={t.audienceLegend}
+          value={audience}
+          onChange={onAudienceChange}
+          disabled={audienceLocked}
+          disabledHint={t.audienceLocked}
+          options={AUDIENCES.map((value) => ({ value, label: t.audience[value] }))}
+        />
+        <SegmentedControl
+          legend={t.languageLegend}
+          value={language}
+          onChange={onLanguageChange}
+          size="sm"
+          className="ml-auto"
+          options={LANGUAGES.map((value) => ({
+            value,
+            label: value.toUpperCase(),
+            srLabel: t.languageNames[value],
+            lang: value,
+          }))}
+        />
       </div>
       <p className="border-border bg-muted border-t">
         <span className="text-muted-foreground mx-auto flex w-full max-w-2xl items-center gap-2 px-4 py-1.5 text-xs">

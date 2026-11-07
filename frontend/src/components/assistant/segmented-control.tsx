@@ -18,6 +18,9 @@ type Props<T extends string> = {
   onChange: (value: T) => void;
   disabled?: boolean;
   disabledHint?: string;
+  /** `sm` is the compact control used for the short language codes. */
+  size?: "md" | "sm";
+  className?: string;
 };
 
 /**
@@ -31,13 +34,15 @@ export function SegmentedControl<T extends string>({
   onChange,
   disabled,
   disabledHint,
+  size = "md",
+  className,
 }: Props<T>) {
   const name = useId();
   return (
     <fieldset
       disabled={disabled}
       title={disabled ? disabledHint : undefined}
-      className="min-w-0 disabled:opacity-60"
+      className={cn("min-w-0 shrink-0 disabled:opacity-60", className)}
     >
       <legend className="sr-only">{legend}</legend>
       <div className="border-border bg-background inline-flex rounded-md border p-0.5">
@@ -46,7 +51,8 @@ export function SegmentedControl<T extends string>({
             key={option.value}
             lang={option.lang}
             className={cn(
-              "text-muted-foreground relative flex min-h-9 cursor-pointer items-center rounded-sm px-2.5 text-sm font-medium transition-colors duration-150 select-none",
+              "text-muted-foreground relative flex cursor-pointer items-center justify-center rounded-sm font-medium transition-colors duration-150 select-none",
+              size === "sm" ? "min-h-7 min-w-8 px-2 text-xs font-semibold" : "min-h-9 px-2.5 text-sm",
               "hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground",
               "has-[:focus-visible]:outline-ring has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2",
               "has-[:disabled]:cursor-not-allowed",

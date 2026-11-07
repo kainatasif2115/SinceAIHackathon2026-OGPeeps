@@ -145,6 +145,12 @@ export function Assistant({
     document.documentElement.lang = language;
   }, [language]);
 
+  // The homepage strip chooses the audience. Follow it until a conversation starts.
+  useEffect(() => {
+    if (variant !== "panel" || entries.length > 0) return;
+    setAudience(defaultAudience);
+  }, [variant, defaultAudience, entries.length]);
+
   useEffect(() => {
     getScenarios()
       .then((list) => setScenarios({ status: "ready", scenarios: list }))
@@ -389,7 +395,11 @@ export function Assistant({
     return (
       <I18nContext value={t}>
         <div className="flex h-full flex-col">
-          <PanelHeader {...headerProps} onClose={onClose} />
+          <PanelHeader
+            language={language}
+            onLanguageChange={setLanguage}
+            onClose={onClose}
+          />
           <div className="flex-1 overflow-y-auto overscroll-contain">
             <div id="assistant-main" className="px-5 pt-6 pb-10">
               {content}
