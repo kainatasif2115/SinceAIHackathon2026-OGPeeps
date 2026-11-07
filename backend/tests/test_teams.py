@@ -102,6 +102,7 @@ def test_owner_sees_business_checks_but_never_private_ones():
     anna, _ = signup("anna@kahvila.fi", "business", name="Anna")
     chat(anna, "small_business", "Invoice with a changed bank account")
     chat(anna, "consumer", "My own bank texted me")
+    chat(boss, "small_business", "The owner's own check")
 
     shared = boss.get("/api/account/team/conversations").json()
 

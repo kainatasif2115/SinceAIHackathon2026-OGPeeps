@@ -129,6 +129,14 @@ Every assistant message, including questions and the answer card, has two small 
 - They're kept with the conversation for 24 hours, like the text.
 - The privacy line reminds users never to type passwords, card numbers or codes.
 
+### Dashboard (`/dashboard`, signed in)
+
+- Where login and sign-up land. A white **sidebar** (logo back to the homepage, name and account type, sections, **Log out** at the bottom) and the chosen section on the soft-pink canvas. On phones the sidebar becomes a top bar with the logo, Log out and a swipeable row of sections.
+- Sections: **Chat** (the assistant, same component as the homepage panel), **Your checks** (history and handoff status; for an owner also the team's checks), **Team** (business accounts only) and **Account** (profile, invite, log out, delete).
+- Business accounts get a **Business / Private** switch above the chat with a line saying who will see the check. Private accounts don't see it.
+- The chat lives in the dashboard frame and is only hidden in other sections, so a conversation survives moving around. The current section has `aria-current="page"`.
+- `/account` redirects to `/dashboard/account`.
+
 ### Account pages (`/signup`, `/login`, `/account`)
 
 - Same DNA theme and header as the homepage, with a "Home" link. The homepage header shows **Log in**, or the first name once signed in.

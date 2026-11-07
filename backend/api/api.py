@@ -279,10 +279,11 @@ def team_leave(request):
 
 @api.get("/account/team/conversations", response=list[TeamConversationOut], auth=customer_auth)
 def team_conversations(request):
-    """The checks staff made in business mode. Owner only; private-mode checks never
-    appear here."""
+    """The checks colleagues made in business mode (the owner's own are in their list).
+    Owner only; private-mode checks never appear here."""
     team = _my_team(request, owner=True)
-    docs = sessions.for_team(team["_id"])
+    me = request.auth["_id"]
+    docs = [d for d in sessions.for_team(team["_id"]) if d.get("user_id") != me]
     names = {u["_id"]: u["name"] for u in accounts.in_team(team["_id"])}
     return [
         {**summary, "author": names.get(doc.get("user_id"), "Former member")}

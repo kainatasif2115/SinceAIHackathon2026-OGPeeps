@@ -82,7 +82,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     try {
       if (mode === "signup") await signUp({ email, name, password, kind, company });
       else await logIn(email, password);
-      router.push("/account");
+      router.push("/dashboard");
     } catch (err) {
       setError(
         err instanceof ApiError && err.status > 0

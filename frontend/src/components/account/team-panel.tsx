@@ -130,8 +130,8 @@ export function TeamPanel({ onLeft }: { onLeft: () => void }) {
             </button>
           </div>
           <p className="text-muted-foreground text-xs">
-            They join when they create a business account with this email, or accept on their
-            account page. Remove people when they leave: old staff access is a common way in.
+            They join when they create a business account with this email, or accept in their
+            Account section. Remove people when they leave: old staff access is a common way in.
           </p>
         </form>
       ) : (
