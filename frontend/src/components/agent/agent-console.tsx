@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  AlarmClock,
   Building2,
   Clock,
   Headset,
@@ -11,7 +10,6 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
-  Timer,
   User,
   X,
 } from "lucide-react";
@@ -442,10 +440,8 @@ function TicketCard({
   onDragEnd: () => void;
 }) {
   const severity = SEVERITY_META[ticket.severity];
-  // Response-time strip for open urgent tickets: the target, then how long it has waited.
-  const target = ticket.status === "done" ? null : severity.respondWithin;
-  const waited = (now - new Date(ticket.created_at).getTime()) / 60_000;
-  const overdue = target !== null && waited > target;
+  // Open critical tickets show how long the customer has been waiting.
+  const showWaiting = ticket.severity === "critical" && ticket.status !== "done";
   return (
     <button
       type="button"
@@ -467,22 +463,10 @@ function TicketCard({
         dragging && "opacity-40",
       )}
     >
-      {target !== null && (
-        <span
-          className={cn(
-            "-mx-3.5 -mt-3.5 mb-0.5 flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold",
-            "bg-risk-critical text-risk-critical-fg",
-          )}
-        >
-          {overdue ? (
-            <AlarmClock aria-hidden className="size-3.5 shrink-0" />
-          ) : (
-            <Timer aria-hidden className="size-3.5 shrink-0" />
-          )}
-          {overdue
-            ? `Overdue by ${duration(waited - target)}`
-            : `Respond within ${duration(target)}`}
-          <span className="font-normal opacity-80">· waiting {duration(waited)}</span>
+      {showWaiting && (
+        <span className="bg-risk-critical text-risk-critical-fg -mx-3.5 -mt-3.5 mb-0.5 flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold">
+          <Clock aria-hidden className="size-3.5 shrink-0" />
+          Waiting {duration((now - new Date(ticket.created_at).getTime()) / 60_000)}
         </span>
       )}
       <span className="flex items-center justify-between gap-2">
