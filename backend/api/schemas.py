@@ -181,3 +181,12 @@ class TicketOut(Schema):
 
 class TicketUpdateIn(Schema):
     status: TicketStatus
+
+
+class AgentLoginIn(Schema):
+    username: str = Field(min_length=1, max_length=100)
+    password: str = Field(min_length=1, max_length=200)
+
+
+class AgentOut(Schema):
+    name: str

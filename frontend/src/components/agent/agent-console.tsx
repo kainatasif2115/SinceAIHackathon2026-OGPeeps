@@ -6,6 +6,7 @@ import {
   Clock,
   Headset,
   ImageIcon,
+  LogOut,
   RefreshCw,
   Search,
   ShieldCheck,
@@ -21,6 +22,7 @@ import {
   type Ticket,
   type TicketStatus,
 } from "@/lib/agent-api";
+import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { TicketDetail } from "./ticket-detail";
 import { SEVERITY_META, STATUS_META, ago } from "./ticket-meta";
@@ -35,7 +37,15 @@ type Audience = "all" | Ticket["audience"];
  * Jira-style board of handoff tickets: Backlog, In progress, Blocked, Done.
  * Polls the backend so a "Talk to a person" in the chat appears here live.
  */
-export function AgentConsole() {
+export function AgentConsole({
+  agentName,
+  onSignOut,
+  onSessionExpired,
+}: {
+  agentName: string;
+  onSignOut: () => void;
+  onSessionExpired: () => void;
+}) {
   const [tickets, setTickets] = useState<Ticket[] | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [severities, setSeverities] = useState<Set<Severity>>(new Set());
@@ -50,6 +60,11 @@ export function AgentConsole() {
   // Set on each load; 0 until then (cards only render once tickets have loaded).
   const [now, setNow] = useState(0);
   const known = useRef<Set<string> | null>(null);
+  // Read through a ref so the polling loop is not restarted on every render.
+  const expired = useRef(onSessionExpired);
+  useEffect(() => {
+    expired.current = onSessionExpired;
+  });
 
   useEffect(() => {
     let alive = true;
@@ -68,8 +83,10 @@ export function AgentConsole() {
         }
         known.current = new Set(list.map((t) => t.reference));
         setTickets(list);
-      } catch {
-        if (alive) setLoadError(true);
+      } catch (err) {
+        if (!alive) return;
+        if (err instanceof ApiError && err.status === 401) expired.current();
+        else setLoadError(true);
       }
     }
     void load();
@@ -158,33 +175,50 @@ export function AgentConsole() {
   const openTicket = tickets?.find((t) => t.reference === openRef) ?? null;
 
   return (
-    <div className="theme-dna bg-muted flex min-h-full flex-1 flex-col">
-      <header className="bg-ink text-ink-foreground">
-        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
-            <span className="font-heading text-brand-soft text-xl font-bold">DNA</span>
-            <span className="h-5 w-px bg-white/25" aria-hidden />
-            <h1 className="font-heading flex items-center gap-2 text-lg font-semibold">
-              <Headset aria-hidden className="size-5" />
+    <div className="theme-dna flex min-h-full flex-1 flex-col bg-white">
+      <header className="border-border sticky top-0 z-30 border-b bg-white">
+        <div className="flex h-16 flex-wrap items-center justify-between gap-3 px-4 sm:px-6">
+          <div className="flex items-center gap-2.5">
+            <span className="font-heading text-brand text-2xl leading-none font-bold tracking-tight">
+              DNA
+            </span>
+            <span className="bg-border h-6 w-px" aria-hidden />
+            <h1 className="font-heading flex items-center gap-1.5 text-base font-semibold">
+              <Headset aria-hidden className="text-brand size-4.5" />
               Support console
             </h1>
-          </div>
-          <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1.5 text-white/75">
+            <span className="bg-brand-soft text-accent-foreground ml-1 hidden items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold sm:flex">
               <span className="relative flex size-2">
-                <span className="bg-risk-safe-line absolute inline-flex size-full animate-ping rounded-full opacity-60" />
-                <span className="bg-risk-safe-line relative inline-flex size-2 rounded-full" />
+                <span className="bg-brand absolute inline-flex size-full animate-ping rounded-full opacity-50" />
+                <span className="bg-brand relative inline-flex size-2 rounded-full" />
               </span>
               Live
             </span>
-            <span className="rounded-full bg-white/10 px-3 py-1">
-              Demo agent · prototype, no sign-in
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground hidden md:inline">Prototype · demo account</span>
+            <span className="border-border flex items-center gap-2 rounded-full border py-1 pr-3 pl-1">
+              <span className="bg-brand text-brand-foreground flex size-7 items-center justify-center rounded-full text-xs font-bold">
+                {agentName
+                  .split(" ")
+                  .map((part) => part[0])
+                  .join("")}
+              </span>
+              <span className="font-medium">{agentName}</span>
             </span>
+            <button
+              type="button"
+              onClick={onSignOut}
+              className="text-brand hover:bg-brand-soft inline-flex h-9 items-center gap-1.5 rounded-full px-3 font-semibold transition-colors duration-150"
+            >
+              <LogOut aria-hidden className="size-4" />
+              <span className="hidden sm:inline">Sign out</span>
+            </button>
           </div>
         </div>
       </header>
 
-      <div className="border-border border-b bg-white">
+      <div className="border-border border-b bg-[#fdf8fb]">
         <div className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
           <label className="relative min-w-52 flex-1 sm:max-w-xs">
             <span className="sr-only">Search tickets</span>
@@ -214,14 +248,14 @@ export function AgentConsole() {
                   className={cn(
                     "inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition-colors duration-150",
                     on
-                      ? "border-ink bg-ink text-ink-foreground"
-                      : "border-border hover:bg-muted bg-white",
+                      ? "border-brand bg-brand text-brand-foreground"
+                      : "border-border hover:border-brand/40 bg-white",
                   )}
                 >
                   <span aria-hidden className={cn("size-2 rounded-full", meta.dot)} />
                   {meta.label}
                   <span
-                    className={cn("tabular-nums", on ? "text-white/70" : "text-muted-foreground")}
+                    className={cn("tabular-nums", on ? "text-white/80" : "text-muted-foreground")}
                   >
                     {counts[severity]}
                   </span>
@@ -305,7 +339,7 @@ export function AgentConsole() {
                     setDropTarget(null);
                   }}
                   className={cn(
-                    "flex min-h-[60vh] flex-col gap-3 rounded-2xl bg-[#ebebef] p-3 transition-colors duration-150",
+                    "flex min-h-[60vh] flex-col gap-3 rounded-2xl border border-[#f3e4ec] bg-[#fdf6fa] p-3 transition-colors duration-150",
                     dropTarget === status && "bg-brand-soft outline-brand outline-2 outline-dashed",
                   )}
                 >
@@ -317,7 +351,7 @@ export function AgentConsole() {
                       <meta.icon aria-hidden className="text-muted-foreground size-4" />
                       {meta.label}
                     </span>
-                    <span className="text-muted-foreground rounded-full bg-white px-2 py-0.5 text-xs tabular-nums">
+                    <span className="bg-brand-soft text-accent-foreground rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums">
                       {column.length}
                     </span>
                   </h2>
@@ -358,16 +392,16 @@ export function AgentConsole() {
             open(toast.reference);
             setToast(null);
           }}
-          className="bg-ink text-ink-foreground animate-in fade-in slide-in-from-bottom-2 fixed right-4 bottom-4 z-30 flex max-w-sm items-start gap-3 rounded-2xl p-4 text-left shadow-[0_12px_32px_rgb(0_0_0/0.3)] duration-200"
+          className="border-brand/30 border-l-brand animate-in fade-in slide-in-from-bottom-2 fixed right-4 bottom-4 z-30 flex max-w-sm items-start gap-3 rounded-2xl border border-l-4 bg-white p-4 text-left shadow-[0_12px_32px_rgb(218_0_112/0.18)] duration-200"
         >
-          <span className="bg-brand flex size-9 shrink-0 items-center justify-center rounded-full">
+          <span className="bg-brand text-brand-foreground flex size-9 shrink-0 items-center justify-center rounded-full">
             <Headset aria-hidden className="size-4.5" />
           </span>
           <span className="flex flex-col gap-0.5">
             <span className="text-sm font-semibold">
               New handoff · {toast.reference} · {SEVERITY_META[toast.severity].label}
             </span>
-            <span className="line-clamp-2 text-sm text-white/80">{toast.title}</span>
+            <span className="text-muted-foreground line-clamp-2 text-sm">{toast.title}</span>
           </span>
         </button>
       )}

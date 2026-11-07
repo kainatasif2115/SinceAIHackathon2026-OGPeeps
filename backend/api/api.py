@@ -7,8 +7,12 @@ from ninja import File, Form, NinjaAPI, Schema, Status
 from ninja.errors import HttpError
 from ninja.files import UploadedFile
 
+from api import agent_auth as agent_auth_mod
 from api import db, presenter, sessions, tickets, voice
+from api.agent_auth import agent_auth
 from api.schemas import (
+    AgentLoginIn,
+    AgentOut,
     ConsentIn,
     HandoffOut,
     ReplyIn,
@@ -120,16 +124,44 @@ def delete_session(request, session_id: str):
     return Status(204, None)
 
 
-# Support-agent console. In production this sits behind DNA's staff sign-in; the
-# prototype has no sign-in, so it only ever holds synthetic demo conversations.
+# Support-agent console. The prototype has one demo staff account (api/agent_auth.py);
+# in production this sits behind DNA's staff single sign-on.
 
 
-@api.get("/agent/tickets", response=list[TicketOut])
+@api.post("/agent/login", response=AgentOut)
+def agent_login(request, response: HttpResponse, body: AgentLoginIn):
+    if not agent_auth_mod.is_configured():
+        raise HttpError(503, "The demo staff login is not set up (AGENT_DEMO_PASSWORD).")
+    if not agent_auth_mod.check(body.username, body.password):
+        raise HttpError(401, "Wrong username or password.")
+    response.set_cookie(
+        agent_auth_mod.COOKIE,
+        agent_auth_mod.issue_token(),
+        max_age=agent_auth_mod.MAX_AGE,
+        httponly=True,
+        samesite="Strict",
+        secure=request.is_secure(),
+    )
+    return {"name": agent_auth_mod.DISPLAY_NAME}
+
+
+@api.post("/agent/logout", response={204: None})
+def agent_logout(request, response: HttpResponse):
+    response.delete_cookie(agent_auth_mod.COOKIE, samesite="Strict")
+    return Status(204, None)
+
+
+@api.get("/agent/me", response=AgentOut, auth=agent_auth)
+def agent_me(request):
+    return {"name": request.auth}
+
+
+@api.get("/agent/tickets", response=list[TicketOut], auth=agent_auth)
 def list_tickets(request):
     return tickets.all_tickets()
 
 
-@api.patch("/agent/tickets/{reference}", response=TicketOut)
+@api.patch("/agent/tickets/{reference}", response=TicketOut, auth=agent_auth)
 def update_ticket(request, reference: str, body: TicketUpdateIn):
     ticket = tickets.update_status(reference, body.status)
     if not ticket:

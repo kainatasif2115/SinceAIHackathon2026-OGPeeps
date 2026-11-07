@@ -65,3 +65,28 @@ export function updateTicketStatus(reference: string, status: TicketStatus): Pro
     body: JSON.stringify({ status }),
   });
 }
+
+const agentSchema = z.object({ name: z.string() });
+export type Agent = z.infer<typeof agentSchema>;
+
+/** The signed-in demo agent, or null when there is no valid session. */
+export async function getMe(): Promise<Agent | null> {
+  try {
+    return await call("/api/agent/me", agentSchema);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 401) return null;
+    throw err;
+  }
+}
+
+export function signIn(username: string, password: string): Promise<Agent> {
+  return call("/api/agent/login", agentSchema, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+}
+
+export async function signOut(): Promise<void> {
+  await fetch("/api/agent/logout", { method: "POST", cache: "no-store" }).catch(() => {});
+}
