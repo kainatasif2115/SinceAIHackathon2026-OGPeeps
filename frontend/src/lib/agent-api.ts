@@ -135,3 +135,83 @@ export type EvaluationResults = z.infer<typeof resultsSchema>;
 export function getResults(): Promise<EvaluationResults> {
   return call("/api/agent/results", resultsSchema);
 }
+
+// --- Test-case browser (/agent/cases) ------------------------------------------
+
+export type CaseRun = "multi" | "single";
+
+const caseSummarySchema = z.object({
+  case_id: z.string(),
+  journey: z.string(),
+  audience: z.string(),
+  language: z.enum(["fi", "en", "sv"]),
+  opening: z.string(),
+  passed: z.boolean(),
+  failures: z.array(z.string()),
+  benign: z.boolean(),
+  twin: z.boolean(),
+  our_risk: z.string().nullable(),
+  expected_risk: z.string(),
+  our_action: z.string().nullable(),
+});
+
+const caseListSchema = z.object({
+  run: z.string(),
+  runs: z.record(z.string(), z.object({ file: z.string(), label: z.string() })),
+  cases: z.array(caseSummarySchema),
+});
+
+const turnSchema = z.object({
+  role: z.string().nullable(),
+  type: z.string().nullable(),
+  text: z.string(),
+  fields: z.array(z.string()),
+  granted: z.array(z.string()),
+  refused: z.array(z.string()),
+});
+
+const caseDetailSchema = z.object({
+  case_id: z.string(),
+  journey: z.string(),
+  audience: z.string(),
+  language: z.enum(["fi", "en", "sv"]),
+  mode: z.string(),
+  passed: z.boolean(),
+  failures: z.array(z.object({ type: z.string() }).passthrough()),
+  transcript: z.array(turnSchema),
+  ours: z.object({
+    risk_level: z.string().nullable(),
+    urgency: z.string().nullable(),
+    action: z.string().nullable(),
+    advice_text: z.string(),
+    steps: z.array(z.string()),
+    questions_asked: z.array(z.string()),
+    escalation_required: z.boolean(),
+    escalation_target: z.string().nullable(),
+    confidence: z.number().nullable(),
+  }),
+  expected: z.object({
+    risk_level: z.string(),
+    urgency: z.string(),
+    action: z.string().nullable(),
+    also_acceptable: z.array(z.string().nullable()),
+    escalation_required: z.boolean(),
+    escalation_target: z.string().nullable(),
+    must_ask_topics: z.array(z.string()),
+    benign: z.boolean(),
+    rationale: z.string(),
+    reference_answer: z.string(),
+  }),
+});
+
+export type CaseSummary = z.infer<typeof caseSummarySchema>;
+export type CaseDetail = z.infer<typeof caseDetailSchema>;
+export type ChatTurn = z.infer<typeof turnSchema>;
+
+export function listCases(run: CaseRun) {
+  return call(`/api/agent/cases?run=${run}`, caseListSchema);
+}
+
+export function getCase(run: CaseRun, caseId: string): Promise<CaseDetail> {
+  return call(`/api/agent/cases/${run}/${encodeURIComponent(caseId)}`, caseDetailSchema);
+}

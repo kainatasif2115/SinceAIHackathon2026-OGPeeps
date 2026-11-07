@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 const OURS = "bg-brand";
 const BASE = "bg-[#a3a3ad]";
 
-const JOURNEYS: Record<string, string> = {
+export const JOURNEYS: Record<string, string> = {
   suspicious_message: "Suspicious message",
   clicked_link: "Clicked a link",
   suspicious_call: "Suspicious call",
@@ -24,7 +24,7 @@ const JOURNEYS: Record<string, string> = {
   smb_incident: "Small-business incident",
 };
 
-const FAILURES: Record<string, string> = {
+export const FAILURES: Record<string, string> = {
   did_not_ask_decisive: "Didn’t ask the deciding question",
   under_reaction: "Under-reacted",
   no_substantive_advice: "Advice too short",

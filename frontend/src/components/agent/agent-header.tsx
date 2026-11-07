@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { ChartColumn, Headset, KanbanSquare, LogOut } from "lucide-react";
+import { ChartColumn, Headset, KanbanSquare, LogOut, MessagesSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type AgentView = "board" | "results";
+export type AgentView = "board" | "results" | "cases";
 
 const TABS: { view: AgentView; href: string; label: string; icon: typeof Headset }[] = [
   { view: "board", href: "/agent", label: "Board", icon: KanbanSquare },
   { view: "results", href: "/agent/results", label: "Results", icon: ChartColumn },
+  { view: "cases", href: "/agent/cases", label: "Cases", icon: MessagesSquare },
 ];
 
 /** Shared header for the staff console: brand, Board / Results tabs, signed-in agent. */

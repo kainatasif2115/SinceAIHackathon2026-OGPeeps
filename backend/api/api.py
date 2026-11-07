@@ -8,7 +8,7 @@ from ninja.errors import HttpError
 from ninja.files import UploadedFile
 
 from api import agent_auth as agent_auth_mod
-from api import db, presenter, results, sessions, tickets, voice
+from api import cases, db, presenter, results, sessions, tickets, voice
 from api.agent_auth import agent_auth
 from api.schemas import (
     AgentLoginIn,
@@ -165,6 +165,23 @@ def list_tickets(request):
 def evaluation_results(request):
     """The evaluator's output for each saved run (results/*.txt), as numbers."""
     return results.load_all()
+
+
+@api.get("/agent/cases", auth=agent_auth)
+def list_cases(request, run: str = "multi"):
+    """Dev cases in a saved run, each with the official pass/fail."""
+    if run not in cases.RUNS:
+        raise HttpError(404, "Unknown run.")
+    return {"run": run, "runs": cases.RUNS, "cases": cases.summaries(run)}
+
+
+@api.get("/agent/cases/{run}/{case_id}", auth=agent_auth)
+def case_detail(request, run: str, case_id: str):
+    """One case as a chat: the transcript, our answer, the expected answer, the verdict."""
+    found = cases.detail(run, case_id) if run in cases.RUNS else None
+    if not found:
+        raise HttpError(404, "Case not found in this run.")
+    return found
 
 
 @api.patch("/agent/tickets/{reference}", response=TicketOut, auth=agent_auth)

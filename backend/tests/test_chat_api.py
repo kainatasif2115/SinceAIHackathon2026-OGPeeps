@@ -346,3 +346,24 @@ def test_results_parser_handles_missing_values():
     assert parsed["safe_action_pass_ci"] == [20.0, 80.0]
     assert parsed["false_alarms"] is None
     assert parsed["failure_types"] == {}
+
+
+def test_case_browser_shows_chats_with_official_verdicts(monkeypatch, client):
+    assert client.get("/api/agent/cases").status_code == 401
+    _sign_in(monkeypatch, client)
+
+    listing = client.get("/api/agent/cases?run=multi").json()
+    assert len(listing["cases"]) == 30
+    first = listing["cases"][0]
+    assert {"case_id", "journey", "language", "passed", "failures"} <= set(first)
+
+    chat = client.get(f"/api/agent/cases/multi/{first['case_id']}").json()
+    assert chat["transcript"][0]["role"] == "user"
+    assert chat["transcript"][-1]["type"] == "final"
+    assert chat["expected"]["action"]
+
+    single = client.get("/api/agent/cases?run=single").json()["cases"]
+    assert sum(c["passed"] for c in single) == 485  # 82.5 % of 588, as the evaluator says
+
+    assert client.get("/api/agent/cases?run=nope").status_code == 404
+    assert client.get("/api/agent/cases/multi/NOPE").status_code == 404
