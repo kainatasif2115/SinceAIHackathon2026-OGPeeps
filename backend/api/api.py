@@ -8,7 +8,7 @@ from ninja.errors import HttpError
 from ninja.files import UploadedFile
 
 from api import agent_auth as agent_auth_mod
-from api import cases, db, presenter, results, sessions, tickets, twins, voice
+from api import campaigns, cases, db, presenter, results, sessions, tickets, twins, voice
 from api.agent_auth import agent_auth
 from api.schemas import (
     AgentLoginIn,
@@ -84,7 +84,10 @@ def start_session(request, body: StartIn):
     conv = Conversation(case=case)
     conv.add_images([image.model_dump() for image in body.images], turn=0)
     session_id = sessions.new_id()
-    return _advance(session_id, conv, {"scenario_id": body.scenario_id})
+    # Only the typed message is fingerprinted (screenshots are not), and the note
+    # is informational: it never changes the assistant's advice.
+    campaign = campaigns.check_and_record(body.message, body.language, body.audience)
+    return {**_advance(session_id, conv, {"scenario_id": body.scenario_id}), "campaign": campaign}
 
 
 @api.post("/sessions/{session_id}/reply", response=SessionOut)
@@ -173,6 +176,12 @@ def list_cases(request, run: str = "multi"):
     if run not in cases.RUNS:
         raise HttpError(404, "Unknown run.")
     return {"run": run, "runs": cases.RUNS, "cases": cases.summaries(run)}
+
+
+@api.get("/agent/campaigns", auth=agent_auth)
+def campaign_radar(request):
+    """Recent chats grouped into campaigns (fingerprints only, never message text)."""
+    return {"min_reports": campaigns.MIN_REPORTS, "campaigns": campaigns.clusters()}
 
 
 @api.get("/agent/twins", auth=agent_auth)

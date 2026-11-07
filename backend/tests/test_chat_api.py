@@ -1,7 +1,7 @@
 import pytest
 from django.test import Client
 
-from api import agent_auth, results, sessions, tickets
+from api import agent_auth, campaigns, results, sessions, tickets
 from assistant import brain
 from assistant.brain import BrainUnavailable
 from tests.fakes import Script, ask, ask_consent, done, final
@@ -368,3 +368,32 @@ def test_case_browser_shows_chats_with_official_verdicts(monkeypatch, client):
 
     assert client.get("/api/agent/cases?run=nope").status_code == 404
     assert client.get("/api/agent/cases/multi/NOPE").status_code == 404
+
+
+def test_campaign_radar_tells_the_nth_person_without_storing_text(monkeypatch, client):
+    campaigns._memory.clear()
+    monkeypatch.setattr(brain, "decide_multi_turn", lambda *a, **k: done(final()))
+    message = "My parcel is stuck at customs, they want a fee at parcel-hold.example/pay"
+
+    first = post(
+        client, "/api/sessions", {"audience": "consumer", "language": "en", "message": message}
+    )
+    note = first.json()["campaign"]
+    # The demo campaign already has 9 reports with this domain.
+    assert note["others"] >= campaigns.MIN_REPORTS
+    assert note["theme"] == "Parcel or customs fee"
+
+    unrelated = post(
+        client,
+        "/api/sessions",
+        {"audience": "consumer", "language": "en", "message": "My grandson asked for money"},
+    )
+    assert unrelated.json()["campaign"] is None
+
+    stored = campaigns._memory[-1]
+    assert "grandson" not in str(stored)  # only hashes, domains and a theme are kept
+
+    assert client.get("/api/agent/campaigns").status_code == 401
+    _sign_in(monkeypatch, client)
+    radar = client.get("/api/agent/campaigns").json()
+    assert radar["campaigns"][0]["theme"] == "Parcel or customs fee"

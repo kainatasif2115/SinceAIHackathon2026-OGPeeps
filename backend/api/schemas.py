@@ -124,11 +124,20 @@ class FinalTurn(Schema):
     answer: Answer
 
 
+class CampaignNote(Schema):
+    """Shown once at least campaigns.MIN_REPORTS others asked about something similar."""
+
+    others: int
+    theme: str
+    first_seen: datetime
+
+
 class SessionOut(Schema):
     session_id: str
     turn: QuestionTurn | ConsentTurn | FinalTurn
     turns_used: int
     max_turns: int
+    campaign: CampaignNote | None = None
 
 
 class HandoffOut(Schema):

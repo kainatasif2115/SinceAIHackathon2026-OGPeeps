@@ -78,6 +78,9 @@ const en = {
   whatToDo: "What to do",
   whyHeading: "Where this advice comes from",
   readAloud: "Read aloud",
+  campaignNote: (n: number) =>
+    `You’re not the only one: ${n} other customers asked about a very similar message in the last 24 hours.`,
+  campaignPrivacy: "We only count similar messages. We don’t keep anyone’s text.",
   copy: "Copy",
   talk: "Talk instead",
   talkShort: "Talk",
@@ -253,6 +256,9 @@ const fi: Dictionary = {
   whatToDo: "Mitä tehdä",
   whyHeading: "Mihin neuvo perustuu",
   readAloud: "Lue ääneen",
+  campaignNote: (n: number) =>
+    `Et ole ainoa: ${n} muuta asiakasta kysyi hyvin samankaltaisesta viestistä viimeisen vuorokauden aikana.`,
+  campaignPrivacy: "Laskemme vain samankaltaiset viestit. Emme säilytä kenenkään tekstiä.",
   copy: "Kopioi",
   talk: "Puhu mieluummin",
   talkShort: "Puhu",
@@ -427,6 +433,9 @@ const sv: Dictionary = {
   whatToDo: "Gör så här",
   whyHeading: "Varifrån rådet kommer",
   readAloud: "Läs upp",
+  campaignNote: (n: number) =>
+    `Du är inte ensam: ${n} andra kunder frågade om ett mycket liknande meddelande det senaste dygnet.`,
+  campaignPrivacy: "Vi räknar bara liknande meddelanden. Vi sparar ingens text.",
   copy: "Kopiera",
   talk: "Prata i stället",
   talkShort: "Prata",

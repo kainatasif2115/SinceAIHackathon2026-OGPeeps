@@ -64,6 +64,11 @@ const sessionSchema = z.object({
   turn: z.discriminatedUnion("type", [questionTurnSchema, consentTurnSchema, finalTurnSchema]),
   turns_used: z.number(),
   max_turns: z.number(),
+  /** "You're not the only one": set when enough others asked about something similar. */
+  campaign: z
+    .object({ others: z.number(), theme: z.string(), first_seen: z.string() })
+    .nullable()
+    .optional(),
 });
 
 const handoffSchema = z.object({ reference: z.string(), summary: z.string() });

@@ -292,3 +292,28 @@ export function listTwins(run: "twins" | "single" = "twins") {
     z.object({ run: z.string(), pairs: z.array(pairSchema) }),
   );
 }
+
+// --- Campaign radar (/agent/radar) --------------------------------------------------
+
+const campaignSchema = z.object({
+  theme: z.string(),
+  domains: z.array(z.string()),
+  reports: z.number(),
+  first_seen: z.string(),
+  last_seen: z.string(),
+  hourly: z.array(z.number()),
+  rising: z.boolean(),
+  languages: z.record(z.string(), z.number()),
+  audiences: z.record(z.string(), z.number()),
+  shown_to_customers: z.boolean(),
+  demo: z.boolean(),
+});
+
+export type Campaign = z.infer<typeof campaignSchema>;
+
+export function getCampaigns() {
+  return call(
+    "/api/agent/campaigns",
+    z.object({ min_reports: z.number(), campaigns: z.array(campaignSchema) }),
+  );
+}

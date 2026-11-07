@@ -29,6 +29,7 @@ import { PanelHeader } from "./panel-header";
 import { I18nContext } from "./i18n-context";
 import { CallBar, useVoiceCall, type LatestTurn } from "./call-mode";
 import { MessageActions, answerText } from "./message-actions";
+import { CampaignNote } from "./campaign-note";
 import { PrivacyCard } from "./privacy-card";
 import { ShareAdvice } from "./share-advice";
 import { AssistantTurn, QuestionMessage, UserMessage } from "./messages";
@@ -155,6 +156,8 @@ export function Assistant({
   // When the last reply arrived: the service deletes a chat 24 h after its last activity.
   const [lastTurnAt, setLastTurnAt] = useState<number | null>(null);
   const [deleted, setDeleted] = useState(false);
+  // Campaign radar note from the first reply, if enough others asked about the same thing.
+  const [campaign, setCampaign] = useState<{ others: number } | null>(null);
   const [announce, setAnnounce] = useState("");
   // Bumped on "Start over" so late responses from an abandoned session are ignored.
   const generation = useRef(0);
@@ -208,6 +211,7 @@ export function Assistant({
         maxTurns: result.max_turns,
       });
       setEntries((prev) => [...prev, entry]);
+      if (result.campaign) setCampaign({ others: result.campaign.others });
       setLastTurnAt(currentTime());
       setAnnounce(announcement(entry, t));
     } catch (error) {
@@ -279,6 +283,7 @@ export function Assistant({
     call.stop();
     setDeleted(false);
     setLastTurnAt(null);
+    setCampaign(null);
     generation.current += 1;
     setEntries([]);
     setSession(null);
@@ -402,10 +407,13 @@ export function Assistant({
           </div>
 
           <ol aria-label={t.startHeading} className="flex flex-col gap-6">
-            {entries.map((entry) => (
+            {entries.map((entry, index) => (
               <li key={entry.id}>
                 {entry.kind === "user" ? (
-                  <UserMessage text={entry.text} images={entry.images} />
+                  <>
+                    <UserMessage text={entry.text} images={entry.images} />
+                    {index === 0 && campaign && <CampaignNote others={campaign.others} />}
+                  </>
                 ) : (
                   <AssistantTurn id={entry.id}>
                     {entry.kind === "question" && <QuestionMessage turn={entry.turn} />}

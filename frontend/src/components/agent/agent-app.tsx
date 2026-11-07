@@ -7,6 +7,7 @@ import { ApiError } from "@/lib/api";
 import { AgentConsole } from "./agent-console";
 import { AgentHeader, type AgentView } from "./agent-header";
 import { CasesView } from "./cases-view";
+import { RadarView } from "./radar-view";
 import { ResultsView } from "./results-view";
 import { TwinsView } from "./twins-view";
 
@@ -45,6 +46,17 @@ export function AgentApp({ view = "board" }: { view?: AgentView }) {
     />
   );
   const expire = () => setSession({ status: "signed-out" });
+
+  if (view === "radar") {
+    return (
+      <div className="theme-dna flex min-h-full flex-1 flex-col bg-white">
+        {header}
+        <main className="flex-1">
+          <RadarView onSessionExpired={expire} />
+        </main>
+      </div>
+    );
+  }
 
   if (view === "twins") {
     return (
