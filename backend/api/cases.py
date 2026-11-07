@@ -103,6 +103,7 @@ def detail(run: str, case_id: str) -> dict | None:
         {"role": "assistant", "type": "final", "text": sub.get("advice_text", "")},
     ]
     escalation = gt.get("escalation") or {}
+    signals = case.get("signals") or {}
     return {
         "case_id": case["case_id"],
         "journey": case["journey"],
@@ -123,6 +124,14 @@ def detail(run: str, case_id: str) -> dict | None:
             }
             for t in transcript
         ],
+        # What came with the case: the forwarded item (untrusted, possibly written by a
+        # scammer), the link check and call warning, and which data needed permission.
+        "evidence": {
+            "artifact": signals.get("artifact"),
+            "link_check": signals.get("link_check"),
+            "call_warning": signals.get("call_warning"),
+            "needs_consent": (case.get("consent") or {}).get("requires_consent") or [],
+        },
         "ours": {
             "risk_level": sub.get("risk_level"),
             "urgency": sub.get("urgency"),

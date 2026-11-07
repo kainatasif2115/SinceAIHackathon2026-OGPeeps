@@ -361,6 +361,7 @@ def test_case_browser_shows_chats_with_official_verdicts(monkeypatch, client):
     assert chat["transcript"][0]["role"] == "user"
     assert chat["transcript"][-1]["type"] == "final"
     assert chat["expected"]["action"]
+    assert chat["evidence"]["artifact"]["body"]  # every case comes with a forwarded item
 
     single = client.get("/api/agent/cases?run=single").json()["cases"]
     assert sum(c["passed"] for c in single) == 485  # 82.5 % of 588, as the evaluator says

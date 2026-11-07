@@ -179,6 +179,40 @@ const caseDetailSchema = z.object({
   passed: z.boolean(),
   failures: z.array(z.object({ type: z.string() }).passthrough()),
   transcript: z.array(turnSchema),
+  evidence: z.object({
+    artifact: z
+      .object({
+        type: z.string(),
+        sender: z.string().nullable().optional(),
+        body: z.string(),
+        links: z.array(z.string()).optional(),
+        received_at: z.string().nullable().optional(),
+      })
+      .passthrough()
+      .nullable(),
+    link_check: z
+      .object({
+        url: z.string(),
+        verdict: z.string(),
+        confidence: z.number().nullable().optional(),
+        domain_age_days: z.number().nullable().optional(),
+        categories: z.array(z.string()).optional(),
+      })
+      .passthrough()
+      .nullable(),
+    call_warning: z
+      .object({
+        number: z.string().nullable().optional(),
+        warning: z.string().nullable().optional(),
+        confidence: z.number().nullable().optional(),
+        answered: z.boolean().nullable().optional(),
+        duration_s: z.number().nullable().optional(),
+        caller_id_possibly_spoofed: z.boolean().nullable().optional(),
+      })
+      .passthrough()
+      .nullable(),
+    needs_consent: z.array(z.string()),
+  }),
   ours: z.object({
     risk_level: z.string().nullable(),
     urgency: z.string().nullable(),

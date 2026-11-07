@@ -24,6 +24,7 @@ import {
 import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Select } from "./select";
+import { ArtifactCard, EvidencePanel } from "./case-evidence";
 import { FAILURES, JOURNEYS } from "./results-view";
 
 const LANGUAGE_NAMES: Record<string, string> = { fi: "Finnish", en: "English", sv: "Swedish" };
@@ -325,6 +326,8 @@ function CaseChat({ run, caseId }: { run: CaseRun; caseId: string }) {
         ))}
       </ol>
 
+      <EvidencePanel detail={detail} />
+
       <section
         aria-labelledby="expected-heading"
         className="flex flex-col gap-3 rounded-2xl border border-[#f3e4ec] bg-[#fdf6fa] p-5"
@@ -409,6 +412,9 @@ function Bubble({ turn, detail }: { turn: ChatTurn; detail: CaseDetail }) {
         >
           {turn.text}
         </p>
+        {turn.type === "opening" && detail.evidence.artifact && (
+          <ArtifactCard artifact={detail.evidence.artifact} language={lang} />
+        )}
         {turn.type === "consent_reply" && (turn.granted.length > 0 || turn.refused.length > 0) && (
           <span className="text-muted-foreground text-xs">
             {turn.granted.length > 0 && `Allowed: ${turn.granted.join(", ")}`}
