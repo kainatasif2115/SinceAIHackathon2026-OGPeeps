@@ -250,6 +250,30 @@
   animation: alarm-ring 2.5s ease-in-out infinite;
 }
 
+/* Homepage hero: rings radiating from the phone, like a signal. */
+@keyframes signal-ring {
+  from {
+    transform: scale(0.35);
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.signal-ring {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: signal-ring 5s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signal-ring {
+    display: none;
+  }
+}
+
 /* Motion is opt-out: anyone who asks the OS for less motion gets none. */
 @media (prefers-reduced-motion: reduce) {
   *,

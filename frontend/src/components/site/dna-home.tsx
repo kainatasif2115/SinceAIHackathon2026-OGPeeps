@@ -6,7 +6,10 @@ import type { InitialRequest } from "@/components/assistant/assistant";
 import type { ImageAttachment } from "@/lib/media";
 import type { ScenariosState } from "@/components/assistant/scenario-list";
 import { ChatLauncher, ChatPanel } from "./chat-panel";
+import { Anatomy } from "./anatomy";
 import { Hero } from "./hero";
+import { ScrollProgress } from "./motion";
+import { Proof } from "./proof";
 import { RedTeam } from "./red-team";
 import { BeforeAfter, HelpTopics, HowItWorks, ScamsNow, TrustBand } from "./sections";
 import { SiteFooter, SiteHeader, TopStrip } from "./site-chrome";
@@ -82,6 +85,7 @@ export function DnaHome() {
       >
         Skip to content
       </a>
+      <ScrollProgress />
       <TopStrip audience={audience} onAudienceChange={setAudience} />
       <SiteHeader onOpenAssistant={openPanel} />
 
@@ -94,8 +98,10 @@ export function DnaHome() {
           onPickScenario={askScenario}
         />
         <BeforeAfter />
+        <Anatomy />
         <HelpTopics audience={audience} onOpen={openPanel} />
         <HowItWorks />
+        <Proof />
         <ScamsNow audience={audience} scenarios={scenarios} onPick={askScenario} />
         <RedTeam />
         <TrustBand onOpen={openPanel} />

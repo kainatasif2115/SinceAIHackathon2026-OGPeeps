@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import type { Audience, Scenario } from "@/lib/api";
 import type { ScenariosState } from "@/components/assistant/scenario-list";
+import { Reveal } from "./motion";
 
 type Topic = { icon: LucideIcon; title: string; text: string };
 
@@ -261,13 +262,13 @@ function SectionHeading({
   intro?: string;
 }) {
   return (
-    <div className="flex max-w-2xl flex-col gap-3">
+    <Reveal className="flex max-w-2xl flex-col gap-3">
       <p className="text-brand text-sm font-semibold">{eyebrow}</p>
       <h2 id={id} className="text-3xl font-bold tracking-tight sm:text-4xl">
         {title}
       </h2>
       {intro && <p className="text-muted-foreground text-lg">{intro}</p>}
-    </div>
+    </Reveal>
   );
 }
 

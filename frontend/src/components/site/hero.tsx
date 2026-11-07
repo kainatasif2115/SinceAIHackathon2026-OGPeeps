@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   ArrowRight,
   Ear,
@@ -223,25 +223,32 @@ export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Pro
   );
 }
 
-/** Illustration: a suspicious text and the assistant's answer. Decorative only. */
+/**
+ * Illustration: a suspicious text types itself in, the customer asks, and the
+ * assistant's verdict slides up, once on load. Signal rings radiate behind
+ * the phone. Decorative only; with reduced motion it is shown complete.
+ */
 function PhoneMock() {
   return (
     <div aria-hidden className="relative mx-auto hidden w-full max-w-[340px] select-none lg:block">
-      <div className="bg-ink rounded-[2.75rem] p-3 shadow-[0_30px_60px_rgb(0_0_0/0.3)]">
+      <SignalRings />
+      <div className="bg-ink relative rounded-[2.75rem] p-3 shadow-[0_30px_60px_rgb(0_0_0/0.3)]">
         <div className="flex flex-col gap-3 rounded-[2.1rem] bg-[#f4f4f6] px-4 pt-8 pb-6 text-[#121212]">
           <div className="mx-auto mb-1 h-1.5 w-20 rounded-full bg-black/15" />
           <p className="text-center text-[11px] font-semibold text-black/50">Messages · 09:41</p>
 
           <div className="max-w-[85%] self-start rounded-2xl rounded-bl-md bg-white px-3.5 py-2.5 text-[13px] leading-snug shadow-sm">
-            Your parcel is on hold. Pay the €1.99 customs fee within 24 h:
-            <span className="text-[#0060df] underline"> parcel-hold.example/pay</span>
+            <TypeIn text="Your parcel is on hold. Pay the €1.99 customs fee within 24 h: " />
+            <span className="animate-in fade-in fill-mode-both text-[#0060df] underline delay-[1500ms] duration-300">
+              parcel-hold.example/pay
+            </span>
           </div>
 
-          <div className="bg-brand max-w-[80%] self-end rounded-2xl rounded-br-md px-3.5 py-2.5 text-[13px] leading-snug text-white">
+          <div className="bg-brand animate-in fade-in zoom-in-95 slide-in-from-bottom-2 fill-mode-both max-w-[80%] self-end rounded-2xl rounded-br-md px-3.5 py-2.5 text-[13px] leading-snug text-white delay-[2100ms] duration-400">
             Is this real? I already clicked the link.
           </div>
 
-          <div className="flex flex-col gap-2 rounded-2xl border border-black/5 bg-white p-3.5 shadow-sm">
+          <div className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both flex flex-col gap-2 rounded-2xl border border-black/5 bg-white p-3.5 shadow-sm delay-[2900ms] duration-700">
             <p className="flex items-center gap-1.5 text-[11px] font-semibold text-black/55">
               <ShieldCheck className="text-brand size-3.5" />
               Security assistant
@@ -259,7 +266,7 @@ function PhoneMock() {
           </div>
         </div>
       </div>
-      <div className="text-ink absolute -bottom-4 -left-6 flex items-center gap-2 rounded-2xl bg-white px-4 py-3 shadow-[0_12px_30px_rgb(0_0_0/0.2)]">
+      <div className="text-ink animate-in fade-in slide-in-from-left-4 fill-mode-both absolute -bottom-4 -left-6 flex items-center gap-2 rounded-2xl bg-white px-4 py-3 shadow-[0_12px_30px_rgb(0_0_0/0.2)] delay-[3500ms] duration-700">
         <span className="bg-risk-safe text-risk-safe-fg flex size-8 items-center justify-center rounded-full">
           <ShieldCheck className="size-4" />
         </span>
@@ -269,5 +276,55 @@ function PhoneMock() {
         </span>
       </div>
     </div>
+  );
+}
+
+/** Concentric rings radiating from behind the phone, offset so they never pulse together. */
+function SignalRings() {
+  return (
+    <svg
+      viewBox="0 0 600 600"
+      className="pointer-events-none absolute top-1/2 left-1/2 -z-0 size-[170%] -translate-x-1/2 -translate-y-1/2"
+    >
+      {[0, 1.25, 2.5, 3.75].map((delay) => (
+        <circle
+          key={delay}
+          cx="300"
+          cy="300"
+          r="200"
+          fill="none"
+          stroke="white"
+          strokeWidth="2.25"
+          className="signal-ring"
+          style={{ animationDelay: `${delay}s` }}
+        />
+      ))}
+    </svg>
+  );
+}
+
+/** Types `text` out once on mount; shown whole with reduced motion. */
+function TypeIn({ text, speed = 22 }: { text: string; speed?: number }) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const frame = requestAnimationFrame(() => setCount(text.length));
+      return () => cancelAnimationFrame(frame);
+    }
+    let i = 0;
+    const timer = setInterval(() => {
+      i += 1;
+      setCount(i);
+      if (i >= text.length) clearInterval(timer);
+    }, speed);
+    return () => clearInterval(timer);
+  }, [text, speed]);
+  return (
+    <>
+      {text.slice(0, count)}
+      {count < text.length && (
+        <span className="ml-px inline-block h-[1em] w-px animate-pulse bg-black/60 align-[-2px]" />
+      )}
+    </>
   );
 }
