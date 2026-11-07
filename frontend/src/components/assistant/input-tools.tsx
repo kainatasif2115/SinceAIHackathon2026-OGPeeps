@@ -94,8 +94,10 @@ export function useImageDrop(onFiles: (files: File[]) => void) {
   };
 }
 
+// Same focus ring as the shared Button, so every control in the composer
+// behaves alike for keyboard users.
 const TOOL_BUTTON =
-  "text-muted-foreground hover:bg-muted hover:text-foreground inline-flex size-10 shrink-0 items-center justify-center rounded-full transition-colors duration-150 disabled:pointer-events-none disabled:opacity-40";
+  "text-muted-foreground hover:bg-muted hover:text-foreground inline-flex size-10 shrink-0 items-center justify-center rounded-full transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-40";
 
 export function AttachButton({
   onFiles,
@@ -113,7 +115,7 @@ export function AttachButton({
         onClick={() => input.current?.click()}
         disabled={disabled}
         title={t.attachImage}
-        className={TOOL_BUTTON}
+        className={cn(TOOL_BUTTON, "border-border border")}
       >
         <ImagePlus aria-hidden className="size-5" />
         <span className="sr-only">{t.attachImage}</span>
