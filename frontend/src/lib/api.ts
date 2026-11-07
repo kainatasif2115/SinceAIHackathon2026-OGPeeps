@@ -209,6 +209,21 @@ export async function speak(text: string, language: Language): Promise<Blob> {
   return res.blob();
 }
 
+/** "Delete now": removes the conversation from the service before its 24-hour expiry. */
+export async function deleteSession(sessionId: string): Promise<void> {
+  if (isMockMode) return (await mock()).mockDelete(sessionId);
+  let res: Response;
+  try {
+    res = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}`, {
+      method: "DELETE",
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch {
+    throw new ApiError(0, "Network error or timeout");
+  }
+  if (!res.ok) throw new ApiError(res.status, res.statusText);
+}
+
 export async function getHealth(): Promise<Health> {
   if (isMockMode) return (await mock()).mockHealth();
   return request("/api/health", healthSchema);

@@ -29,6 +29,8 @@ import { PanelHeader } from "./panel-header";
 import { I18nContext } from "./i18n-context";
 import { CallBar, useVoiceCall, type LatestTurn } from "./call-mode";
 import { MessageActions, answerText } from "./message-actions";
+import { PrivacyCard } from "./privacy-card";
+import { ShareAdvice } from "./share-advice";
 import { AssistantTurn, QuestionMessage, UserMessage } from "./messages";
 import type { ScenariosState } from "./scenario-list";
 import { ServiceStatus } from "./service-status";
@@ -43,6 +45,9 @@ type Entry =
 
 type SessionMeta = { id: string; turnsUsed: number; maxTurns: number };
 type Failure = { error: unknown; retry: (() => void) | null };
+
+/** Wall-clock time, read only from event handlers and async callbacks. */
+const currentTime = () => Date.now();
 
 let entryCounter = 0;
 const nextId = () => `entry-${++entryCounter}`;
@@ -142,6 +147,9 @@ export function Assistant({
   // Guards the initial request against StrictMode running mount effects twice.
   const initialSent = useRef(false);
   const [failure, setFailure] = useState<Failure | null>(null);
+  // When the last reply arrived: the service deletes a chat 24 h after its last activity.
+  const [lastTurnAt, setLastTurnAt] = useState<number | null>(null);
+  const [deleted, setDeleted] = useState(false);
   const [announce, setAnnounce] = useState("");
   // Bumped on "Start over" so late responses from an abandoned session are ignored.
   const generation = useRef(0);
@@ -187,6 +195,7 @@ export function Assistant({
         maxTurns: result.max_turns,
       });
       setEntries((prev) => [...prev, entry]);
+      setLastTurnAt(currentTime());
       setAnnounce(announcement(entry, t));
     } catch (error) {
       if (gen !== generation.current) return;
@@ -255,6 +264,8 @@ export function Assistant({
 
   function startOver() {
     call.stop();
+    setDeleted(false);
+    setLastTurnAt(null);
     generation.current += 1;
     setEntries([]);
     setSession(null);
@@ -319,7 +330,20 @@ export function Assistant({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const talkButton = !inCall && (
+  const finalEntry = entries.find((e) => e.kind === "final");
+  const consentEntries = entries.filter((e) => e.kind === "consent");
+  const allowedLabels = consentEntries.flatMap((e) =>
+    e.choice === true ? e.turn.fields.map((f) => f.label) : [],
+  );
+  const declinedLabels = consentEntries.flatMap((e) =>
+    e.choice === false ? e.turn.fields.map((f) => f.label) : [],
+  );
+  const screenshotCount = entries.reduce(
+    (n, e) => n + (e.kind === "user" ? e.images.length : 0),
+    0,
+  );
+
+  const talkButton = !inCall && !deleted && (
     <Button variant="outline" size="sm" onClick={() => void call.start(latestTurn)}>
       <Mic aria-hidden className="size-3.5" />
       {inConversation ? t.talkShort : t.talk}
@@ -395,6 +419,22 @@ export function Assistant({
               </li>
             ))}
           </ol>
+
+          {finalEntry?.kind === "final" && session && (
+            <div className="flex flex-col gap-4">
+              <ShareAdvice answer={finalEntry.answer} audience={audience} />
+              <PrivacyCard
+                sessionId={session.id}
+                language={language}
+                allowed={allowedLabels}
+                declined={declinedLabels}
+                screenshots={screenshotCount}
+                expiresAt={lastTurnAt ? new Date(lastTurnAt + 24 * 60 * 60 * 1000) : null}
+                handedOff={finalEntry.answer.escalation_required}
+                onDeleted={() => setDeleted(true)}
+              />
+            </div>
+          )}
 
           {loading && <ThinkingStatus />}
           {failure && (

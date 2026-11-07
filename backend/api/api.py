@@ -3,7 +3,7 @@ import os
 import secrets
 
 from django.http import HttpResponse
-from ninja import File, Form, NinjaAPI, Schema
+from ninja import File, Form, NinjaAPI, Schema, Status
 from ninja.errors import HttpError
 from ninja.files import UploadedFile
 
@@ -108,6 +108,15 @@ def handoff(request, session_id: str):
     sessions.save(session_id, conv, {**_extra(doc), "handoff_reference": reference})
     tickets.create(tickets.from_conversation(reference, session_id, conv, final))
     return {"reference": reference, "summary": presenter.handoff_summary(conv, final)}
+
+
+@api.delete("/sessions/{session_id}", response={204: None})
+def delete_session(request, session_id: str):
+    """ "Delete now" from the privacy card. A handoff ticket, if one was made, keeps
+    its own copy of the summary for the human agent and expires on its own."""
+    if not sessions.delete(session_id):
+        raise HttpError(404, "Conversation not found or expired.")
+    return Status(204, None)
 
 
 # Support-agent console. In production this sits behind DNA's staff sign-in; the

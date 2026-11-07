@@ -68,13 +68,13 @@ export function SiteHeader({ onOpenAssistant }: { onOpenAssistant: () => void })
           </span>
         </a>
 
-        <nav aria-label="Page sections" className="hidden md:block">
+        <nav aria-label="Page sections" className="hidden lg:block">
           <ul className="flex items-center gap-1">
             {NAV.map((item) => (
               <li key={item.href}>
                 <a
                   href={item.href}
-                  className="hover:bg-muted rounded-full px-3.5 py-2 text-sm font-semibold transition-colors duration-150"
+                  className="hover:bg-muted rounded-full px-3.5 py-2 text-sm font-semibold whitespace-nowrap transition-colors duration-150"
                 >
                   {item.label}
                 </a>

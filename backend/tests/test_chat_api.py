@@ -257,3 +257,17 @@ def test_agent_can_move_a_ticket(monkeypatch, client):
         "/api/agent/tickets/NOPE", {"status": "done"}, content_type="application/json"
     )
     assert missing.status_code == 404
+
+
+def test_delete_now_removes_the_conversation(monkeypatch, client):
+    monkeypatch.setattr(brain, "decide_multi_turn", Script(done(final())))
+    sid = post(
+        client,
+        "/api/sessions",
+        {"audience": "consumer", "language": "en", "message": "A text about a parcel."},
+    ).json()["session_id"]
+
+    assert client.delete(f"/api/sessions/{sid}").status_code == 204
+    assert sessions.load(sid) is None
+    assert client.delete(f"/api/sessions/{sid}").status_code == 404
+    assert post(client, f"/api/sessions/{sid}/handoff").status_code == 404
