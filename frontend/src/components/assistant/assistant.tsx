@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { RotateCcw } from "lucide-react";
+import { Mic, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   answerConsent,
@@ -19,6 +19,7 @@ import {
 } from "@/lib/api";
 import { getDictionary, type Dictionary } from "@/lib/i18n";
 import type { ImageAttachment } from "@/lib/media";
+import { parseYesNo } from "@/lib/voice";
 import { AnswerCard } from "./answer-card";
 import { AppHeader } from "./app-header";
 import { Composer } from "./composer";
@@ -26,6 +27,7 @@ import { ConsentCard } from "./consent-card";
 import { ErrorNotice } from "./error-notice";
 import { PanelHeader } from "./panel-header";
 import { I18nContext } from "./i18n-context";
+import { CallBar, useVoiceCall, type LatestTurn } from "./call-mode";
 import { MessageActions, answerText } from "./message-actions";
 import { AssistantTurn, QuestionMessage, UserMessage } from "./messages";
 import type { ScenariosState } from "./scenario-list";
@@ -111,6 +113,8 @@ type Props = {
   /** Starts the conversation on mount. Remount (change `key`) to start a new one. */
   initial?: InitialRequest | null;
   defaultAudience?: Audience;
+  /** Opens straight into hands-free talking (the homepage's "Talk instead"). */
+  startInVoice?: boolean;
   onClose?: () => void;
 };
 
@@ -118,6 +122,7 @@ export function Assistant({
   variant = "page",
   initial = null,
   defaultAudience = "consumer",
+  startInVoice = false,
   onClose,
 }: Props) {
   const [language, setLanguage] = useState<Language>(initial?.language ?? "en");
@@ -249,6 +254,7 @@ export function Assistant({
   }
 
   function startOver() {
+    call.stop();
     generation.current += 1;
     setEntries([]);
     setSession(null);
@@ -272,10 +278,59 @@ export function Assistant({
   const lastAssistant = entries.findLast((e) => e.kind !== "user");
   const awaitingAnswer = lastAssistant?.kind === "question" && !failure;
 
+  const latestTurn: LatestTurn | null = lastAssistant
+    ? { id: lastAssistant.id, kind: lastAssistant.kind, text: entryText(lastAssistant, t) }
+    : null;
+
+  /** What was said during a call goes where typing would have gone. */
+  function handleSpoken(text: string): boolean {
+    if (!inConversation) {
+      handleStart(text, []);
+      return true;
+    }
+    if (lastAssistant?.kind === "question") {
+      handleReply(text, []);
+      return true;
+    }
+    if (lastAssistant?.kind === "consent" && lastAssistant.choice === null) {
+      const granted = parseYesNo(text, language);
+      if (granted === null) return false;
+      handleConsent(lastAssistant.id, granted);
+      return true;
+    }
+    return false;
+  }
+
+  const call = useVoiceCall({
+    language,
+    latest: latestTurn,
+    failed: failure !== null,
+    onSay: handleSpoken,
+  });
+  const inCall = call.phase !== "off";
+
+  useEffect(() => {
+    if (!startInVoice) return;
+    // A timer, not a ref guard: in development React mounts twice and the first
+    // cleanup aborts the call, so the call must start on the mount that stays.
+    const timer = setTimeout(() => void call.start(null), 0);
+    return () => clearTimeout(timer);
+    // Once per mount; the host remounts with a new key for a new call.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const talkButton = !inCall && (
+    <Button variant="outline" size="sm" onClick={() => void call.start(latestTurn)}>
+      <Mic aria-hidden className="size-3.5" />
+      {inConversation ? t.talkShort : t.talk}
+    </Button>
+  );
+
   const content = (
     <>
       {!inConversation ? (
         <StartView
+          talkButton={talkButton}
           draft={draft}
           onDraftChange={handleDraftChange}
           selectedScenario={scenario}
@@ -301,6 +356,7 @@ export function Assistant({
                   {t.turnCounter(session.turnsUsed, session.maxTurns)}
                 </span>
               )}
+              {talkButton}
               <Button variant="ghost" size="sm" onClick={startOver}>
                 <RotateCcw aria-hidden className="size-3.5" />
                 {t.startOver}
@@ -345,7 +401,7 @@ export function Assistant({
             <ErrorNotice error={failure.error} onRetry={failure.retry} onStartOver={startOver} />
           )}
 
-          {awaitingAnswer && (
+          {awaitingAnswer && !inCall && (
             <Composer
               value={replyDraft}
               onChange={setReplyDraft}
@@ -357,6 +413,11 @@ export function Assistant({
               rows={2}
             />
           )}
+        </div>
+      )}
+      {inCall && call.phase !== "off" && (
+        <div className="mt-6">
+          <CallBar phase={call.phase} heard={call.heard} notice={call.notice} onEnd={call.stop} />
         </div>
       )}
       <p aria-live="polite" className="sr-only">

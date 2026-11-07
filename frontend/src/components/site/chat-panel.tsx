@@ -11,6 +11,7 @@ type PanelProps = {
   onClose: () => void;
   assistantKey: number;
   initial: InitialRequest | null;
+  startInVoice: boolean;
   audience: Audience;
 };
 
@@ -19,7 +20,14 @@ type PanelProps = {
  * the right from `sm` up. It stays mounted while closed (inert) so an open
  * conversation survives closing and reopening.
  */
-export function ChatPanel({ open, onClose, assistantKey, initial, audience }: PanelProps) {
+export function ChatPanel({
+  open,
+  onClose,
+  assistantKey,
+  initial,
+  startInVoice,
+  audience,
+}: PanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   // Mount the assistant on first open so it picks up the audience chosen by then.
   const [mounted, setMounted] = useState(false);
@@ -71,6 +79,7 @@ export function ChatPanel({ open, onClose, assistantKey, initial, audience }: Pa
             key={assistantKey}
             variant="panel"
             initial={initial}
+            startInVoice={startInVoice}
             defaultAudience={audience}
             onClose={onClose}
           />
