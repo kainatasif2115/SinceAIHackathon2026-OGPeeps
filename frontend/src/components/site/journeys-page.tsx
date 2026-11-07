@@ -80,9 +80,10 @@ export function JourneysPage() {
             One conversation for each journey
           </h1>
           <p className="text-muted-foreground">
-            Each tab is a real conversation with the organisers’ simulated customer: the assistant
-            asks only what the advice depends on, asks permission before looking at anything, and
-            hands over to a person when needed. All five passed the organisers’ evaluator.
+            Each tab is a saved conversation with the organisers’ simulated customer. The assistant
+            asks a question only when the advice depends on the answer, asks permission before
+            looking at account data (and carries on if the customer says no), and hands over to a
+            person when needed. All five passed the organisers’ evaluator.
           </p>
         </div>
 
