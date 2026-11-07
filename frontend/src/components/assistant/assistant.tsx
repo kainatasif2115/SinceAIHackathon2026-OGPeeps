@@ -112,6 +112,9 @@ type Props = {
   initial?: InitialRequest | null;
   defaultAudience?: Audience;
   onClose?: () => void;
+  /** Drawer is covering the viewport. Ignored on the full-screen page. */
+  expanded?: boolean;
+  onToggleExpanded?: () => void;
 };
 
 export function Assistant({
@@ -119,6 +122,8 @@ export function Assistant({
   initial = null,
   defaultAudience = "consumer",
   onClose,
+  expanded = false,
+  onToggleExpanded,
 }: Props) {
   const [language, setLanguage] = useState<Language>(initial?.language ?? "en");
   const [audience, setAudience] = useState<Audience>(initial?.audience ?? defaultAudience);
@@ -398,10 +403,15 @@ export function Assistant({
           <PanelHeader
             language={language}
             onLanguageChange={setLanguage}
+            expanded={expanded}
+            onToggleExpanded={onToggleExpanded}
             onClose={onClose}
           />
           <div className="flex-1 overflow-y-auto overscroll-contain">
-            <div id="assistant-main" className="px-5 pt-6 pb-10">
+            <div
+              id="assistant-main"
+              className={expanded ? "mx-auto w-full max-w-3xl px-5 pt-6 pb-10" : "px-5 pt-6 pb-10"}
+            >
               {content}
             </div>
           </div>

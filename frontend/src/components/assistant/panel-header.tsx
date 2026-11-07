@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, ShieldCheck, X } from "lucide-react";
+import { Info, Maximize2, Minimize2, ShieldCheck, X } from "lucide-react";
 import { LANGUAGES, type Language } from "@/lib/api";
 import { useT } from "./i18n-context";
 import { SegmentedControl } from "./segmented-control";
@@ -8,11 +8,19 @@ import { SegmentedControl } from "./segmented-control";
 type Props = {
   language: Language;
   onLanguageChange: (language: Language) => void;
+  expanded?: boolean;
+  onToggleExpanded?: () => void;
   onClose?: () => void;
 };
 
 /** Header for the assistant when it sits in the homepage's slide-out panel. */
-export function PanelHeader({ language, onLanguageChange, onClose }: Props) {
+export function PanelHeader({
+  language,
+  onLanguageChange,
+  expanded = false,
+  onToggleExpanded,
+  onClose,
+}: Props) {
   const t = useT();
   return (
     <header className="border-border bg-card border-b">
@@ -39,6 +47,21 @@ export function PanelHeader({ language, onLanguageChange, onClose }: Props) {
             lang: value,
           }))}
         />
+        {onToggleExpanded && (
+          <button
+            type="button"
+            onClick={onToggleExpanded}
+            aria-pressed={expanded}
+            className="hover:bg-muted text-foreground hidden size-10 shrink-0 items-center justify-center rounded-full transition-colors duration-150 sm:flex"
+          >
+            {expanded ? (
+              <Minimize2 aria-hidden className="size-5" />
+            ) : (
+              <Maximize2 aria-hidden className="size-5" />
+            )}
+            <span className="sr-only">{expanded ? t.collapsePanel : t.expandPanel}</span>
+          </button>
+        )}
         {onClose && (
           <button
             type="button"

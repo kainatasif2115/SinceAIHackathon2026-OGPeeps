@@ -16,14 +16,20 @@ type PanelProps = {
 
 /**
  * Slide-out drawer holding the assistant: full screen on phones, 720px on
- * the right from `sm` up. It stays mounted while closed (inert) so an open
- * conversation survives closing and reopening.
+ * the right from `sm` up, with a control to cover the window. It stays
+ * mounted while closed (inert) so an open conversation survives closing
+ * and reopening.
  */
 export function ChatPanel({ open, onClose, assistantKey, initial, audience }: PanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   // Mount the assistant on first open so it picks up the audience chosen by then.
   const [mounted, setMounted] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   if (open && !mounted) setMounted(true);
+
+  useEffect(() => {
+    if (!open) setExpanded(false);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -61,8 +67,9 @@ export function ChatPanel({ open, onClose, assistantKey, initial, audience }: Pa
         tabIndex={-1}
         inert={!open}
         className={cn(
-          "bg-card fixed inset-y-0 right-0 z-50 flex w-full flex-col shadow-[0_0_40px_rgb(0_0_0/0.18)] outline-none sm:w-[720px]",
-          "transition-transform duration-250 ease-out",
+          "bg-card fixed inset-y-0 right-0 z-50 flex flex-col shadow-[0_0_40px_rgb(0_0_0/0.18)] outline-none",
+          "transition-[transform,width] duration-250 ease-out",
+          expanded ? "w-full" : "w-full sm:w-[720px]",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
@@ -72,6 +79,8 @@ export function ChatPanel({ open, onClose, assistantKey, initial, audience }: Pa
             variant="panel"
             initial={initial}
             defaultAudience={audience}
+            expanded={expanded}
+            onToggleExpanded={() => setExpanded((value) => !value)}
             onClose={onClose}
           />
         )}
