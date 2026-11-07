@@ -14,6 +14,12 @@ The brief asks for "documented decisions", so add an entry whenever the team set
 
 ---
 
+## 2026-11-07: Host the demo on Google Cloud Run in Finland
+
+**Decision:** Two Cloud Run services (Django API and Next.js site) in europe-north1, images built by Cloud Build, keys in Secret Manager, sessions in a free MongoDB Atlas cluster. One script, `make deploy`, does it all (see `docs/deploy.md`).
+**Why:** Judges get a link instead of a setup guide. The free tier covers a demo (about €0–1 a month), the hackathon pack offers no Google Cloud credits, and a Finnish region fits an operator like DNA and EU data rules. Cloud Run scales to zero and needs no servers to look after.
+**Alternatives considered:** A single VM (always on, more upkeep), MongoDB on our own VM (no free tier in the EU), and building images on our laptops (ARM chips would build the wrong kind of image for Cloud Run).
+
 ## 2026-11-07: A checklist of deciding questions, and the checker covers both branches
 
 **Decision:** The policy now lists the situations that always need a deciding question ("did you make this change yourself?", "has the money already been sent?", "did you type your card details?", "did you enable anything from the attachment?", "did you read out the code?"). The question is required unless the user has plainly answered it. But when the data the assistant may use clearly settles it (for example the order shows up as an ordinary order on the account), it says so calmly instead. In single-turn mode the checker now also adds one sentence for the safer answer ("If you made the change yourself, this is expected and there is nothing more to do."), in Finnish, Swedish or English, when the model leaves it out. Every such sentence is checked against the organisers' step and unsafe-wording patterns.

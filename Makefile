@@ -6,7 +6,7 @@ PY := $(VENV)/bin/python
 RUNS := runs
 N ?= 60
 
-.PHONY: help setup agent db backend frontend test check baseline eval-sample eval-dev eval-multi predict-test validate
+.PHONY: help setup agent db backend frontend test check baseline eval-sample eval-dev eval-multi predict-test validate deploy
 
 help: ## Show available commands
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-13s %s\n", $$1, $$2}'
@@ -67,3 +67,6 @@ predict-test: ## Answer all 335 test inputs into test_predictions.jsonl and vali
 
 validate: ## Check a submission file: make validate FILE=test_predictions.jsonl
 	$(PYTHON) simset/tools/validate.py --submission $(FILE)
+
+deploy: ## Deploy to Google Cloud Run: make deploy GCP_PROJECT=my-project (see docs/deploy.md)
+	GCP_PROJECT=$(GCP_PROJECT) deploy/gcp.sh

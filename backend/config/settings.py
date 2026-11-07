@@ -32,6 +32,13 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() == "true"
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
+if not DEBUG and SECRET_KEY == "dev-only-insecure-key":
+    raise RuntimeError("Set DJANGO_SECRET_KEY when DJANGO_DEBUG is false.")
+
+# Cloud Run ends HTTPS at its front end and forwards plain HTTP with this header,
+# so request.is_secure() (and with it the Secure cookie flag) needs to trust it.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 # Chat requests can carry up to three screenshots (about 2 MB of base64 each, see
 # api/schemas.py); Django's 2.5 MB default would reject the largest of them.
 DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024

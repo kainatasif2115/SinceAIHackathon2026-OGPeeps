@@ -1,0 +1,19 @@
+# Build context for backend/Dockerfile (the repo root). Never send keys or local data.
+**/.env
+**/.env.*
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+**/db.sqlite3
+backend/tests
+frontend
+runs
+results
+docs
+.git
+.github
+.claude
+*.jsonl
+!simset/**/*.jsonl
