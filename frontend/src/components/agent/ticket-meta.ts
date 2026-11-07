@@ -84,7 +84,7 @@ export const SEVERITY_META: Record<Severity, SeverityStyle> = {
     chip: "bg-risk-high text-risk-high-fg",
     dot: "bg-risk-high-line",
     edge: "border-l-risk-high-line",
-    respondWithin: 60,
+    respondWithin: null,
   },
   medium: {
     label: "Medium",

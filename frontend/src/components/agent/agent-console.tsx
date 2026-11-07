@@ -471,9 +471,7 @@ function TicketCard({
         <span
           className={cn(
             "-mx-3.5 -mt-3.5 mb-0.5 flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold",
-            ticket.severity === "critical"
-              ? "bg-risk-critical text-risk-critical-fg"
-              : "bg-risk-high text-risk-high-fg",
+            "bg-risk-critical text-risk-critical-fg",
           )}
         >
           {overdue ? (
