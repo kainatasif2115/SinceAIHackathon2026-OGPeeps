@@ -250,3 +250,12 @@ export function listCases(run: CaseRun) {
 export function getCase(run: CaseRun, caseId: string): Promise<CaseDetail> {
   return call(`/api/agent/cases/${run}/${encodeURIComponent(caseId)}`, caseDetailSchema);
 }
+
+/** The five journey conversations for the public /journeys page (no staff login needed). */
+export async function getJourneys(): Promise<CaseDetail[]> {
+  const { journeys } = await call(
+    "/api/journeys",
+    z.object({ journeys: z.array(caseDetailSchema) }),
+  );
+  return journeys;
+}

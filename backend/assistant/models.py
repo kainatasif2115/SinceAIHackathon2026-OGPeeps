@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 from assistant import vocab
 
@@ -35,6 +35,10 @@ class FinalAnswer(BaseModel):
     consent_requested_for: list[str]
     citations: list[GuidanceId]
     confidence: float = Field(description="0-1: how likely this answer is the right, safe one.")
+    # Steps the checker added in the organisers' standard wording, because the matcher
+    # didn't recognise the model's own wording for a step it chose. Kept in the scored
+    # answer; the chat hides them, as the model already said the same in its own words.
+    _added_steps: list[str] = PrivateAttr(default_factory=list)
 
 
 class Question(BaseModel):

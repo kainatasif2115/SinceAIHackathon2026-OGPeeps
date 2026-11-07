@@ -321,7 +321,7 @@
     "en": []
   },
   "explain_benign": {
-    "en_canonical": "Explain that this looks legitimate or harmless, and why.",
+    "en_canonical": "This looks genuine, so nothing needs to be done.",
     "fi": [
       "Muuta ei tarvitse tehdä.",
       "Mitään ei tarvitse tehdä.",
@@ -334,7 +334,7 @@
     ]
   },
   "seek_support_org": {
-    "en_canonical": "Point to a trusted person or a victim-support service.",
+    "en_canonical": "Talk to someone you trust or a victim-support service.",
     "fi": [],
     "en": []
   },
@@ -349,7 +349,7 @@
     "en": []
   },
   "decline_request": {
-    "en_canonical": "Decline the out-of-scope request briefly.",
+    "en_canonical": "I cannot help with that, but I can help you stay safe.",
     "fi": [
       "Ymmärrän harmituksesi, mutta en voi selvittää numeron omistajaa enkä auttaa julkaisemaan kenenkään tietoja.",
       "Tekstiviestin lähettäjänimen voi väärentää, joten viesti voi näkyä samassa ketjussa kuin pankin aidot viestit."

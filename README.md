@@ -37,6 +37,8 @@ The Next.js app proxies `/api/*` to Django, so the browser only ever talks to on
 
 **Accounts are optional.** Anyone can check a message without signing up. Customers who create an account (`/signup`, `/login`) get a dashboard (`/dashboard`) laid out like a chat app: **Chat** with the last 24 hours of history beside it, **Live call** (the call co-pilot listens to a call and hands what was said to the chat), **Your checks** (each handoff shows the place in line, which DNA agent picked it up, and a Sent → Picked up → Resolved timeline), and **Team** for business accounts. Account settings, including "delete my account", are in the profile menu. An account is for a **private person** or a **business**: a business account creates the company's team, the owner invites colleagues (the app gives a sign-up link to copy or email), and sees the checks they make in Business mode. Support staff sign in separately at `/agent`.
 
+**Data credit.** The evaluation data, guidance texts and evaluator come from "DNA Digital Security Assistant simulation set v2.0.1, Since AI ry, 2026" (data and documentation CC BY 4.0, code MIT), included unchanged in `simset/`. All cases are synthetic and the guidance is not DNA's or an authority's advice.
+
 ## Stack
 
 | Part | Tools |

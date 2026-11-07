@@ -276,6 +276,12 @@ function CaseChat({ run, caseId }: { run: CaseRun; caseId: string }) {
     );
   }
 
+  return <CaseChatView detail={detail} />;
+}
+
+/** One case as a chat: the header with the verdict, the conversation, the evidence and
+ *  what the organisers expected. Shared by the staff Cases tab and the public /journeys. */
+export function CaseChatView({ detail }: { detail: CaseDetail }) {
   const { ours, expected } = detail;
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6">

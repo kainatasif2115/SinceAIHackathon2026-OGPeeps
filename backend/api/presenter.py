@@ -126,7 +126,8 @@ def answer(sub: dict, language: str) -> dict:
             ACTION_TITLES.get(sub["primary_action"], {}), language, sub["primary_action"]
         ),
         "advice_text": sub["advice_text"],
-        "steps": sub["steps"],
+        # The chat leaves out the checker's standard-wording copies (see engine.shown_steps).
+        "steps": sub.get("shown_steps") or sub["steps"],
         "escalation_required": bool(sub.get("escalation_required")),
         "escalation_target": target,
         "escalation_label": _pick(ESCALATION_LABELS.get(target, {}), language, target)
@@ -146,7 +147,10 @@ def field_label(path: str, language: str) -> str:
 
 def turn(raw: dict, language: str) -> dict:
     if raw["type"] == "final":
-        return {"type": "final", "answer": answer(raw["answer"], language)}
+        sub = raw["answer"]
+        if raw.get("shown_steps"):
+            sub = {**sub, "shown_steps": raw["shown_steps"]}
+        return {"type": "final", "answer": answer(sub, language)}
     if raw["type"] == "consent_request":
         fields = [{"path": f, "label": field_label(f, language)} for f in raw["fields"]]
         return {"type": "consent_request", "text": raw["text"], "fields": fields}

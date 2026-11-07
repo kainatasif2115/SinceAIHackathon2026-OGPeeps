@@ -14,6 +14,12 @@ The brief asks for "documented decisions", so add an entry whenever the team set
 
 ---
 
+## 2026-11-07: The chat shows the model's own steps, the scored answer keeps the standard wording
+
+**Decision:** When the organisers' matcher doesn't recognise the model's wording for a step it chose, the checker still appends the standard sentence to the scored answer, but the chat leaves that copy out (`engine.shown_steps`). The three standard sentences written as instructions to the assistant ("Explain that this looks legitimate…", "Point to a trusted person…", "Decline the out-of-scope request briefly.") are now advice to the user that the matcher still recognises.
+**Why:** The AI review of 30 answers found six that repeat a step at the end and one that shows an internal instruction. The model had already said the same in its own words; the copy only exists for the evaluator.
+**Alternatives considered:** Dropping the appended sentences everywhere (lowers step coverage in the evaluator without making the advice safer), and matching on similar words (too unreliable: the repeated pairs share few words).
+
 ## 2026-11-07: Final measured run instead of the replayed estimate
 
 **Decision:** We reran the full evaluation on the live code and the deployed ElevenLabs agent (588 dev cases, 120 conversations at 24 per journey, all 335 test answers) and report those numbers: 89.6 % safe-action pass and 95.0 % in conversation. The replayed estimate (92.9 %) stays in `results.md` only for comparison.

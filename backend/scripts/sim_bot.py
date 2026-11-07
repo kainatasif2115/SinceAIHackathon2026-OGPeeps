@@ -47,7 +47,7 @@ def handle(event: dict, state: dict) -> dict:
         )
         return {"type": "final", "answer": answer}
     if turn["type"] == "final":
-        return turn
+        return {"type": "final", "answer": turn["answer"]}
     if turn["type"] == "question":
         return {"type": "question", "text": turn["text"], "topics": turn["topics"]}
     return {"type": "consent_request", "fields": turn["fields"], "text": turn["text"]}

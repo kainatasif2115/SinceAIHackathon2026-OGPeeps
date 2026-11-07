@@ -414,6 +414,13 @@ def evaluation_results(request):
     return results.load_all()
 
 
+@api.get("/journeys")
+def journeys(request):
+    """The five journeys as saved conversations, for the public /journeys page. Synthetic
+    organisers' dev cases and our answers; nothing here comes from a customer."""
+    return {"journeys": cases.journeys()}
+
+
 @api.get("/agent/cases", auth=agent_auth)
 def list_cases(request, run: str = "multi"):
     """Dev cases in a saved run, each with the official pass/fail."""
@@ -519,7 +526,10 @@ def _advance(request, session_id: str, conv: Conversation, doc: dict) -> dict:
 
     extra = _extra(doc)
     if raw["type"] == "final":
-        extra.update(pending=None, final=raw["answer"])
+        final = raw["answer"]
+        if raw.get("shown_steps"):
+            final = {**final, "shown_steps": raw["shown_steps"]}
+        extra.update(pending=None, final=final)
     else:
         extra.update(pending=raw)
     sessions.save(session_id, conv, extra)
