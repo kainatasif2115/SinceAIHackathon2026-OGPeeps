@@ -99,7 +99,7 @@ export function SiteHeader({ onOpenAssistant }: { onOpenAssistant: () => void })
 export function SiteFooter() {
   return (
     <footer className="bg-ink text-ink-foreground">
-      <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[2fr_1fr_1fr]">
+      <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
         <div className="flex max-w-sm flex-col gap-3">
           <p className="font-heading flex items-center gap-2.5 text-lg font-semibold">
             <span className="text-brand-soft font-bold">DNA</span>
@@ -111,21 +111,6 @@ export function SiteFooter() {
             synthetic data only and is not a live DNA service or real security advice.
           </p>
         </div>
-        <FooterColumn
-          heading="The assistant"
-          links={[
-            { href: "/assistant", label: "Open full-screen app" },
-            { href: "#how", label: "How it works" },
-            { href: "#never", label: "What we never ask for" },
-          ]}
-        />
-        <FooterColumn
-          heading="Prototype"
-          links={[
-            { href: "/api/docs", label: "API docs" },
-            { href: "#scams", label: "Example cases" },
-          ]}
-        />
       </div>
       <div className="border-t border-white/10">
         <p className="text-ink-foreground/60 mx-auto w-full max-w-6xl px-4 py-4 text-xs sm:px-6">
@@ -133,31 +118,5 @@ export function SiteFooter() {
         </p>
       </div>
     </footer>
-  );
-}
-
-function FooterColumn({
-  heading,
-  links,
-}: {
-  heading: string;
-  links: { href: string; label: string }[];
-}) {
-  return (
-    <div className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold">{heading}</h2>
-      <ul className="flex flex-col gap-2">
-        {links.map((link) => (
-          <li key={link.href}>
-            <a
-              href={link.href}
-              className="text-ink-foreground/75 hover:text-ink-foreground text-sm underline-offset-4 hover:underline"
-            >
-              {link.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
