@@ -471,8 +471,8 @@ function TicketCard({
         >
           {ticket.severity === "critical" && ticket.status !== "done" ? (
             <span aria-hidden className="relative flex size-2">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex size-2 rounded-full bg-white" />
+              <span className="bg-risk-critical-line absolute inline-flex size-full animate-ping rounded-full opacity-60" />
+              <span className="bg-risk-critical-line relative inline-flex size-2 rounded-full" />
             </span>
           ) : (
             <severity.icon aria-hidden className="size-3.5" />

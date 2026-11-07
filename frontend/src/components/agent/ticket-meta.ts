@@ -69,7 +69,8 @@ export const SEVERITY_META: Record<Severity, SeverityStyle> = {
   critical: {
     label: "Critical",
     icon: OctagonExclamationPoint,
-    chip: "bg-[#c62828] text-white", // solid: the only filled tag on the board
+    // Light like the others; a thin outline and the pulsing dot set it apart.
+    chip: "bg-risk-critical text-risk-critical-fg ring-1 ring-inset ring-risk-critical-line/40",
     dot: "bg-risk-critical-line",
     edge: "border-l-risk-critical-line",
     card: "bg-[#fff6f6]",
