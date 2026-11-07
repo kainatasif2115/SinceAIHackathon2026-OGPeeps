@@ -49,6 +49,7 @@ const en = {
   usingExample: "Using example:",
   clearExample: "Remove example",
 
+  topicHint: (title: string) => `${title}: pick one to edit, or write your own`,
   examplesHeading: "Or try an example",
   examplesLoading: "Loading examples…",
   examplesError: "Examples could not be loaded. You can still describe your own situation.",
@@ -236,6 +237,7 @@ const fi: Dictionary = {
   usingExample: "Esimerkki:",
   clearExample: "Poista esimerkki",
 
+  topicHint: (title) => `${title}: valitse yksi muokattavaksi tai kirjoita oma`,
   examplesHeading: "Tai kokeile esimerkkiä",
   examplesLoading: "Ladataan esimerkkejä…",
   examplesError: "Esimerkkejä ei voitu ladata. Voit silti kertoa oman tilanteesi.",
@@ -421,6 +423,7 @@ const sv: Dictionary = {
   usingExample: "Exempel:",
   clearExample: "Ta bort exempel",
 
+  topicHint: (title) => `${title}: välj ett att redigera, eller skriv ett eget`,
   examplesHeading: "Eller prova ett exempel",
   examplesLoading: "Laddar exempel…",
   examplesError: "Exemplen kunde inte laddas. Du kan ändå beskriva din egen situation.",

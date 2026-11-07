@@ -30,7 +30,8 @@ GATED_SIGNALS = [
 
 @cache
 def scenarios() -> dict[str, dict]:
-    """The organisers' five demo journeys plus a benign and a business case per journey."""
+    """The organisers' five demo journeys, plus a benign, a business and a Swedish case for
+    each journey."""
     dev = simset.load_jsonl(simset.DEV_CASES)
     picked = {
         c["case_id"]: c
@@ -50,7 +51,28 @@ def scenarios() -> dict[str, dict]:
             ),
             None,
         )
-        for c in (benign, business, english):
+        swedish = next(
+            (
+                c
+                for c in dev
+                if c["journey"] == journey
+                and c["language"] == "sv"
+                and c["audience"] == "consumer"
+                and not c["ground_truth"]["is_benign_control"]
+            ),
+            None,
+        )
+        swedish_business = next(
+            (
+                c
+                for c in dev
+                if c["journey"] == journey
+                and c["language"] == "sv"
+                and c["audience"] == "small_business"
+            ),
+            None,
+        )
+        for c in (benign, business, english, swedish, swedish_business):
             if c:
                 picked.setdefault(c["case_id"], c)
     return picked

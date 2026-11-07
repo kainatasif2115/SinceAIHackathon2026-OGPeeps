@@ -5,6 +5,7 @@ import type { Audience, Language, Scenario } from "@/lib/api";
 import type { ImageAttachment } from "@/lib/media";
 import { Composer } from "./composer";
 import { useT } from "./i18n-context";
+import { localizeTopic } from "@/lib/topic-translations";
 import { ScenarioList, type ScenariosState } from "./scenario-list";
 
 /** A help topic picked on the homepage, with example messages to start from. */
@@ -39,6 +40,7 @@ export function StartView({
   onPickScenario,
 }: Props) {
   const t = useT();
+  const localTopic = topic ? localizeTopic(topic, language) : null;
   return (
     <div className="flex flex-col gap-12">
       <section aria-labelledby="start-heading" className="flex flex-col gap-4">
@@ -67,13 +69,13 @@ export function StartView({
           </p>
         )}
 
-        {topic && (
+        {localTopic && (
           <div className="flex flex-col gap-2">
             <p className="text-sm font-semibold">
-              {topic.title}: pick one to edit, or write your own
+              {t.topicHint(localTopic.title)}
             </p>
             <ul className="flex flex-col gap-2">
-              {topic.examples.map((example) => (
+              {localTopic.examples.map((example) => (
                 <li key={example}>
                   <button
                     type="button"
