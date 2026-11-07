@@ -13,6 +13,7 @@ from api import (
     campaigns,
     cases,
     db,
+    limits,
     presenter,
     redteam,
     results,
@@ -86,6 +87,8 @@ def health(request):
 
 
 def _brain_configured() -> bool:
+    if brain.provider() == "mock":
+        return True
     if brain.provider() == "elevenlabs":
         return bool(os.environ.get("ELEVENLABS_API_KEY") and os.environ.get("ELEVENLABS_AGENT_ID"))
     return bool(os.environ.get("ANTHROPIC_API_KEY"))
@@ -109,7 +112,7 @@ def start_session(request, body: StartIn):
     # Only the typed message is fingerprinted (screenshots are not), and the note
     # is informational: it never changes the assistant's advice.
     campaign = campaigns.check_and_record(body.message, body.language, body.audience)
-    return {**_advance(session_id, conv, doc), "campaign": campaign}
+    return {**_advance(request, session_id, conv, doc), "campaign": campaign}
 
 
 @api.post("/sessions/{session_id}/reply", response=SessionOut)
@@ -119,7 +122,7 @@ def reply(request, session_id: str, body: ReplyIn):
     sessions.add_link_check(conv.case, body.text)
     text = body.text.strip() or SCREENSHOT_ONLY[conv.case["language"]]
     conv.record_answer(text, [image.model_dump() for image in body.images])
-    return _advance(session_id, conv, doc)
+    return _advance(request, session_id, conv, doc)
 
 
 @api.post("/sessions/{session_id}/consent", response=SessionOut)
@@ -127,7 +130,7 @@ def consent(request, session_id: str, body: ConsentIn):
     conv, doc = _load(session_id)
     pending = _require_pending(doc, "consent_request")
     conv.record_consent(pending["fields"], body.granted)
-    return _advance(session_id, conv, doc)
+    return _advance(request, session_id, conv, doc)
 
 
 @api.post("/sessions/{session_id}/handoff", response=HandoffOut)
@@ -239,6 +242,8 @@ def account_delete(request, response: HttpResponse):
 def red_team(request, body: RedTeamIn):
     """ "Try to trick it": runs an attack through the real pipeline and reports what
     the safety checker caught. Public, like the chat itself."""
+    if not limits.allow(request):
+        raise HttpError(429, "Too many tries for now. Please come back in an hour.")
     return redteam.attack(body.message, body.language, body.audience)
 
 
@@ -328,6 +333,8 @@ def transcribe(request, audio: File[UploadedFile], language: Form[str] = ""):
     """Microphone recording -> text, so people can speak instead of type."""
     if not voice.is_configured():
         raise HttpError(503, "Voice input is not available right now.")
+    if not limits.allow(request):
+        raise HttpError(429, "Voice input is busy. Please try again later.")
     if audio.size > MAX_AUDIO_BYTES:
         raise HttpError(413, "Recording is too long.")
     try:
@@ -343,6 +350,8 @@ def speak(request, body: SpeakIn):
     """Text -> speech (MP3), for "read it aloud"."""
     if not voice.is_configured():
         raise HttpError(503, "Reading aloud is not available right now.")
+    if not limits.allow(request):
+        raise HttpError(429, "Reading aloud is busy. Please try again later.")
     try:
         audio = voice.speak(body.text, body.language)
     except Exception as err:
@@ -370,12 +379,15 @@ def _extra(doc: dict) -> dict:
     return {k: doc[k] for k in keep if k in doc}
 
 
-def _advance(session_id: str, conv: Conversation, doc: dict) -> dict:
+def _advance(request, session_id: str, conv: Conversation, doc: dict) -> dict:
     try:
+        if not limits.allow(request):
+            raise BrainUnavailable("usage limit reached")
         raw = conv.next_turn()
     except BrainUnavailable as err:
         # The assistant must never leave someone without advice: give the safe generic
-        # answer with a human handoff, and log why.
+        # answer with a human handoff, and log why. This also covers the usage limits
+        # (api/limits.py), so running out of budget costs no AI credits.
         log.warning("Brain unavailable for session %s: %s", session_id, err)
         answer = engine.fallback_answer(conv.case)
         raw = {

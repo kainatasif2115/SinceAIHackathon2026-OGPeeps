@@ -258,3 +258,60 @@ def test_missing_api_key_is_brain_unavailable(monkeypatch):
 
     with pytest.raises(brain.BrainUnavailable):
         brain.answer_single_turn({"case_id": "X", "language": "en"})
+
+
+def test_self_service_answers_drop_the_handoff_and_its_sentence(en_case):
+    answer = final(
+        primary_action="change_password_and_enable_mfa",
+        risk_level="high",
+        escalation_required=True,
+        escalation_target="security_specialist",
+        advice_text="Change your password now. I am connecting you now to a security specialist.",
+        steps=["Change your password.", "I am connecting you to a specialist."],
+        step_ids=["change_password"],
+    )
+
+    checked = checker.check(answer, en_case, ConsentState()).answer
+
+    assert not checked.escalation_required
+    assert checked.escalation_target is None
+    assert "connecting" not in checked.advice_text + " ".join(checked.steps)
+    assert "Change your password" in checked.advice_text
+
+
+@pytest.mark.parametrize(
+    ("action", "risk"),
+    [("change_password_and_enable_mfa", "critical"), ("isolate_device_and_scan", "high")],
+)
+def test_handoff_stays_where_it_is_needed(en_case, action, risk):
+    answer = final(
+        primary_action=action,
+        risk_level=risk,
+        escalation_required=True,
+        escalation_target="security_specialist",
+    )
+
+    assert checker.check(answer, en_case, ConsentState()).answer.escalation_required
+
+
+def test_a_conditional_offer_of_a_person_is_kept(en_case):
+    offer = "If you already gave a code, tell me and I will connect you to support."
+    answer = final(
+        primary_action="verify_via_official_channel",
+        risk_level="high",
+        escalation_required=True,
+        advice_text=f"Call your bank on the number on your card. {offer}",
+    )
+
+    checked = checker.check(answer, en_case, ConsentState()).answer
+
+    assert not checked.escalation_required
+    assert offer in checked.advice_text
+
+
+def test_a_password_change_is_never_low_risk(en_case):
+    answer = final(primary_action="change_password_and_enable_mfa", risk_level="low")
+
+    checked = checker.check(answer, en_case, ConsentState()).answer
+
+    assert (checked.risk_level, checked.urgency) == ("high", "today")

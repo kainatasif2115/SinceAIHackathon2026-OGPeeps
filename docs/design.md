@@ -110,10 +110,11 @@ Chat-app style: **one rounded card** (16px) holds the text area and a toolbar un
 
 ### Voice input
 
-- The microphone uses the browser's speech recognition in the selected language (fi-FI, sv-SE, en-GB).
-- While listening, the button turns red with a stop icon and a pulse, and a live status line says it's listening.
+- When the backend has ElevenLabs voice on, the browser records the audio and our backend turns it into text (ElevenLabs speech-to-text). The recording doesn't go to the browser maker, and it works in any browser that can record, Firefox included. Recordings stop after 60 seconds.
+- Otherwise (voice switched off) it falls back to the browser's own speech recognition in the selected language (fi-FI, sv-SE, en-GB).
+- While listening, the button turns red with a stop icon and a pulse, and a live status line says it's listening; while the recording is turned into text it says "Turning your voice into text…".
 - The words appear in the message box, so the user can check them before sending.
-- The button is hidden in browsers without speech recognition (e.g. Firefox).
+- The button is hidden only in browsers that can neither record nor recognise speech.
 - Errors (permission denied, nothing heard) show a plain message under the box.
 
 ### Copy and read aloud

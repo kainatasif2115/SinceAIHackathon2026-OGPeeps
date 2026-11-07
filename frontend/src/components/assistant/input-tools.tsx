@@ -178,27 +178,31 @@ export function MicButton({
 /** Live status under the box: listening, or why voice input failed. */
 export function VoiceStatus({
   listening,
+  transcribing = false,
   error,
 }: {
   listening: boolean;
+  transcribing?: boolean;
   error: SpeechError | null;
 }) {
   const t = useT();
   const message = listening
     ? t.voiceListening
-    : error === "denied"
-      ? t.voiceDenied
-      : error === "no-speech"
-        ? t.voiceNoSpeech
-        : error === "unavailable"
-          ? t.voiceUnavailable
-          : null;
+    : transcribing
+      ? t.voiceTranscribing
+      : error === "denied"
+        ? t.voiceDenied
+        : error === "no-speech"
+          ? t.voiceNoSpeech
+          : error === "unavailable"
+            ? t.voiceUnavailable
+            : null;
   return (
     <p
       aria-live="polite"
       className={cn(
         "text-sm",
-        listening ? "text-foreground" : "text-destructive",
+        listening || transcribing ? "text-foreground" : "text-destructive",
         !message && "sr-only",
       )}
     >

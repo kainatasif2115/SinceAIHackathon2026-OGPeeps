@@ -12,7 +12,7 @@ from functools import cache
 
 import anthropic
 
-from assistant import elevenlabs_llm
+from assistant import elevenlabs_llm, mock_brain
 from assistant.models import Decision, FinalAnswer
 from assistant.prompt import system_prompt
 
@@ -137,6 +137,8 @@ def _call(output_format, user_content: str, language: str = "en", images: list[d
 
 
 def answer_single_turn(case: dict, feedback: str | None = None) -> FinalAnswer:
+    if provider() == "mock":
+        return mock_brain.answer_single_turn(case)
     content = (
         "Mode: single-turn. Give one final answer now; you cannot ask the user anything first.\n\n"
         f"<case>\n{json.dumps(visible_case(case), ensure_ascii=False)}\n</case>"
@@ -158,6 +160,8 @@ def decide_multi_turn(
     `history` holds earlier questions, answers and consent results; `images` the
     screenshots the user attached so far.
     """
+    if provider() == "mock":
+        return mock_brain.decide_multi_turn(case, history, turns_left)
     if turns_left <= 0:
         rule = 'You have no questions left: next must be "final".'
     else:

@@ -149,7 +149,11 @@ export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Pro
               onRemove={attachments.remove}
               error={attachments.error}
             />
-            <VoiceStatus listening={speech.listening} error={speech.error} />
+            <VoiceStatus
+              listening={speech.listening}
+              transcribing={speech.transcribing}
+              error={speech.error}
+            />
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
               <div className="-ml-2 flex items-center">
                 <AttachButton

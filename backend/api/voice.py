@@ -12,7 +12,10 @@ LANGUAGES = {"fi", "en", "sv"}
 
 
 def is_configured() -> bool:
-    return bool(os.environ.get("ELEVENLABS_API_KEY"))
+    """VOICE_ENABLED=false switches ElevenLabs voice off (no credits); the page then
+    falls back to the browser's own speech."""
+    enabled = os.environ.get("VOICE_ENABLED", "true").lower() != "false"
+    return enabled and bool(os.environ.get("ELEVENLABS_API_KEY"))
 
 
 def transcribe(audio: bytes, filename: str, language: str | None) -> str:

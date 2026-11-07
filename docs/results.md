@@ -93,6 +93,21 @@ Per journey after the fix: breach notice 100%, small-business incident 100%, sus
 
 Files: [`results/dev_twins_108_evaluator.txt`](../results/dev_twins_108_evaluator.txt), before: [`results/dev_twins_108_before_evaluator.txt`](../results/dev_twins_108_before_evaluator.txt).
 
+### Estimated full-set score today (588 cases, replayed)
+
+The full 588-case run above was measured before today's fixes. Rerunning it costs about 45,000 ElevenLabs credits, so this is an **estimate** built from answers we already have: the 108 "it depends" cases use their real new answers, the other 480 use the earlier answers, and the two new checker rules (proportionate handoffs, password changes are high risk; see `docs/decisions.md`) are applied on top. Scored with the organisers' evaluator.
+
+| | Measured before today | + new "it depends" answers | **+ new checker rules (estimate)** |
+|---|---|---|---|
+| Safe-action pass | 82.5 % | 91.2 % | **92.9 %** (95% CI 90.8–94.9) |
+| Escalation recall | 91.7 % | 99.2 % | **99.2 %** |
+| Handoffs the reference didn't want | 86 | 90 | **42** |
+| False alarms on benign / unsafe statements | 6.1 % / 0 % | 6.1 % / 0 % | **6.1 % / 0 %** |
+| Correctness / uncertainty and escalation | 84.9 / 75.7 | 90.2 / 88.5 | **91.6 / 92.1** |
+| Weighted proxy | 87.2 | 92.0 | **93.4** (95% CI 92.5–94.1) |
+
+**Scams in another language.** In 58 dev cases the scam text is Finnish but the user writes English or Swedish. Those passed 63.8% in the measured run; with today's answers they pass 86.2% (50 of 58), because most failures were "it depends" cases. Of the 8 left, 4 were password-leak notices rated low risk, which the new password rule now raises to high.
+
 ### Multi-turn, 30 conversations with the simulated user
 
 This is the mode the demo uses: the assistant can ask questions and ask permission before answering. We ran the organisers' `sim/run_conversation.py` with our bot (`backend/scripts/sim_bot.py`) on 6 dev cases per journey, scored with the same evaluator.

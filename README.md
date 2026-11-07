@@ -77,6 +77,9 @@ Rerun `make agent` whenever `backend/assistant/prompt.py` changes, so the agent 
 | `ELEVENLABS_LLM` | Model inside the agent (default `claude-sonnet-5-5`) |
 | `ELEVENLABS_VOICE_ID`, `ELEVENLABS_TTS_MODEL` | Voice for "read aloud" (default: first voice on the account, `eleven_flash_v2_5`) |
 | `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `BRAIN_PROVIDER` | Optional: call Claude directly instead (`BRAIN_PROVIDER=anthropic`) |
+| `BRAIN_PROVIDER=mock` | **Free mock AI for building and testing**: the organisers' keyword rules answer instead of the model, so clicking through the app spends no credits. Answers are weak and marked "(Test answer without the AI.)"; never use it for a demo or for measuring. |
+| `VOICE_ENABLED=false` | Switch ElevenLabs voice off (no credits): read-aloud and the microphone fall back to the browser's own speech |
+| `RATE_LIMIT_PER_HOUR`, `DAILY_AI_LIMIT` | Protect the credits on a public link: AI answers per visitor per hour (default 30) and for the whole service per day (default 1500). Past a limit, people still get the safe generic answer, at no AI cost. |
 | `MONGODB_URI` | MongoDB connection string: the team's Atlas cluster, or `mongodb://localhost:27017` after `make db`. Leave empty to keep chats in memory. |
 | `MONGODB_DB` | Database name (default `security_assistant`) |
 | `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS` | Django settings (defaults are fine locally) |
