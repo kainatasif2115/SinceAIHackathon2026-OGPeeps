@@ -60,12 +60,12 @@ Compared with the organisers' rules baseline on the same 588 cases:
 
 Other scorecard proxies: correctness 84.9, uncertainty and escalation 75.7. Every answer is in the user's language, readable, and cites guidance. Full evaluator output: [`results/dev_full_588_evaluator.txt`](../results/dev_full_588_evaluator.txt); answers: [`results/dev_full_588_predictions.jsonl`](../results/dev_full_588_predictions.jsonl). Reproduce with `make eval-dev`.
 
-**Where we lose points:**
+**Where we lost points in this run** (the table above was measured before the deciding-question fix; see the next section):
 
 | Weak spot | Score | What happens |
 |---|---|---|
-| "It depends" (twin) cases | 51.9 % (single-turn) | The decisive question isn't asked (49 cases). The checker's riskier-branch rule only fires when the question is asked. |
-| Breach notices | 66.7 % | Mostly the decisive question about a code or "did you do this yourself" isn't asked. |
+| "It depends" (twin) cases | 51.9 % (single-turn) | The decisive question isn't asked (49 cases). The checker's riskier-branch rule only fires when the question is asked. **Fixed: 99.1 % on a rerun of all 108, see below.** |
+| Breach notices | 66.7 % | Mostly the decisive question about a code or "did you do this yourself" isn't asked. **The breach-notice twin cases now pass 24 of 24.** |
 | Small-business incidents | 75.0 % | Over-cautious on benign payee changes the user already verified by phone. |
 | Over-escalation | 86 extra handoffs | We hand off to a person more often than the reference. That's the safer direction to be wrong in, but it costs customer-service time. |
 
@@ -73,29 +73,53 @@ Cases that aren't "it depends" pass at **89.4%**.
 
 **Our 60-case sample was optimistic.** It scored 86.7% where the full set scores 82.5%. That's within the sample's confidence interval, but we now report the full set. The sample history is still useful: on those 60 cases, setting the language per conversation took answers in the user's language from 50% to 100%, and the riskier-branch rule took "it depends" cases from 42% to 67%.
 
+### "It depends" cases after the deciding-question fix (108 cases, single-turn)
+
+In 108 dev cases the right answer depends on one fact only the user knows ("did you make this change yourself?", "has the money already gone?"). We added a checklist of these deciding questions to the policy, and the checker now adds one sentence for the safer answer when the model leaves it out (see `docs/decisions.md`, 2026-11-07). Rerun on all 108:
+
+| | Before | **After** |
+|---|---|---|
+| Safe-action pass | 51.9 % | **99.1 %** (95% CI 97.2–100) |
+| Asked the deciding question | 54.6 % | **100 %** |
+| Unsafe statements | 0 % | **0 %** |
+| Escalation recall | 86.1 % | **100 %** |
+| Correctness / uncertainty and escalation | 65.5 / 70.5 | **94.4 / 86.7** |
+| Clarity | 94.4 | **94.4** |
+| Weighted proxy | 78.8 | **92.0** |
+
+Per journey after the fix: breach notice 100%, small-business incident 100%, suspicious call 100%, clicked link 95.8%. The one remaining failure (DSA-D-0398) asks the right question but its advice misses the reference's required step wording.
+
+**A side effect we caught and fixed.** The first version of the checklist made the model treat two harmless order confirmations as incidents (false alarms on a 60-case mixed sample went from 0% to 15%). We added a "data first" rule: when the account data clearly shows an ordinary order, say so calmly. On the 45 answers of that sample measured afterwards, 41 pass (37 before), and all three cases that went wrong now pass. (The rest of that sample run was cut short when our ElevenLabs credits ran out.)
+
+Files: [`results/dev_twins_108_evaluator.txt`](../results/dev_twins_108_evaluator.txt), before: [`results/dev_twins_108_before_evaluator.txt`](../results/dev_twins_108_before_evaluator.txt).
+
 ### Multi-turn, 30 conversations with the simulated user
 
 This is the mode the demo uses: the assistant can ask questions and ask permission before answering. We ran the organisers' `sim/run_conversation.py` with our bot (`backend/scripts/sim_bot.py`) on 6 dev cases per journey, scored with the same evaluator.
 
-| | Before the consent fix | **After the consent fix (current)** |
-|---|---|---|
-| Safe-action pass | 93.3 % | **90.0 %** (95% CI 76.7–100) |
-| Unsafe statements / false alarms on benign | 0 % / 0 % | **0 % / 0 %** |
-| Escalation recall | 100 % | **100 %** |
-| Clarity | 100 | **99.0** |
-| Privacy and consent | 66.0 | **74.0** |
-| Asked permission for data the case needed | 0 % | **20 %** |
-| Used consent-gated data it didn't need | 20 % | **10 %** |
-| Consent violations (data used without permission) | 0 % | **0 %** |
-| Weighted proxy | 86.8 | **85.9** |
+| | First run | After the consent wording | **After the deciding-question checklist and account-check step (current)** |
+|---|---|---|---|
+| Safe-action pass | 93.3 % | 90.0 % | **100 %** (30 of 30) |
+| Asked the deciding question (twin cases) | – | 66.7 % | **100 %** |
+| Unsafe statements / false alarms on benign | 0 % / 0 % | 0 % / 0 % | **0 % / 0 %** |
+| Escalation recall | 100 % | 100 % | **100 %** |
+| Clarity | 100 | 99.0 | **100** |
+| Privacy and consent | 66.0 | 74.0 | **89.3** |
+| Asked permission for data the case needed | 0 of 5 | 1 of 5 | **4 of 5** |
+| Conversations with a permission request | – | 12 of 30 | **16 of 30** |
+| Used consent-gated data it didn't need | 20 % | 10 % | **20 %** |
+| Consent violations (data used without permission) | 0 % | 0 % | **0 %** |
+| Weighted proxy | 86.8 | 85.9 | **93.7** (95% CI 89.2–97.1) |
+
+**The account-check step:** before a risky final answer, if the assistant hasn't offered any account check yet, the engine asks it once whether one hidden field would confirm or rule out the suspicion. That took "asked permission where needed" from 1 of 5 to 4 of 5. The miss is a "login from Spain" chat where the user said they had logged in themselves; the answer was low risk, so the step didn't run. The trade-off: it now looks at gated data a little more often than the reference thinks necessary (6 of 30 conversations), always with the user's permission.
 
 **What the consent fix was:** the first run never asked permission to check data, even where the reference expects it. For example, a "was my eSIM moved?" case needs the subscription's recent changes. We changed the policy to ask early for the one field that would confirm or rule out the main suspicion, and to report only data that actually changed the advice.
 
 An example from the rerun (DSA-D-0002, Finnish): *"Saanko katsoa Oma-tilisi viimeisimmät kirjautumiset (aika, maa ja tunnettu laite)?"* ("May I look at your account's recent logins: time, country and known device?").
 
-The pass-rate difference (93.3% vs 90.0%) is one case, well within the noise for 30 conversations. **Asking permission is still our clearest multi-turn gap: the assistant asks in only 1 of 5 cases where the reference expects it.** It never used data without permission.
+The pass-rate difference between the first two runs (93.3% vs 90.0%) is one case, well within the noise for 30 conversations. In the current run the assistant asks permission in 4 of the 5 cases where the reference expects it (it was 1 of 5), and it has never used data without permission.
 
-Full output: [`results/dev_multi_30_evaluator.txt`](../results/dev_multi_30_evaluator.txt) (before the fix: [`results/dev_multi_30_before_privacy_fix_evaluator.txt`](../results/dev_multi_30_before_privacy_fix_evaluator.txt)); transcripts: [`results/dev_multi_30_predictions.jsonl`](../results/dev_multi_30_predictions.jsonl).
+Full output: [`results/dev_multi_30_evaluator.txt`](../results/dev_multi_30_evaluator.txt); earlier runs: [`results/dev_multi_30_before_consent_step_evaluator.txt`](../results/dev_multi_30_before_consent_step_evaluator.txt) and [`results/dev_multi_30_before_privacy_fix_evaluator.txt`](../results/dev_multi_30_before_privacy_fix_evaluator.txt); transcripts: [`results/dev_multi_30_predictions.jsonl`](../results/dev_multi_30_predictions.jsonl).
 
 ## 4. False alarms
 
@@ -150,7 +174,7 @@ To do by the team. Read three answers aloud to someone outside the team and writ
 - **Retention:** chat sessions, including any screenshots, are deleted after 24 hours (MongoDB TTL index). The handoff summary contains only what the user wrote and chose.
 - **Screenshots:** up to three per message. Before upload, the browser shrinks them and strips EXIF data such as GPS location. The AI treats them as untrusted evidence and is told never to repeat a password, card number or code shown in one. The page reminds users never to type passwords, card numbers or codes.
 - **Voice input:** uses the browser's own speech recognition (in Chrome, Google processes the audio). Only the resulting text is sent to us, and the user sees it in the message box before sending. ElevenLabs processes the conversation text and voice to run the model; in production this would be covered by DNA's data processing agreement and EU data residency.
-- **Privacy and consent proxy:** 91.7 out of 100 single-turn (588 cases) and 74.0 multi-turn (30 conversations). There were no consent violations in either. In multi-turn the assistant still asks permission less often than it should (see section 3).
+- **Privacy and consent proxy:** 91.7 out of 100 single-turn (588 cases) and 89.3 multi-turn (30 conversations, up from 74.0). There were no consent violations in either. In chat, the assistant now asks permission in 4 of the 5 cases where the reference expects it (see section 3).
 
 ## 8. Packaging hypothesis for DNA
 
@@ -169,7 +193,7 @@ None so far.
 
 ## 10. Files
 
-- `test_predictions.jsonl` at the repo root: all 335 test inputs, single-turn, Claude Sonnet 5.5 via ElevenLabs. `python3 simset/tools/validate.py --submission test_predictions.jsonl` → **OK** (335 lines, 335 cases covered, 0 missing). One case (DSA-T-0263) first came back with invalid JSON twice and was answered on a rerun.
-  - Our own checks on the file: 335/335 answers in the user's language, 0 flagged unsafe statements (the organisers' `find_unsafe`), no advice under 20 words.
-  - Mix of answers: 110 human handoffs, 88 answers asking a decisive question, 50 `no_action_needed`.
+- `test_predictions.jsonl` at the repo root: all 335 test inputs, single-turn, Claude Sonnet 5.5 via ElevenLabs, regenerated on 2026-11-07 with the deciding-question fix. `python3 simset/tools/validate.py --submission test_predictions.jsonl` → **OK** (335 lines, 335 cases covered, 0 missing). Two cases (DSA-T-0006, DSA-T-0263) first came back with invalid JSON twice and were answered on a rerun.
+  - Our own checks on the file: 335/335 answers in the user's language, 0 flagged unsafe statements (the organisers' `find_unsafe`), no advice under 20 words, no fallback answers.
+  - Mix of answers: 131 human handoffs, 138 answers asking a decisive question, 50 `no_action_needed`. Compared with the earlier file (before the fix): decisive questions 88 → 138 and "contact your bank" answers 30 → 60, as the riskier-branch rule intends, while `no_action_needed` stays at 50.
 - Setup instructions: [`README.md`](../README.md#setup).

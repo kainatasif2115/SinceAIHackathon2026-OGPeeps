@@ -49,7 +49,8 @@ def done(answer: FinalAnswer) -> Decision:
 
 
 class Script:
-    """Returns the queued replies in order and records what it was called with."""
+    """Returns the queued replies in order and records what it was called with. The last
+    reply repeats, like a model that keeps its answer when asked to reconsider."""
 
     def __init__(self, *replies):
         self.replies = list(replies)
@@ -57,4 +58,4 @@ class Script:
 
     def __call__(self, *args, **kwargs):
         self.calls.append((args, kwargs))
-        return self.replies.pop(0)
+        return self.replies.pop(0) if len(self.replies) > 1 else self.replies[0]
