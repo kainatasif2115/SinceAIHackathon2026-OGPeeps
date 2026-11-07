@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Ear,
   LockKeyhole,
+  Mic,
   PhoneCall,
   ShieldCheck,
   TriangleExclamationPoint,
@@ -13,16 +14,8 @@ import {
 import type { Audience, Scenario } from "@/lib/api";
 import type { ScenariosState } from "@/components/assistant/scenario-list";
 import { MAX_MESSAGE_LENGTH } from "@/components/assistant/composer";
-import {
-  AttachButton,
-  AttachmentTray,
-  MicButton,
-  VoiceStatus,
-  useImageAttachments,
-  useImageDrop,
-} from "@/components/assistant/input-tools";
-import { useSpeechInput } from "@/components/assistant/use-speech-input";
-import type { ImageAttachment } from "@/lib/media";
+import { AttachButton, useImageDrop } from "@/components/assistant/input-tools";
+import { ImageError, MAX_IMAGES, prepareImage, type ImageAttachment } from "@/lib/media";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -53,18 +46,32 @@ export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Pro
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const copy = HEADLINE[audience];
-  const attachments = useImageAttachments();
-  const drop = useImageDrop((files) => void attachments.add(files));
-  const speech = useSpeechInput("en", text, (value) => {
-    setText(value);
+  const drop = useImageDrop((files) => void sendScreenshots(files));
+
+  /** A screenshot goes straight to the assistant panel, with whatever was typed so far. */
+  async function sendScreenshots(files: File[]) {
+    const images: ImageAttachment[] = [];
+    for (const file of files.slice(0, MAX_IMAGES)) {
+      try {
+        images.push(await prepareImage(file));
+      } catch (err) {
+        setError(
+          err instanceof ImageError && err.reason === "size"
+            ? "That image is too large (over 20 MB)."
+            : "That file couldn’t be read as an image. Try a PNG or JPEG screenshot.",
+        );
+      }
+    }
+    if (images.length === 0) return;
     setError(null);
-  });
+    onAsk(text.trim(), images);
+    setText("");
+  }
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    speech.stop();
     const value = text.trim();
-    if (!value && attachments.images.length === 0) {
+    if (!value) {
       setError("Write a few words about what happened.");
       return;
     }
@@ -73,9 +80,8 @@ export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Pro
       return;
     }
     setError(null);
-    onAsk(value, attachments.images);
+    onAsk(value, []);
     setText("");
-    attachments.clear();
   }
 
   const examples =
@@ -153,23 +159,19 @@ export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Pro
                 {error}
               </p>
             )}
-            <AttachmentTray
-              images={attachments.images}
-              onRemove={attachments.remove}
-              error={attachments.error}
-            />
-            <VoiceStatus listening={speech.listening} error={speech.error} />
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
               <div className="-ml-2 flex items-center">
-                <AttachButton
-                  onFiles={(files) => void attachments.add(files)}
-                  disabled={attachments.full}
-                />
-                <MicButton
-                  supported={speech.supported}
-                  listening={speech.listening}
-                  onToggle={speech.toggle}
-                />
+                <AttachButton onFiles={(files) => void sendScreenshots(files)} />
+                {/* Speaking opens the assistant panel in hands-free mode. */}
+                <button
+                  type="button"
+                  onClick={onTalk}
+                  title="Talk to the assistant"
+                  className="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex size-10 items-center justify-center rounded-full transition-colors duration-150"
+                >
+                  <Mic aria-hidden className="size-5" />
+                  <span className="sr-only">Talk to the assistant</span>
+                </button>
               </div>
               <p
                 id="hero-privacy"
