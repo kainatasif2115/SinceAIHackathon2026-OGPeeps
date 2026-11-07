@@ -63,7 +63,15 @@ def conversation_config() -> dict:
                 "cascade_timeout_seconds": 15,
             },
         },
-        "conversation": {"text_only": True},
+        "conversation": {
+            "text_only": True,
+            # Screenshots are uploaded to the conversation and sent with the message.
+            "file_input": {
+                "enabled": True,
+                "max_files_in_memory": 6,
+                "max_files_per_conversation": 6,
+            },
+        },
     }
 
 

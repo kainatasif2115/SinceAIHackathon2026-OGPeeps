@@ -69,6 +69,15 @@ SCREENSHOT_NOTE = (
 )
 
 
+def _screenshot_labels(images: list[dict]) -> str:
+    """Which message each attached file (in order) was sent with."""
+    return "\n".join(
+        f"Attached file {n}: screenshot sent with "
+        + ("the opening message" if image["turn"] == 0 else f"reply {image['turn']}")
+        for n, image in enumerate(images, start=1)
+    )
+
+
 def with_images(text: str, images: list[dict] | None) -> str | list[dict]:
     """Message content for Claude: plain text, or the screenshots followed by the text."""
     if not images:
@@ -91,21 +100,12 @@ def with_images(text: str, images: list[dict] | None) -> str | list[dict]:
     return blocks
 
 
-# The ElevenLabs route is text-only for now: the model is told screenshots exist
-# instead of the images being dropped silently.
-SCREENSHOTS_UNSEEN = (
-    "The user attached {n} screenshot(s), but they cannot be shown to you in this channel. "
-    "Do not guess what they contain. If their content matters for your advice, ask the user "
-    "to describe what the screenshot shows (sender, link, what it asks for) as one question."
-)
-
-
 def _call(output_format, user_content: str, language: str = "en", images: list[dict] | None = None):
     if provider() == "elevenlabs":
         if images:
-            user_content += "\n\n" + SCREENSHOTS_UNSEEN.format(n=len(images))
+            user_content = f"{SCREENSHOT_NOTE}\n\n{_screenshot_labels(images)}\n\n{user_content}"
         try:
-            return elevenlabs_llm.complete(output_format, user_content, language)
+            return elevenlabs_llm.complete(output_format, user_content, language, images)
         except elevenlabs_llm.ElevenLabsError as err:
             raise BrainUnavailable(str(err)) from err
     # Without credentials the SDK raises TypeError, not APIError; fail the same safe way.

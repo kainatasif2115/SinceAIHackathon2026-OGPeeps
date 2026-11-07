@@ -97,7 +97,7 @@ def test_voice_without_key_is_503(monkeypatch):
     assert response.status_code == 503
 
 
-def test_screenshots_are_mentioned_not_dropped_on_the_elevenlabs_route(monkeypatch):
+def test_screenshots_go_to_elevenlabs_with_the_safety_note(monkeypatch):
     from tests.fakes import done
 
     monkeypatch.setenv("BRAIN_PROVIDER", "elevenlabs")
@@ -107,6 +107,37 @@ def test_screenshots_are_mentioned_not_dropped_on_the_elevenlabs_route(monkeypat
 
     brain.decide_multi_turn({"case_id": "X", "language": "fi"}, [], 3, images=[image])
 
-    content, language = script.calls[0][0][1], script.calls[0][0][2]
-    assert "attached 1 screenshot(s)" in content
+    _, content, language, images = script.calls[0][0]
+    assert "untrusted" in content and "Attached file 1" in content
     assert language == "fi"
+    assert images == [image]
+
+
+def test_screenshots_are_uploaded_and_sent_as_one_multimodal_message(monkeypatch):
+    uploads = []
+
+    class Files:
+        def create(self, conversation_id, file):
+            uploads.append((conversation_id, file))
+
+            class Uploaded:
+                file_id = f"file_{len(uploads)}"
+
+            return Uploaded()
+
+    class Client:
+        class conversational_ai:  # noqa: N801
+            class conversations:  # noqa: N801
+                files = Files()
+
+    monkeypatch.setattr(elevenlabs_llm, "client", lambda: Client)
+    image = {"media_type": "image/png", "data": "aGk=", "turn": 0}
+
+    ids = elevenlabs_llm._upload("conv_1", [image])
+    message = elevenlabs_llm._message("What is this?", ids)
+
+    assert uploads == [("conv_1", ("screenshot-1.png", b"hi", "image/png"))]
+    assert message["type"] == "multimodal_message"
+    assert message["text"] == {"type": "user_message", "text": "What is this?"}
+    assert message["files"] == [{"type": "file_input", "file_id": "file_1"}]
+    assert elevenlabs_llm._message("Hi", []) == {"type": "user_message", "text": "Hi"}
