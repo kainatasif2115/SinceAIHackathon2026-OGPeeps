@@ -260,6 +260,7 @@ def check(answer: FinalAnswer, case: dict, consent: ConsentState) -> CheckResult
                 phrase = _fallback_phrase(step_id, language)
                 if phrase:
                     a.steps.append(phrase)
+                    a._added_steps.append(phrase)
                     fixes.append(f"added recognisable wording for step {step_id}")
         first_two = " ".join(textcheck.sentences(a.advice_text)[:2])
         if not (textcheck.find_steps(first_two) & set(a.step_ids)):

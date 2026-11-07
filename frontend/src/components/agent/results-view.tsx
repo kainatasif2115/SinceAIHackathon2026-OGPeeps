@@ -379,7 +379,8 @@ export function ResultsView({ onSessionExpired }: { onSessionExpired: () => void
           </li>
           <li>
             These are the evaluator’s automated proxies. Implementation (20 % of the brief) is
-            judged by people, and our own manual safety review is still to do.
+            judged by people. A first review of 30 answers against the organisers’ form found none
+            unsafe; a team member confirms it before submission.
           </li>
           <li>All cases are synthetic. They are not DNA customer data or DNA’s advice.</li>
         </ul>

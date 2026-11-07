@@ -519,7 +519,10 @@ def _advance(request, session_id: str, conv: Conversation, doc: dict) -> dict:
 
     extra = _extra(doc)
     if raw["type"] == "final":
-        extra.update(pending=None, final=raw["answer"])
+        final = raw["answer"]
+        if raw.get("shown_steps"):
+            final = {**final, "shown_steps": raw["shown_steps"]}
+        extra.update(pending=None, final=final)
     else:
         extra.update(pending=raw)
     sessions.save(session_id, conv, extra)

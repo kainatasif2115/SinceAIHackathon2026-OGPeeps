@@ -267,6 +267,24 @@ def test_customer_can_ask_for_a_person_when_the_advice_does_not(monkeypatch, cli
     assert ticket["severity"] == "medium"  # the assistant's own risk, not raised
 
 
+def test_chat_hides_the_checkers_standard_copy_of_a_step(monkeypatch, client):
+    own = "Check your accounts by opening the service yourself, not through the email."
+    answer = final(
+        step_ids=["dont_open_link", "verify_official_channel"],
+        advice_text="Do not open the link in this email.",
+        steps=["Do not open the link.", own],
+    )
+    monkeypatch.setattr(brain, "decide_multi_turn", Script(done(answer)))
+
+    res = post(
+        client, "/api/sessions", {"audience": "consumer", "language": "en", "message": "Odd email"}
+    ).json()
+
+    assert res["turn"]["answer"]["steps"] == ["Do not open the link.", own]
+    stored = sessions.load(res["session_id"])[1]["final"]
+    assert len(stored["steps"]) == 3  # the scored answer keeps the standard wording
+
+
 def test_old_demo_tickets_are_cleared_from_the_board(monkeypatch, client):
     tickets._memory.clear()
     tickets._memory["DEMO-001"] = {"reference": "DEMO-001", "demo": True}

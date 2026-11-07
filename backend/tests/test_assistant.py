@@ -1,5 +1,6 @@
 import pytest
 
+from api import presenter
 from assistant import brain, checker, engine, simset
 from assistant.checker import ConsentState
 from tests.fakes import Script, ask, ask_consent, done, final
@@ -74,6 +75,37 @@ def test_missing_step_wording_is_added(en_case):
     found = simset.textcheck.find_steps(checked.advice_text + "\n" + "\n".join(checked.steps))
     assert "dont_open_link" in found
     assert "dont_open_link" in simset.textcheck.find_steps(checked.advice_text.split(".")[0])
+
+
+def test_added_standard_wording_is_scored_but_not_repeated_in_the_chat(en_case):
+    own = "Check your accounts by opening the service yourself, not through the email."
+    answer = final(
+        step_ids=["verify_official_channel"],
+        advice_text="Do not open the link in this message.",
+        steps=["Do not open the link.", own],
+    )
+
+    checked = checker.check(answer, en_case, ConsentState()).answer
+
+    added = checked.steps[-1]
+    assert added not in answer.steps  # the evaluator's wording was appended
+    assert engine.to_submission("X", checked, "multi_turn")["steps"][-1] == added
+    assert engine.shown_steps(checked) == ["Do not open the link.", own]
+
+
+def test_chat_shows_every_step_when_only_added_ones_exist(en_case):
+    answer = final(step_ids=["verify_official_channel"], advice_text="Be careful.", steps=[])
+
+    checked = checker.check(answer, en_case, ConsentState()).answer
+
+    assert checked.steps and engine.shown_steps(checked) == checked.steps
+
+
+def test_presenter_prefers_the_shown_steps():
+    sub = engine.to_submission("X", final(steps=["One.", "Two.", "Standard."]), "multi_turn")
+    turn = {"type": "final", "answer": sub, "shown_steps": ["One.", "Two."]}
+
+    assert presenter.turn(turn, "en")["answer"]["steps"] == ["One.", "Two."]
 
 
 def test_unsafe_wording_triggers_one_rewrite(monkeypatch, en_case):

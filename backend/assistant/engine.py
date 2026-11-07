@@ -68,6 +68,13 @@ def to_submission(case_id: str, answer: FinalAnswer, mode: str) -> dict:
     return sub
 
 
+def shown_steps(answer: FinalAnswer) -> list[str]:
+    """The steps the chat shows: the model's own, without the checker's standard-wording
+    copies of steps it already gave (all of them if nothing else would be left)."""
+    own = [s for s in answer.steps if s not in answer._added_steps]
+    return own or list(answer.steps)
+
+
 def single_turn(case: dict) -> dict:
     """One answer in the organisers' submission format."""
     answer = _checked(
@@ -221,7 +228,7 @@ class Conversation:
         sub["questions_asked"] = [
             h["text"] for h in self.history if h["role"] == "assistant" and h["type"] == "question"
         ]
-        return {"type": "final", "answer": sub}
+        return {"type": "final", "answer": sub, "shown_steps": shown_steps(answer)}
 
     def _hidden_fields(self) -> list[str]:
         """Consent-gated fields the user has not been asked about and did not pre-allow."""

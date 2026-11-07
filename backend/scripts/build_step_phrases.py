@@ -22,6 +22,16 @@ OUT = Path(__file__).resolve().parents[1] / "assistant" / "data" / "step_phrases
 MAX_WORDS = 18
 
 
+# The organisers' step names are written as instructions to the assistant. These three
+# would read oddly as a step shown to the customer, so we use advice the matcher still
+# recognises as the same step.
+USER_FACING = {
+    "explain_benign": "This looks genuine, so nothing needs to be done.",
+    "seek_support_org": "Talk to someone you trust or a victim-support service.",
+    "decline_request": "I cannot help with that, but I can help you stay safe.",
+}
+
+
 def main() -> None:
     tc = simset.textcheck
     steps = simset.load_reference("step_vocabulary.json")["steps"]
@@ -46,7 +56,7 @@ def main() -> None:
 
     phrases = {}
     for step_id, spec in steps.items():
-        phrases[step_id] = {"en_canonical": spec["en"]}
+        phrases[step_id] = {"en_canonical": USER_FACING.get(step_id, spec["en"])}
         for lang in ("fi", "en"):
             best = [s for s, _ in candidates[step_id][lang].most_common(3)]
             if not best:  # fall back to the shortest sentences that also mention other steps
