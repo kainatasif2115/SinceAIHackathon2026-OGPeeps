@@ -1,4 +1,13 @@
-import { Ban, CircleCheck, CircleDashed, Inbox } from "lucide-react";
+import {
+  Ban,
+  CircleCheck,
+  CircleDashed,
+  CircleExclamationPoint,
+  Inbox,
+  Info,
+  OctagonExclamationPoint,
+  TriangleExclamationPoint,
+} from "lucide-react";
 import type { Severity, TicketStatus } from "@/lib/agent-api";
 
 type StatusStyle = {
@@ -46,36 +55,48 @@ export const STATUS_META: Record<TicketStatus, StatusStyle> = {
 
 type SeverityStyle = {
   label: string;
+  icon: typeof Inbox;
   chip: string;
   dot: string;
   /** Thick left edge on the ticket card, so severity reads at a glance. */
   edge: string;
+  /** Card background: the more severe, the more it stands out. */
+  card: string;
 };
 
+// Same icons as the risk levels on the chat's answer card.
 export const SEVERITY_META: Record<Severity, SeverityStyle> = {
   critical: {
     label: "Critical",
-    chip: "bg-risk-critical text-risk-critical-fg",
+    icon: OctagonExclamationPoint,
+    chip: "bg-[#c62828] text-white", // solid: the only filled tag on the board
     dot: "bg-risk-critical-line",
     edge: "border-l-risk-critical-line",
+    card: "bg-[#fff6f6]",
   },
   high: {
     label: "High",
+    icon: TriangleExclamationPoint,
     chip: "bg-risk-high text-risk-high-fg",
     dot: "bg-risk-high-line",
     edge: "border-l-risk-high-line",
+    card: "bg-[#fffaf4]",
   },
   medium: {
     label: "Medium",
+    icon: CircleExclamationPoint,
     chip: "bg-risk-medium text-risk-medium-fg",
     dot: "bg-risk-medium-line",
     edge: "border-l-risk-medium-line",
+    card: "bg-white",
   },
   low: {
     label: "Low",
+    icon: Info,
     chip: "bg-risk-safe text-risk-safe-fg",
     dot: "bg-risk-safe-line",
     edge: "border-l-risk-safe-line",
+    card: "bg-white",
   },
 };
 

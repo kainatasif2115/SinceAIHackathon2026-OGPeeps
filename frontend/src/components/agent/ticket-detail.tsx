@@ -94,10 +94,11 @@ export function TicketDetail({
               <div className="flex flex-wrap items-center gap-2">
                 <span
                   className={cn(
-                    "rounded-md px-2 py-0.5 text-xs font-semibold",
+                    "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold",
                     SEVERITY_META[ticket.severity].chip,
                   )}
                 >
+                  <SeverityIcon severity={ticket.severity} />
                   {SEVERITY_META[ticket.severity].label}
                 </span>
                 <label className="ml-auto flex items-center gap-2 text-sm">
@@ -247,4 +248,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       {children}
     </section>
   );
+}
+
+function SeverityIcon({ severity }: { severity: Ticket["severity"] }) {
+  const Icon = SEVERITY_META[severity].icon;
+  return <Icon aria-hidden className="size-3.5" />;
 }

@@ -452,7 +452,8 @@ function TicketCard({
       onDragEnd={onDragEnd}
       onClick={onOpen}
       className={cn(
-        "flex w-full cursor-grab flex-col gap-2.5 rounded-xl border bg-white p-3.5 text-left shadow-sm transition-[box-shadow,opacity,border-color] duration-150 hover:shadow-md active:cursor-grabbing",
+        "flex w-full cursor-grab flex-col gap-2.5 rounded-xl border p-3.5 text-left shadow-sm transition-[box-shadow,opacity,border-color] duration-150 hover:shadow-md active:cursor-grabbing",
+        severity.card,
         fresh ? "border-brand ring-brand/30 ring-4" : "border-transparent",
         // Finished work steps back so open tickets stand out.
         ticket.status === "done" && "opacity-70 shadow-none hover:opacity-100",
@@ -462,7 +463,20 @@ function TicketCard({
       )}
     >
       <span className="flex items-center justify-between gap-2">
-        <span className={cn("rounded-md px-2 py-0.5 text-xs font-semibold", severity.chip)}>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold",
+            severity.chip,
+          )}
+        >
+          {ticket.severity === "critical" && ticket.status !== "done" ? (
+            <span aria-hidden className="relative flex size-2">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex size-2 rounded-full bg-white" />
+            </span>
+          ) : (
+            <severity.icon aria-hidden className="size-3.5" />
+          )}
           {severity.label}
         </span>
         <span className="flex items-center gap-1.5">
