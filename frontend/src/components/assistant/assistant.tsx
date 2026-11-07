@@ -35,7 +35,7 @@ import { ShareAdvice } from "./share-advice";
 import { AssistantTurn, QuestionMessage, UserMessage } from "./messages";
 import type { ScenariosState } from "./scenario-list";
 import { ServiceStatus } from "./service-status";
-import { StartView } from "./start-view";
+import { StartView, type TopicSuggestions } from "./start-view";
 import { ThinkingStatus } from "./thinking-status";
 
 type Entry =
@@ -121,6 +121,10 @@ type Props = {
   defaultAudience?: Audience;
   /** Opens straight into hands-free talking (the homepage's "Talk instead"). */
   startInVoice?: boolean;
+  /** Example messages for a help topic picked on the homepage. */
+  topic?: TopicSuggestions | null;
+  /** An example case whose opening message starts in the box, ready to edit and send. */
+  prefill?: Scenario | null;
   onClose?: () => void;
   /** Drawer is covering the viewport. Ignored on the full-screen page. */
   expanded?: boolean;
@@ -132,17 +136,23 @@ export function Assistant({
   initial = null,
   defaultAudience = "consumer",
   startInVoice = false,
+  topic = null,
+  prefill = null,
   onClose,
   expanded = false,
   onToggleExpanded,
 }: Props) {
-  const [language, setLanguage] = useState<Language>(initial?.language ?? "en");
-  const [audience, setAudience] = useState<Audience>(initial?.audience ?? defaultAudience);
+  const [language, setLanguage] = useState<Language>(
+    initial?.language ?? prefill?.language ?? "en",
+  );
+  const [audience, setAudience] = useState<Audience>(
+    initial?.audience ?? prefill?.audience ?? defaultAudience,
+  );
   const t = getDictionary(language);
 
   const [scenarios, setScenarios] = useState<ScenariosState>({ status: "loading" });
-  const [draft, setDraft] = useState("");
-  const [scenario, setScenario] = useState<Scenario | null>(initial?.scenario ?? null);
+  const [draft, setDraft] = useState(prefill?.opening_message ?? "");
+  const [scenario, setScenario] = useState<Scenario | null>(initial?.scenario ?? prefill);
   const [replyDraft, setReplyDraft] = useState("");
 
   const [entries, setEntries] = useState<Entry[]>(() =>
@@ -372,6 +382,7 @@ export function Assistant({
     <>
       {!inConversation ? (
         <StartView
+          topic={topic}
           talkButton={talkButton}
           draft={draft}
           onDraftChange={handleDraftChange}

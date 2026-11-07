@@ -210,10 +210,15 @@ class RedTeamIn(Schema):
 # --- Customer accounts (optional) ---------------------------------------------------
 
 
+AccountKind = Literal["private", "business"]
+
+
 class SignUpIn(Schema):
     email: str = Field(min_length=3, max_length=254)
     name: str = Field(min_length=1, max_length=100)
     password: str = Field(min_length=1, max_length=200)
+    kind: AccountKind = "private"
+    company: str = Field(default="", max_length=100)
 
 
 class LoginIn(Schema):
@@ -225,6 +230,27 @@ class AccountOut(Schema):
     email: str
     name: str
     created_at: datetime
+    kind: AccountKind
+    company: str | None = None
+    role: Literal["owner", "member"] | None = None
+    pending_invite: str | None = None
+
+
+class TeamMember(Schema):
+    name: str
+    email: str
+    role: Literal["owner", "member"]
+
+
+class TeamOut(Schema):
+    name: str
+    role: Literal["owner", "member"]
+    members: list[TeamMember]
+    invites: list[str]
+
+
+class InviteIn(Schema):
+    email: str = Field(min_length=3, max_length=254)
 
 
 class ConversationOut(Schema):
@@ -238,3 +264,7 @@ class ConversationOut(Schema):
     action_label: str | None = None
     handoff_reference: str | None = None
     handoff_status: Literal["backlog", "in_progress", "blocked", "done"] | None = None
+
+
+class TeamConversationOut(ConversationOut):
+    author: str

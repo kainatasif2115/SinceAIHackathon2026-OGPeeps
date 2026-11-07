@@ -3,8 +3,8 @@
 import { useId, useLayoutEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Info, LoaderCircle, UserRound } from "lucide-react";
-import { logIn, signUp } from "@/lib/account-api";
+import { Building2, Eye, EyeOff, Info, LoaderCircle, UserRound } from "lucide-react";
+import { logIn, signUp, type AccountKind } from "@/lib/account-api";
 import { ApiError } from "@/lib/api";
 import { AccountShell } from "./account-shell";
 
@@ -29,6 +29,16 @@ const COPY = {
   },
 } as const;
 
+const KINDS = [
+  {
+    value: "private",
+    label: "Private person",
+    hint: "Your own phone, email and bank",
+    icon: UserRound,
+  },
+  { value: "business", label: "Business", hint: "You and your staff", icon: Building2 },
+] as const;
+
 const FIELD =
   "border-input focus-visible:border-brand h-11 w-full rounded-xl border bg-white px-3.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklch,var(--brand),transparent_75%)]";
 
@@ -39,6 +49,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
   // Hidden pages stay in the document, so ids must be unique across them.
   const passwordId = useId();
   const rulesId = useId();
+  const [kind, setKind] = useState<AccountKind>("private");
+  const [company, setCompany] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,6 +62,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
   // time: no stuck spinner, old error, or typed password left in the page.
   useLayoutEffect(
     () => () => {
+      setKind("private");
+      setCompany("");
       setName("");
       setEmail("");
       setPassword("");
@@ -66,9 +80,9 @@ export function AuthForm({ mode }: { mode: Mode }) {
     setBusy(true);
     setError(null);
     try {
-      if (mode === "signup") await signUp(email, name, password);
+      if (mode === "signup") await signUp({ email, name, password, kind, company });
       else await logIn(email, password);
-      router.push("/account");
+      router.push("/dashboard");
     } catch (err) {
       setError(
         err instanceof ApiError && err.status > 0
@@ -93,6 +107,53 @@ export function AuthForm({ mode }: { mode: Mode }) {
           <p className="text-muted-foreground text-sm">{copy.intro}</p>
         </div>
 
+        {mode === "signup" && (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-sm font-medium">Who is this account for?</legend>
+            <div className="grid grid-cols-2 gap-2">
+              {KINDS.map((option) => (
+                <label
+                  key={option.value}
+                  className={`flex cursor-pointer flex-col gap-1 rounded-xl border p-3 text-sm transition-colors duration-150 has-focus-visible:ring-2 has-focus-visible:ring-[color-mix(in_oklch,var(--brand),transparent_60%)] ${
+                    kind === option.value
+                      ? "border-brand bg-brand-soft text-accent-foreground border-2"
+                      : "border-input hover:bg-muted"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="kind"
+                    value={option.value}
+                    checked={kind === option.value}
+                    onChange={() => setKind(option.value)}
+                    className="sr-only"
+                  />
+                  <span className="flex items-center gap-1.5 font-semibold">
+                    <option.icon aria-hidden className="size-4" />
+                    {option.label}
+                  </span>
+                  <span className="text-muted-foreground text-xs">{option.hint}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
+        {mode === "signup" && kind === "business" && (
+          <label className="flex flex-col gap-1.5 text-sm font-medium">
+            Company name
+            <input
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              autoComplete="organization"
+              maxLength={100}
+              className={FIELD}
+            />
+            <span className="text-muted-foreground text-xs font-normal">
+              Invited by a colleague? Leave this empty and use the email they invited: you&apos;ll
+              join their company.
+            </span>
+          </label>
+        )}
         {mode === "signup" && (
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             Name
@@ -185,8 +246,9 @@ export function AuthForm({ mode }: { mode: Mode }) {
         {mode === "signup" && (
           <p className="text-muted-foreground flex items-start gap-2 text-xs">
             <Info aria-hidden className="mt-px size-3.5 shrink-0" />
-            We keep only your name, email and a scrambled form of your password. Conversations are
-            still deleted after 24 hours, and you can delete your account at any time.
+            We keep only your name, email, company if any, and a scrambled form of your password.
+            Conversations are still deleted after 24 hours, and you can delete your account at any
+            time.
           </p>
         )}
       </form>

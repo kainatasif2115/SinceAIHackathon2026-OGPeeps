@@ -239,6 +239,16 @@ def for_user(user_id: str) -> list[dict]:
     return sorted(found, key=lambda d: d.get("started_at") or d["updated_at"], reverse=True)
 
 
+def for_team(team_id: str) -> list[dict]:
+    """Checks a company's staff made in business mode, newest first."""
+    if db.is_configured():
+        found = list(_collection().find({"team_id": team_id}))
+    else:
+        with _lock:
+            found = [copy.deepcopy(d) for d in _memory.values() if d.get("team_id") == team_id]
+    return sorted(found, key=lambda d: d.get("started_at") or d["updated_at"], reverse=True)
+
+
 def delete_for_user(user_id: str) -> int:
     if db.is_configured():
         return _collection().delete_many({"user_id": user_id}).deleted_count
