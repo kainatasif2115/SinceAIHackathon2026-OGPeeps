@@ -41,10 +41,19 @@ def _cases() -> dict[str, dict]:
     return {c["case_id"]: c for c in simset.load_jsonl(simset.DEV_CASES)}
 
 
-@cache
+# The five journeys for the public /journeys page: one passed English conversation
+# per journey from the 120-conversation final run, in the order the brief lists them.
+JOURNEYS_FILE = "dev_journeys_5_predictions.jsonl"
+
+
 def _run(run: str) -> list[dict]:
-    """Every case in the run: the case, our submission and the official score."""
-    path = RESULTS_DIR / RUNS[run]["file"]
+    return _rows(RUNS[run]["file"])
+
+
+@cache
+def _rows(file: str) -> list[dict]:
+    """Every case in a saved run: the case, our submission and the official score."""
+    path = RESULTS_DIR / file
     if not path.exists():
         return []
     # dsakit lives in simset/, which importing assistant.simset puts on sys.path.
@@ -93,10 +102,17 @@ def summaries(run: str) -> list[dict]:
     return out
 
 
+def journeys() -> list[dict]:
+    """The five journey conversations, in full, for the public journeys page."""
+    return [_detail(row) for row in _rows(JOURNEYS_FILE)]
+
+
 def detail(run: str, case_id: str) -> dict | None:
     row = next((r for r in _run(run) if r["case"]["case_id"] == case_id), None)
-    if not row:
-        return None
+    return _detail(row) if row else None
+
+
+def _detail(row: dict) -> dict:
     case, sub, score = row["case"], row["sub"], row["score"]
     gt = case["ground_truth"]
 

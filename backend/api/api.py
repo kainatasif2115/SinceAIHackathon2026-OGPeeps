@@ -414,6 +414,13 @@ def evaluation_results(request):
     return results.load_all()
 
 
+@api.get("/journeys")
+def journeys(request):
+    """The five journeys as saved conversations, for the public /journeys page. Synthetic
+    organisers' dev cases and our answers; nothing here comes from a customer."""
+    return {"journeys": cases.journeys()}
+
+
 @api.get("/agent/cases", auth=agent_auth)
 def list_cases(request, run: str = "multi"):
     """Dev cases in a saved run, each with the official pass/fail."""

@@ -427,6 +427,20 @@ def test_results_page_reads_the_evaluator_files(monkeypatch, client):
     assert set(runs) >= {"single", "baseline"}
 
 
+def test_journeys_page_data_is_public_and_has_one_passed_conversation_per_journey(client):
+    journeys = client.get("/api/journeys").json()["journeys"]
+
+    assert [j["journey"] for j in journeys] == [
+        "suspicious_message",
+        "clicked_link",
+        "suspicious_call",
+        "breach_notice",
+        "smb_incident",
+    ]
+    assert all(j["passed"] and j["language"] == "en" for j in journeys)
+    assert all(len(j["transcript"]) >= 2 for j in journeys)
+
+
 def test_results_parser_handles_missing_values():
     text = (
         "Cases scored: 10   (missing submissions: 0)\n"
