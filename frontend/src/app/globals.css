@@ -222,6 +222,41 @@
   }
 }
 
+/*
+ * Open critical tickets on the support board: a soft light that travels round
+ * the card's border. A conic gradient painted on the border box, rotated by
+ * animating a registered angle. Light reds and DNA pink, not a solid red.
+ * With reduced motion (below) it stays a still gradient border.
+ */
+@property --glow-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.critical-glow {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    conic-gradient(
+        from var(--glow-angle),
+        #f8d4d4 0deg,
+        #f8d4d4 200deg,
+        #ef9a9a 260deg,
+        #e05a7a 310deg,
+        #f3a6c4 340deg,
+        #f8d4d4 360deg
+      )
+      border-box;
+  animation: glow-spin 4s linear infinite;
+}
+
+@keyframes glow-spin {
+  to {
+    --glow-angle: 360deg;
+  }
+}
+
 /* Motion is opt-out: anyone who asks the OS for less motion gets none. */
 @media (prefers-reduced-motion: reduce) {
   *,
