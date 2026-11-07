@@ -177,3 +177,51 @@ export function useScrollProgress<T extends HTMLElement>() {
   }, []);
   return { ref, progress };
 }
+
+/**
+ * Like useScrollProgress, but without re-rendering: `onFrame` receives a
+ * smoothed progress (0-1) every animation frame while it is still moving,
+ * eased toward the real scroll position so jumpy wheel input glides.
+ */
+export function useSmoothScrollProgress<T extends HTMLElement>(
+  onFrame: (progress: number) => void,
+  smoothing = 0.14,
+) {
+  const ref = useRef<T | null>(null);
+  const callback = useRef(onFrame);
+  useEffect(() => {
+    callback.current = onFrame;
+  });
+  useEffect(() => {
+    let frame = 0;
+    let current = -1;
+    function target() {
+      const el = ref.current;
+      if (!el) return 0;
+      const rect = el.getBoundingClientRect();
+      const travel = rect.height - window.innerHeight;
+      return travel > 0 ? Math.min(1, Math.max(0, -rect.top / travel)) : 0;
+    }
+    function tick() {
+      frame = 0;
+      const goal = target();
+      const reduced = prefersReducedMotion();
+      current = current < 0 || reduced ? goal : current + (goal - current) * smoothing;
+      if (Math.abs(goal - current) < 0.0005) current = goal;
+      callback.current(current);
+      if (current !== goal) frame = requestAnimationFrame(tick);
+    }
+    function wake() {
+      if (!frame) frame = requestAnimationFrame(tick);
+    }
+    wake();
+    window.addEventListener("scroll", wake, { passive: true });
+    window.addEventListener("resize", wake);
+    return () => {
+      window.removeEventListener("scroll", wake);
+      window.removeEventListener("resize", wake);
+      cancelAnimationFrame(frame);
+    };
+  }, [smoothing]);
+  return ref;
+}

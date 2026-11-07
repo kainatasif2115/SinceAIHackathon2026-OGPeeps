@@ -15,7 +15,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useReducedMotion, useScrollProgress } from "./motion";
+import { useRef, useState } from "react";
+import { useReducedMotion, useScrollProgress, useSmoothScrollProgress } from "./motion";
 
 /* ---------------------------------------------------------------------------------------
  * 1. A statement that lights up word by word as the reader scrolls.
@@ -119,15 +120,27 @@ const SAMPLES: Sample[] = [
 ];
 
 export function RealOrScam() {
-  const { ref, progress } = useScrollProgress<HTMLDivElement>();
   const reduced = useReducedMotion();
   const n = SAMPLES.length;
-  // Each card is "decided" once the row has travelled past it.
-  const decided = (i: number) => reduced || progress >= (i + 0.35) / n;
+  const track = useRef<HTMLDivElement>(null);
+  const bar = useRef<HTMLDivElement>(null);
+  // How many cards have their verdict; only re-renders when this number changes.
+  const [decided, setDecided] = useState(0);
+  const sectionRef = useSmoothScrollProgress<HTMLDivElement>((p) => {
+    const el = track.current;
+    if (el) {
+      const travel = Math.max(0, el.scrollWidth - window.innerWidth);
+      el.style.transform = `translate3d(${-p * travel}px, 0, 0)`;
+    }
+    if (bar.current) bar.current.style.transform = `scaleX(${p})`;
+    const count = Math.min(n, Math.floor(p * n + 0.65));
+    setDecided((prev) => (prev === count ? prev : count));
+  });
+  const isDecided = (i: number) => reduced || i < decided;
 
   return (
     <section aria-labelledby="real-or-scam-heading" className="bg-ink text-ink-foreground">
-      <div ref={ref} className={cn("relative", reduced ? "" : "h-[420vh]")}>
+      <div ref={sectionRef} className={cn("relative", reduced ? "" : "h-[380vh]")}>
         <div
           className={cn(
             "flex flex-col justify-center gap-10 overflow-hidden py-16",
@@ -149,49 +162,43 @@ export function RealOrScam() {
           </div>
 
           <div
-            className={cn("flex gap-5 px-4 sm:px-6", reduced && "overflow-x-auto pb-4")}
-            style={
-              reduced
-                ? undefined
-                : {
-                    transform: `translateX(calc(${-progress} * (100% - 100vw + 3rem) + 0px))`,
-                    width: "max-content",
-                  }
-            }
+            ref={track}
+            className={cn(
+              // Starts in line with the heading above, wherever the screen edge is.
+              "flex w-max items-start gap-5 pr-[max(1rem,calc((100vw-72rem)/2+1.5rem))] pl-[max(1rem,calc((100vw-72rem)/2+1.5rem))]",
+              reduced ? "max-w-full overflow-x-auto pb-4" : "will-change-transform",
+            )}
           >
             {SAMPLES.map((s, i) => (
               <article
                 key={s.text}
-                className="relative flex w-[min(78vw,340px)] shrink-0 flex-col gap-3 rounded-3xl bg-white p-5 text-[#121212] shadow-[0_20px_50px_rgb(0_0_0/0.35)]"
+                className="relative flex w-[min(78vw,330px)] shrink-0 flex-col gap-3 rounded-3xl bg-white p-5 text-[#121212] shadow-[0_20px_50px_rgb(0_0_0/0.35)]"
               >
                 <p className="flex items-center gap-2 pr-24 text-xs font-semibold text-black/55">
-                  <s.icon aria-hidden className="text-brand size-4" />
+                  <s.icon aria-hidden className="text-brand size-4 shrink-0" />
                   {s.kind} from {s.from}
                 </p>
-                <p className="min-h-[5.5rem] text-[15px] leading-relaxed">{s.text}</p>
+                <p className="text-[15px] leading-relaxed">{s.text}</p>
                 <p
                   className={cn(
-                    "text-sm text-black/65 transition-opacity duration-500",
-                    decided(i) ? "opacity-100" : "opacity-0",
+                    "border-t border-black/5 pt-3 text-sm text-black/65 transition-opacity duration-500",
+                    isDecided(i) ? "opacity-100" : "opacity-0",
                   )}
                 >
                   {s.why}
                 </p>
-                <Stamp scam={s.scam} shown={decided(i)} />
+                <Stamp scam={s.scam} shown={isDecided(i)} />
               </article>
             ))}
           </div>
 
-          <div aria-hidden className="mx-auto h-1 w-full max-w-6xl px-4 sm:px-6">
-            {!reduced && (
+          {!reduced && (
+            <div aria-hidden className="mx-auto h-1 w-full max-w-6xl px-4 sm:px-6">
               <div className="h-full overflow-hidden rounded-full bg-white/15">
-                <div
-                  className="bg-brand h-full origin-left rounded-full"
-                  style={{ transform: `scaleX(${progress})` }}
-                />
+                <div ref={bar} className="bg-brand h-full origin-left scale-x-0 rounded-full" />
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </section>
@@ -244,16 +251,21 @@ const STAGES = [
 ];
 
 export function ChatReplay() {
-  const { ref, progress } = useScrollProgress<HTMLDivElement>();
   const reduced = useReducedMotion();
-  const stage = reduced
-    ? STAGES.length - 1
-    : Math.min(STAGES.length - 1, Math.floor(progress * STAGES.length));
-  const at = (n: number) => stage >= n;
+  const last = STAGES.length - 1;
+  // Re-renders only when the step changes, not on every scroll frame.
+  const [stage, setStage] = useState(0);
+  // No easing here (smoothing 1): the step should match the scroll position exactly.
+  const sectionRef = useSmoothScrollProgress<HTMLDivElement>((p) => {
+    const next = Math.min(last, Math.floor(p * STAGES.length));
+    setStage((prev) => (prev === next ? prev : next));
+  }, 1);
+  const current = reduced ? last : stage;
+  const at = (n: number) => current >= n;
 
   return (
     <section aria-labelledby="how-heading" id="how" className="scroll-mt-20 bg-[#fdf6fa]">
-      <div ref={ref} className={cn("relative", reduced ? "" : "h-[460vh]")}>
+      <div ref={sectionRef} className={cn("relative", reduced ? "" : "h-[460vh]")}>
         <div
           className={cn(
             "mx-auto grid w-full max-w-6xl items-center gap-5 px-4 py-6 sm:px-6 lg:grid-cols-[1fr_400px] lg:gap-20 lg:py-16",
@@ -267,34 +279,31 @@ export function ChatReplay() {
                 From “is this real?” to a plan
               </h2>
             </div>
-            <ol className="flex flex-col gap-1">
+            {/* Every step keeps its size; only highlight and fade change, so nothing jumps.
+                On phones the steps share one spot and cross-fade. */}
+            <ol className="grid lg:flex lg:flex-col lg:gap-1">
               {STAGES.map((s, i) => (
                 <li
                   key={s.title}
+                  aria-current={i === current ? "step" : undefined}
                   className={cn(
-                    "flex gap-4 rounded-2xl p-3 transition-[background-color,opacity] duration-500",
-                    i === stage ? "bg-white opacity-100 shadow-sm" : "opacity-45",
-                    i !== stage && "max-lg:hidden",
+                    "flex gap-4 rounded-2xl p-3 transition-[background-color,opacity,box-shadow] duration-500 max-lg:[grid-area:1/1]",
+                    i === current
+                      ? "bg-white opacity-100 shadow-sm"
+                      : "max-lg:opacity-0 lg:opacity-45",
                   )}
                 >
                   <span
                     className={cn(
                       "font-heading flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors duration-500",
-                      i <= stage ? "bg-brand text-brand-foreground" : "text-brand bg-white",
+                      i <= current ? "bg-brand text-brand-foreground" : "text-brand bg-white",
                     )}
                   >
                     {i + 1}
                   </span>
                   <span className="flex flex-col gap-0.5">
                     <span className="font-heading text-lg font-semibold">{s.title}</span>
-                    <span
-                      className={cn(
-                        "text-muted-foreground",
-                        i === stage ? "block" : "hidden lg:block lg:max-h-0 lg:overflow-hidden",
-                      )}
-                    >
-                      {s.text}
-                    </span>
+                    <span className="text-muted-foreground text-[0.95rem]">{s.text}</span>
                   </span>
                 </li>
               ))}
@@ -304,39 +313,50 @@ export function ChatReplay() {
           <div aria-hidden className="mx-auto w-full max-w-[380px]">
             <div className="bg-ink rounded-[2.75rem] p-3 shadow-[0_30px_60px_rgb(0_0_0/0.22)]">
               <div className="flex h-[min(560px,44vh)] flex-col justify-end gap-2.5 overflow-hidden rounded-[2.1rem] bg-[#f4f4f6] px-4 pt-8 pb-5 text-[13px] leading-snug text-[#121212] lg:h-[min(560px,62vh)]">
-                <Bubble shown me>
+                <Bubble me>
                   Someone called from “my operator” and I read out a code they texted me. Now my
                   phone has no signal.
                 </Bubble>
-                <Bubble shown={at(1)}>Did you read the code out to the caller?</Bubble>
-                <Bubble shown={at(1)} me delay>
-                  Yes, about ten minutes ago.
-                </Bubble>
-                <Card shown={at(2)}>
-                  <p className="flex items-center gap-1.5 font-semibold">
-                    <LockKeyhole className="text-brand size-3.5" />
-                    May I check recent changes to your SIM?
-                  </p>
-                  <span className="bg-brand mt-1.5 inline-block self-start rounded-full px-3 py-1 text-[11px] font-semibold text-white">
-                    Allow
-                  </span>
-                </Card>
-                <Card shown={at(3)}>
-                  <p className="bg-risk-critical text-risk-critical-fg inline-flex items-center gap-1 self-start rounded-md px-2 py-0.5 text-[11px] font-semibold">
-                    <TriangleExclamationPoint className="size-3" />
-                    Critical · right now
-                  </p>
-                  <p className="font-heading mt-1 text-[14px] font-semibold">
-                    Your number is being moved. Lock it now.
-                  </p>
-                </Card>
-                <Card shown={at(4)} tone="safe">
-                  <p className="flex items-center gap-1.5 font-semibold">
-                    <Headset className="text-brand size-3.5" />
-                    Connecting you to DNA support…
-                  </p>
-                  <p className="text-[12px] text-black/60">They already know what happened.</p>
-                </Card>
+                {at(1) && <Bubble>Did you read the code out to the caller?</Bubble>}
+                {at(1) && (
+                  <Bubble me late>
+                    Yes, about ten minutes ago.
+                  </Bubble>
+                )}
+                {at(2) && (
+                  <Card>
+                    <p className="flex items-center gap-1.5 font-semibold">
+                      <LockKeyhole className="text-brand size-3.5" />
+                      May I check recent changes to your SIM?
+                    </p>
+                    <span className="bg-brand mt-1.5 inline-block self-start rounded-full px-3 py-1 text-[11px] font-semibold text-white">
+                      Allow
+                    </span>
+                  </Card>
+                )}
+                {at(3) && (
+                  <Card>
+                    <p className="bg-risk-critical text-risk-critical-fg inline-flex items-center gap-1 self-start rounded-md px-2 py-0.5 text-[11px] font-semibold">
+                      <TriangleExclamationPoint className="size-3" />
+                      Critical · right now
+                    </p>
+                    <p className="font-heading mt-1 text-[14px] font-semibold">
+                      Your number is being moved. Lock it now.
+                    </p>
+                  </Card>
+                )}
+                {at(4) && (
+                  <Card safe>
+                    <p className="flex items-center gap-1.5 font-semibold">
+                      <Headset className="text-brand size-3.5" />
+                      Connecting you to DNA support…
+                    </p>
+                    <p className="flex items-center justify-between text-[12px] text-black/60">
+                      They already know what happened.
+                      <CircleCheck className="text-risk-safe-fg size-4" />
+                    </p>
+                  </Card>
+                )}
               </div>
             </div>
           </div>
@@ -346,62 +366,51 @@ export function ChatReplay() {
   );
 }
 
+/* Chat items appear like real messages: mounted when reached, with a short slide-in. */
+const ENTER = "animate-in fade-in slide-in-from-bottom-3 fill-mode-both duration-500 ease-out";
+
 function Bubble({
   children,
-  shown,
   me = false,
-  delay = false,
+  late = false,
 }: {
   children: React.ReactNode;
-  shown: boolean;
   me?: boolean;
-  delay?: boolean;
+  late?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "max-w-[85%] rounded-2xl px-3.5 py-2.5 transition-[opacity,translate,max-height] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        "max-w-[85%] rounded-2xl px-3.5 py-2.5",
+        ENTER,
+        late && "delay-300",
         me
           ? "bg-brand self-end rounded-br-md text-white"
           : "self-start rounded-bl-md bg-white shadow-sm",
-        shown
-          ? "max-h-40 translate-y-0 opacity-100"
-          : "pointer-events-none max-h-0 translate-y-4 py-0 opacity-0",
-        delay && shown && "delay-200",
       )}
     >
       <span className="flex items-start gap-1.5">
-        {!me && <ShieldCheck className="text-brand mt-0.5 size-3.5 shrink-0" />}
-        {me && <User className="mt-0.5 size-3.5 shrink-0 opacity-70" />}
+        {me ? (
+          <User className="mt-0.5 size-3.5 shrink-0 opacity-70" />
+        ) : (
+          <ShieldCheck className="text-brand mt-0.5 size-3.5 shrink-0" />
+        )}
         <span>{children}</span>
       </span>
     </div>
   );
 }
 
-function Card({
-  children,
-  shown,
-  tone,
-}: {
-  children: React.ReactNode;
-  shown: boolean;
-  tone?: "safe";
-}) {
+function Card({ children, safe = false }: { children: React.ReactNode; safe?: boolean }) {
   return (
     <div
       className={cn(
-        "flex flex-col rounded-2xl border bg-white p-3 shadow-sm transition-[opacity,translate,max-height] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-        tone === "safe" ? "border-[#cfe8d6]" : "border-black/5",
-        shown
-          ? "max-h-40 translate-y-0 opacity-100"
-          : "pointer-events-none max-h-0 translate-y-4 border-0 p-0 opacity-0",
+        "flex flex-col rounded-2xl border bg-white p-3 shadow-sm",
+        ENTER,
+        safe ? "border-[#cfe8d6]" : "border-black/5",
       )}
     >
-      {shown && children}
-      {shown && tone === "safe" && (
-        <CircleCheck className="text-risk-safe-fg mt-1 size-4 self-end" />
-      )}
+      {children}
     </div>
   );
 }
