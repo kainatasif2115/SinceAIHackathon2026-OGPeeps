@@ -33,6 +33,7 @@ export function DnaHome() {
     initial: InitialRequest | null;
     voice?: boolean;
     topic?: TopicSuggestions;
+    prefill?: Scenario;
   }>({
     key: 0,
     initial: null,
@@ -89,17 +90,10 @@ export function DnaHome() {
     setPanelOpen(true);
   }
 
+  /** An example case: a fresh conversation with its message in the box, ready to edit and send. */
   function askScenario(scenario: Scenario) {
     setAudience(scenario.audience);
-    setRequest((prev) => ({
-      key: prev.key + 1,
-      initial: {
-        text: scenario.opening_message,
-        audience: scenario.audience,
-        language: scenario.language,
-        scenario,
-      },
-    }));
+    setRequest((prev) => ({ key: prev.key + 1, initial: null, prefill: scenario }));
     setPanelOpen(true);
   }
 
@@ -121,6 +115,7 @@ export function DnaHome() {
           scenarios={scenarios}
           onAsk={ask}
           onTalk={talk}
+          onOpen={openPanel}
           onPickScenario={askScenario}
         />
         <ScrollStatement />
@@ -144,6 +139,7 @@ export function DnaHome() {
         initial={request.initial}
         startInVoice={request.voice ?? false}
         topic={request.topic ?? null}
+        prefill={request.prefill ?? null}
         audience={audience}
       />
     </div>

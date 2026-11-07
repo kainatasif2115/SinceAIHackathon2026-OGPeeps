@@ -24,6 +24,8 @@ type Props = {
   onAsk: (text: string, images: ImageAttachment[]) => void;
   /** Opens the assistant in hands-free talking mode. */
   onTalk: () => void;
+  /** Opens the assistant panel with nothing filled in. */
+  onOpen: () => void;
   onPickScenario: (scenario: Scenario) => void;
 };
 
@@ -42,7 +44,7 @@ const HEADLINE: Record<Audience, { title: string; intro: string; placeholder: st
   },
 };
 
-export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Props) {
+export function Hero({ audience, scenarios, onAsk, onTalk, onOpen, onPickScenario }: Props) {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const copy = HEADLINE[audience];
@@ -71,8 +73,10 @@ export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Pro
   function submit(event: FormEvent) {
     event.preventDefault();
     const value = text.trim();
+    // Nothing typed yet: open the assistant, where examples help them start.
     if (!value) {
-      setError("Write a few words about what happened.");
+      setError(null);
+      onOpen();
       return;
     }
     if (value.length > MAX_MESSAGE_LENGTH) {
