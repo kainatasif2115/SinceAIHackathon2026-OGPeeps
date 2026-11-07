@@ -1,17 +1,24 @@
-import { Ban, CircleCheck, CircleDashed, Inbox } from "lucide-react";
+import {
+  Ban,
+  CircleCheck,
+  CircleDashed,
+  CircleExclamationPoint,
+  Inbox,
+  Info,
+  OctagonExclamationPoint,
+  TriangleExclamationPoint,
+} from "lucide-react";
 import type { Severity, TicketStatus } from "@/lib/agent-api";
 
 type StatusStyle = {
   label: string;
   icon: typeof Inbox;
-  /** Coloured bar across the top of the column. */
-  bar: string;
-  /** Icon colour in the column header. */
-  tone: string;
-  /** Count bubble in the column header. */
-  badge: string;
+  /** Soft coloured pill for the column header: background, text and outline. */
+  pill: string;
   /** Small dot, e.g. next to the status select. */
   dot: string;
+  /** Light wash and border for the whole column. */
+  column: string;
 };
 
 // Grey = waiting, blue = being worked on, red = stuck, green = finished.
@@ -19,71 +26,82 @@ export const STATUS_META: Record<TicketStatus, StatusStyle> = {
   backlog: {
     label: "Backlog",
     icon: Inbox,
-    bar: "border-t-slate-400",
-    tone: "text-slate-500",
-    badge: "bg-slate-100 text-slate-700",
+    pill: "bg-slate-100 text-slate-700 ring-slate-200",
     dot: "bg-slate-400",
+    column: "border-slate-200 bg-slate-50/80",
   },
   in_progress: {
     label: "In progress",
     icon: CircleDashed,
-    bar: "border-t-sky-500",
-    tone: "text-sky-600",
-    badge: "bg-sky-100 text-sky-800",
+    pill: "bg-sky-50 text-sky-700 ring-sky-200",
     dot: "bg-sky-500",
+    column: "border-sky-200/80 bg-sky-50/70",
   },
   blocked: {
     label: "Blocked",
     icon: Ban,
-    bar: "border-t-rose-500",
-    tone: "text-rose-600",
-    badge: "bg-rose-100 text-rose-800",
+    pill: "bg-rose-50 text-rose-700 ring-rose-200",
     dot: "bg-rose-500",
+    column: "border-rose-200/80 bg-rose-50/70",
   },
   done: {
     label: "Done",
     icon: CircleCheck,
-    bar: "border-t-emerald-500",
-    tone: "text-emerald-600",
-    badge: "bg-emerald-100 text-emerald-800",
+    pill: "bg-emerald-50 text-emerald-700 ring-emerald-200",
     dot: "bg-emerald-500",
+    column: "border-emerald-200/80 bg-emerald-50/70",
   },
 };
 
 type SeverityStyle = {
   label: string;
+  icon: typeof Inbox;
   chip: string;
   dot: string;
   /** Thick left edge on the ticket card, so severity reads at a glance. */
   edge: string;
 };
 
+// Same icons as the risk levels on the chat's answer card.
 export const SEVERITY_META: Record<Severity, SeverityStyle> = {
   critical: {
     label: "Critical",
-    chip: "bg-risk-critical text-risk-critical-fg",
+    icon: OctagonExclamationPoint,
+    // Light like the others; a thin outline and the pulsing dot set it apart.
+    chip: "bg-risk-critical text-risk-critical-fg ring-1 ring-inset ring-risk-critical-line/40",
     dot: "bg-risk-critical-line",
     edge: "border-l-risk-critical-line",
   },
   high: {
     label: "High",
+    icon: TriangleExclamationPoint,
     chip: "bg-risk-high text-risk-high-fg",
     dot: "bg-risk-high-line",
     edge: "border-l-risk-high-line",
   },
   medium: {
     label: "Medium",
+    icon: CircleExclamationPoint,
     chip: "bg-risk-medium text-risk-medium-fg",
     dot: "bg-risk-medium-line",
     edge: "border-l-risk-medium-line",
   },
   low: {
     label: "Low",
+    icon: Info,
     chip: "bg-risk-safe text-risk-safe-fg",
     dot: "bg-risk-safe-line",
     edge: "border-l-risk-safe-line",
   },
 };
+
+/** "15 min", "1 h", "1 h 20 min". */
+export function duration(minutes: number): string {
+  const m = Math.max(0, Math.round(minutes));
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  return m % 60 ? `${h} h ${m % 60} min` : `${h} h`;
+}
 
 export function ago(iso: string, now: number): string {
   const minutes = Math.max(0, Math.round((now - new Date(iso).getTime()) / 60_000));

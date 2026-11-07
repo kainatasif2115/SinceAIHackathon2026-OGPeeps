@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  AlarmClock,
   Building2,
   Clock,
   Headset,
   ImageIcon,
-  LogOut,
   RefreshCw,
   Search,
   ShieldCheck,
@@ -24,8 +24,9 @@ import {
 } from "@/lib/agent-api";
 import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { Select } from "./select";
 import { TicketDetail } from "./ticket-detail";
-import { SEVERITY_META, STATUS_META, ago } from "./ticket-meta";
+import { SEVERITY_META, STATUS_META, ago, duration } from "./ticket-meta";
 
 const POLL_MS = 4000;
 
@@ -38,12 +39,11 @@ type Audience = "all" | Ticket["audience"];
  * Polls the backend so a "Talk to a person" in the chat appears here live.
  */
 export function AgentConsole({
-  agentName,
-  onSignOut,
+  header,
   onSessionExpired,
 }: {
-  agentName: string;
-  onSignOut: () => void;
+  /** The shared console header (brand, tabs, signed-in agent). */
+  header: React.ReactNode;
   onSessionExpired: () => void;
 }) {
   const [tickets, setTickets] = useState<Ticket[] | null>(null);
@@ -176,47 +176,7 @@ export function AgentConsole({
 
   return (
     <div className="theme-dna flex min-h-full flex-1 flex-col bg-white">
-      <header className="border-border sticky top-0 z-30 border-b bg-white">
-        <div className="flex h-16 flex-wrap items-center justify-between gap-3 px-4 sm:px-6">
-          <div className="flex items-center gap-2.5">
-            <span className="font-heading text-brand text-2xl leading-none font-bold tracking-tight">
-              DNA
-            </span>
-            <span className="bg-border h-6 w-px" aria-hidden />
-            <h1 className="font-heading flex items-center gap-1.5 text-base font-semibold">
-              <Headset aria-hidden className="text-brand size-4.5" />
-              Support console
-            </h1>
-            <span className="bg-brand-soft text-accent-foreground ml-1 hidden items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold sm:flex">
-              <span className="relative flex size-2">
-                <span className="bg-brand absolute inline-flex size-full animate-ping rounded-full opacity-50" />
-                <span className="bg-brand relative inline-flex size-2 rounded-full" />
-              </span>
-              Live
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground hidden md:inline">Prototype · demo account</span>
-            <span className="border-border flex items-center gap-2 rounded-full border py-1 pr-3 pl-1">
-              <span className="bg-brand text-brand-foreground flex size-7 items-center justify-center rounded-full text-xs font-bold">
-                {agentName
-                  .split(" ")
-                  .map((part) => part[0])
-                  .join("")}
-              </span>
-              <span className="font-medium">{agentName}</span>
-            </span>
-            <button
-              type="button"
-              onClick={onSignOut}
-              className="text-brand hover:bg-brand-soft inline-flex h-9 items-center gap-1.5 rounded-full px-3 font-semibold transition-colors duration-150"
-            >
-              <LogOut aria-hidden className="size-4" />
-              <span className="hidden sm:inline">Sign out</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      {header}
 
       <div className="border-border border-b bg-[#fdf8fb]">
         <div className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
@@ -266,31 +226,27 @@ export function AgentConsole({
 
           <label className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Team</span>
-            <select
-              value={team}
-              onChange={(e) => setTeam(e.target.value)}
-              className="border-input h-9 rounded-full border bg-white px-3 text-sm"
-            >
+            <Select active={team !== "all"} value={team} onChange={(e) => setTeam(e.target.value)}>
               <option value="all">All teams</option>
               {teams.map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
 
           <label className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Customer</span>
-            <select
+            <Select
+              active={audience !== "all"}
               value={audience}
               onChange={(e) => setAudience(e.target.value as Audience)}
-              className="border-input h-9 rounded-full border bg-white px-3 text-sm"
             >
               <option value="all">All</option>
               <option value="consumer">Private</option>
               <option value="small_business">Business</option>
-            </select>
+            </Select>
           </label>
 
           {filtersActive && (
@@ -339,25 +295,22 @@ export function AgentConsole({
                     setDropTarget(null);
                   }}
                   className={cn(
-                    "flex min-h-[60vh] flex-col gap-3 rounded-2xl border border-t-4 border-[#f3e4ec] bg-[#fdf6fa] p-3 transition-colors duration-150",
-                    meta.bar,
+                    "flex min-h-[60vh] flex-col gap-3 rounded-2xl border p-3 transition-colors duration-150",
+                    meta.column,
                     dropTarget === status && "bg-brand-soft outline-brand outline-2 outline-dashed",
                   )}
                 >
-                  <h2
-                    id={`col-${status}`}
-                    className="flex items-center justify-between px-1 text-sm font-semibold"
-                  >
-                    <span className="flex items-center gap-2">
-                      <meta.icon aria-hidden className={cn("size-4", meta.tone)} />
-                      {meta.label}
-                    </span>
+                  <h2 id={`col-${status}`} className="flex items-center gap-2 px-1 pt-0.5">
                     <span
                       className={cn(
-                        "rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
-                        meta.badge,
+                        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-semibold ring-1 ring-inset",
+                        meta.pill,
                       )}
                     >
+                      <meta.icon aria-hidden className="size-4" />
+                      {meta.label}
+                    </span>
+                    <span className="text-muted-foreground text-sm font-semibold tabular-nums">
                       {column.length}
                     </span>
                   </h2>
@@ -443,6 +396,8 @@ function TicketCard({
   onDragEnd: () => void;
 }) {
   const severity = SEVERITY_META[ticket.severity];
+  // Open critical tickets show how long the customer has been waiting.
+  const showWaiting = ticket.severity === "critical" && ticket.status !== "done";
   return (
     <button
       type="button"
@@ -455,15 +410,36 @@ function TicketCard({
       onDragEnd={onDragEnd}
       onClick={onOpen}
       className={cn(
-        "flex w-full cursor-grab flex-col gap-2.5 rounded-xl border bg-white p-3.5 text-left shadow-sm transition-[box-shadow,opacity,border-color] duration-150 hover:shadow-md active:cursor-grabbing",
+        "flex w-full cursor-grab flex-col gap-2.5 overflow-hidden rounded-xl border bg-white p-3.5 text-left shadow-sm transition-[box-shadow,opacity,border-color] duration-150 hover:shadow-md active:cursor-grabbing",
         fresh ? "border-brand ring-brand/30 ring-4" : "border-transparent",
+        // Finished work steps back so open tickets stand out.
+        ticket.status === "done" && "opacity-70 shadow-none hover:opacity-100",
         "border-l-4",
         severity.edge,
         dragging && "opacity-40",
       )}
     >
+      {showWaiting && (
+        <span className="bg-risk-critical text-risk-critical-fg -mx-3.5 -mt-3.5 mb-0.5 flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold">
+          <AlarmClock aria-hidden className="alarm-ring size-3.5 shrink-0" />
+          Waiting {duration((now - new Date(ticket.created_at).getTime()) / 60_000)}
+        </span>
+      )}
       <span className="flex items-center justify-between gap-2">
-        <span className={cn("rounded-md px-2 py-0.5 text-xs font-semibold", severity.chip)}>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold",
+            severity.chip,
+          )}
+        >
+          {ticket.severity === "critical" && ticket.status !== "done" ? (
+            <span aria-hidden className="relative flex size-2">
+              <span className="bg-risk-critical-line absolute inline-flex size-full animate-ping rounded-full opacity-60" />
+              <span className="bg-risk-critical-line relative inline-flex size-2 rounded-full" />
+            </span>
+          ) : (
+            <severity.icon aria-hidden className="size-3.5" />
+          )}
           {severity.label}
         </span>
         <span className="flex items-center gap-1.5">

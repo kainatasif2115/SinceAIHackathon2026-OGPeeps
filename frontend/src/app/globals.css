@@ -186,15 +186,17 @@
   --risk-safe-bg: oklch(0.95 0.04 150);
   --risk-safe-fg: oklch(0.39 0.09 150);
   --risk-safe-line: oklch(0.62 0.12 150);
-  --risk-medium-bg: oklch(0.955 0.055 90);
-  --risk-medium-fg: oklch(0.42 0.09 75);
-  --risk-medium-line: oklch(0.6 0.13 75);
-  --risk-high-bg: oklch(0.945 0.045 55);
-  --risk-high-fg: oklch(0.45 0.13 45);
-  --risk-high-line: oklch(0.66 0.16 50);
-  --risk-critical-bg: oklch(0.94 0.035 25);
-  --risk-critical-fg: oklch(0.45 0.16 27);
-  --risk-critical-line: oklch(0.58 0.19 27);
+  /* Red, orange and yellow spread apart (hue ~25 / ~60 / ~95) so they read as three levels.
+     Text on each tint is 5.3:1 or more. */
+  --risk-medium-bg: oklch(0.968 0.07 100); /* #fff6c0 */
+  --risk-medium-fg: oklch(0.47 0.1 90); /* #715700, 6.3:1 */
+  --risk-medium-line: oklch(0.82 0.16 95); /* #e5c226 */
+  --risk-high-bg: oklch(0.955 0.06 65); /* #ffe9c7 */
+  --risk-high-fg: oklch(0.5 0.13 55); /* #994a00, 5.3:1 */
+  --risk-high-line: oklch(0.73 0.17 60); /* #f38906 */
+  --risk-critical-bg: oklch(0.94 0.04 22); /* #ffe1df */
+  --risk-critical-fg: oklch(0.47 0.17 25); /* #a51e24, 6.1:1 */
+  --risk-critical-line: oklch(0.6 0.21 25); /* #e23439 */
 
   background: var(--background);
   color: var(--foreground);
@@ -220,6 +222,32 @@
     outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
+}
+
+/*
+ * The alarm clock on open critical tickets "rings": a quick shake, then a
+ * pause, every 2.5 s. With reduced motion (below) it stays still.
+ */
+@keyframes alarm-ring {
+  0%,
+  24%,
+  100% {
+    transform: rotate(0deg);
+  }
+  3%,
+  11%,
+  19% {
+    transform: rotate(-14deg);
+  }
+  7%,
+  15% {
+    transform: rotate(14deg);
+  }
+}
+
+.alarm-ring {
+  transform-origin: 50% 40%;
+  animation: alarm-ring 2.5s ease-in-out infinite;
 }
 
 /* Motion is opt-out: anyone who asks the OS for less motion gets none. */
