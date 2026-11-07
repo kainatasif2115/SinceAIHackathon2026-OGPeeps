@@ -139,12 +139,17 @@ def answer(sub: dict, language: str) -> dict:
     }
 
 
+def field_label(path: str, language: str) -> str:
+    """How a shared detail is named to the customer, e.g. on the consent card."""
+    return _pick(SIGNAL_LABELS.get(path, {}), language, path)
+
+
 def turn(raw: dict, language: str) -> dict:
     if raw["type"] == "final":
         return {"type": "final", "answer": answer(raw["answer"], language)}
     if raw["type"] == "consent_request":
         fields = [
-            {"path": f, "label": _pick(SIGNAL_LABELS.get(f, {}), language, f)}
+            {"path": f, "label": field_label(f, language)}
             for f in raw["fields"]
         ]
         return {"type": "consent_request", "text": raw["text"], "fields": fields}

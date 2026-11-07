@@ -40,7 +40,7 @@ export function TeamSection() {
       intro={
         account.role === "owner"
           ? "Checks your colleagues make in Business mode are shared with you."
-          : "Checks you make in Business mode are shared with the company's owner. Switch to Private in the chat for personal matters."
+          : `Checks you make here are shared with ${account.company}'s owner, so keep personal matters out of them.`
       }
     >
       <Card>

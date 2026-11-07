@@ -184,8 +184,12 @@ class TicketOut(Schema):
     advice: TicketAdvice | None
     summary: str
     demo: bool
+    customer_asked: bool = False
     created_at: datetime
     updated_at: datetime
+    assigned_to: str | None = None
+    picked_up_at: datetime | None = None
+    resolved_at: datetime | None = None
 
 
 class TicketUpdateIn(Schema):
@@ -253,6 +257,22 @@ class InviteIn(Schema):
     email: str = Field(min_length=3, max_length=254)
 
 
+class HandoffProgressOut(Schema):
+    """The customer's view of their own handoff: never another ticket's contents."""
+
+    reference: str
+    status: TicketStatus
+    team_label: str
+    severity: Severity
+    assigned_to: str | None = None
+    created_at: datetime
+    picked_up_at: datetime | None = None
+    resolved_at: datetime | None = None
+    queue_position: int | None = None
+    shared: list[str] = []
+    screenshots: int = 0
+
+
 class ConversationOut(Schema):
     session_id: str
     title: str
@@ -264,6 +284,7 @@ class ConversationOut(Schema):
     action_label: str | None = None
     handoff_reference: str | None = None
     handoff_status: Literal["backlog", "in_progress", "blocked", "done"] | None = None
+    handoff: HandoffProgressOut | None = None
 
 
 class TeamConversationOut(ConversationOut):

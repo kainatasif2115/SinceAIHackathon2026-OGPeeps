@@ -112,7 +112,7 @@ def _collection():
 
 
 def _recent() -> list[dict]:
-    _seed_demo()
+    _purge_demo()
     since = datetime.now(UTC) - WINDOW
     if db.is_configured():
         found = list(_collection().find({"at": {"$gte": since}}))
@@ -194,68 +194,20 @@ def clusters() -> list[dict]:
     return sorted(out, key=lambda c: (c["reports"] < 2, -c["reports"], c["last_seen"]))
 
 
-# --- Demo reports -----------------------------------------------------------------------
-# Synthetic messages written for this prototype, fingerprinted like real ones so the
-# radar is not empty on stage. Marked demo=true.
+# --- Old demo reports -------------------------------------------------------------------
+# Earlier builds seeded synthetic reports (demo=true) so the radar was never empty. The
+# radar now shows real chats only; this clears any that are still stored.
 
-_DEMO: list[tuple[str, str, str, list[float]]] = [
-    (
-        "Your parcel is on hold at customs. Pay the 1.99 EUR customs fee within 24 h: "
-        "parcel-hold.example/pay",
-        "en",
-        "consumer",
-        [9.5, 7.2, 5.8, 3.1, 1.6, 0.9, 0.4],
-    ),
-    (
-        "Pakettisi odottaa tullissa. Maksa 1,99 euron tullimaksu 24 tunnin kuluessa: "
-        "parcel-hold.example/pay",
-        "fi",
-        "consumer",
-        [6.4, 2.2],
-    ),
-    (
-        "Someone from the bank security team called and asked me to read out the verification "
-        "code from my bank app so they could stop a payment",
-        "en",
-        "consumer",
-        [11.0, 8.4, 4.9, 2.7, 1.2],
-    ),
-    (
-        "Our supplier emailed new bank details and asked us to pay the next invoice to the new "
-        "IBAN urgently, invoice-update.example",
-        "en",
-        "small_business",
-        [20.0, 14.5, 9.8, 6.1, 3.3],
-    ),
-    (
-        "Text from the operator: faster 5G at the same price for three months, see the offer "
-        "in the app or at operator.example.net",
-        "en",
-        "consumer",
-        [12.0, 10.1, 7.7, 5.0, 2.4, 0.7],
-    ),
-]
+_purged = False
 
 
-def _seed_demo() -> None:
+def _purge_demo() -> None:
+    global _purged
+    if _purged:
+        return
     if db.is_configured():
-        if _collection().count_documents({"demo": True}, limit=1):
-            return
+        _collection().delete_many({"demo": True})
     else:
         with _lock:
-            if any(r.get("demo") for r in _memory):
-                return
-    now = datetime.now(UTC)
-    for text, language, audience, hours in _DEMO:
-        fp = fingerprint(text)
-        for h in hours:
-            _store(
-                {
-                    "id": secrets.token_hex(8),
-                    "at": now - timedelta(hours=h),
-                    "language": language,
-                    "audience": audience,
-                    "demo": True,
-                    **fp,
-                }
-            )
+            _memory[:] = [r for r in _memory if not r.get("demo")]
+    _purged = True

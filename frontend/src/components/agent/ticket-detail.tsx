@@ -73,9 +73,9 @@ export function TicketDetail({
                 <div className="flex flex-col gap-1">
                   <p className="font-heading text-muted-foreground text-sm font-semibold tracking-wide">
                     {ticket.reference}
-                    {ticket.demo && (
+                    {ticket.customer_asked && (
                       <span className="border-border ml-2 rounded-full border px-2 py-0.5 text-[0.6875rem] font-medium">
-                        Demo ticket
+                        Customer asked: the advice did not call for a person
                       </span>
                     )}
                   </p>

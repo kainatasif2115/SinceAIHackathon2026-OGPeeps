@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Building2, LoaderCircle, LogOut, Trash2, UserRound, Users } from "lucide-react";
 import { deleteAccount, joinTeam } from "@/lib/account-api";
 import { useAccount } from "./account-context";
+import { Avatar } from "./avatar";
 import { Card, Section } from "./section";
 
 /** Who you are, a pending team invite, and the account controls. */
@@ -47,10 +48,15 @@ export function AccountSection() {
   return (
     <Section title="Account">
       <Card labelledBy="profile">
-        <h2 id="profile" className="text-lg font-bold">
-          {account.name}
-        </h2>
-        <p className="text-muted-foreground mt-0.5 text-sm">{account.email}</p>
+        <div className="flex items-center gap-4">
+          <Avatar name={account.name} you size="lg" />
+          <div className="min-w-0">
+            <h2 id="profile" className="text-xl font-bold">
+              {account.name}
+            </h2>
+            <p className="text-muted-foreground mt-0.5 truncate text-sm">{account.email}</p>
+          </div>
+        </div>
         <p className="bg-brand-soft text-accent-foreground mt-3 inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold">
           {account.company ? (
             <>

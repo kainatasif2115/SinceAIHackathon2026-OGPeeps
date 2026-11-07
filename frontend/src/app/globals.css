@@ -285,3 +285,16 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Signed-in dashboard: the sections sit on one white panel inset in a soft blush frame
+   (header and sidebar), with the brand's pink only a breath at the top of the panel. */
+.dashboard-canvas {
+  background-color: #fff;
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in oklch, var(--brand) 4%, #fff) 0,
+    #fff 280px
+  );
+  background-repeat: no-repeat;
+  background-attachment: local;
+}

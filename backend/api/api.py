@@ -336,7 +336,9 @@ def _my_team(request, owner: bool = False) -> dict:
 
 
 def _summaries(docs: list[dict]) -> list[dict]:
-    status = tickets.statuses([d["handoff_reference"] for d in docs if d.get("handoff_reference")])
+    handoffs = tickets.handoffs(
+        [d["handoff_reference"] for d in docs if d.get("handoff_reference")]
+    )
     out = []
     for d in docs:
         case = d["conversation"]["case"]
@@ -353,7 +355,8 @@ def _summaries(docs: list[dict]) -> list[dict]:
                 "risk_level": final["risk_level"] if final else None,
                 "action_label": presenter.answer(final, "en")["action_label"] if final else None,
                 "handoff_reference": reference,
-                "handoff_status": status.get(reference) if reference else None,
+                "handoff_status": handoffs[reference]["status"] if reference in handoffs else None,
+                "handoff": handoffs.get(reference) if reference else None,
             }
         )
     return out
@@ -430,7 +433,7 @@ def case_detail(request, run: str, case_id: str):
 
 @api.patch("/agent/tickets/{reference}", response=TicketOut, auth=agent_auth)
 def update_ticket(request, reference: str, body: TicketUpdateIn):
-    ticket = tickets.update_status(reference, body.status)
+    ticket = tickets.update_status(reference, body.status, agent=request.auth)
     if not ticket:
         raise HttpError(404, "Ticket not found or expired.")
     return ticket

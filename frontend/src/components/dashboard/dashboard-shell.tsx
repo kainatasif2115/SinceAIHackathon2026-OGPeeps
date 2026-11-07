@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { History, LoaderCircle, Menu, MessageCircle, Settings, Users, X } from "lucide-react";
+import { Ear, History, LoaderCircle, Menu, MessageCircle, Users, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AccountProvider, useAccount } from "./account-context";
@@ -16,9 +16,9 @@ type Tab = { href: string; label: string; icon: LucideIcon; businessOnly?: boole
 
 const TABS: Tab[] = [
   { href: "/dashboard", label: "Chat", icon: MessageCircle },
+  { href: "/dashboard/call", label: "Live call", icon: Ear },
   { href: "/dashboard/checks", label: "Your checks", icon: History },
   { href: "/dashboard/team", label: "Team", icon: Users, businessOnly: true },
-  { href: "/dashboard/account", label: "Account", icon: Settings },
 ];
 
 /**
@@ -27,7 +27,12 @@ const TABS: Tab[] = [
  */
 export function DashboardShell({ children }: { children: ReactNode }) {
   return (
-    <div className="theme-dna flex h-dvh flex-col overflow-hidden bg-[#fdf6fa]">
+    // The blush frame is set inline: .theme-dna paints its own background and would win
+    // over a utility class.
+    <div
+      className="theme-dna flex h-dvh flex-col overflow-hidden"
+      style={{ background: "#f6f1f3" }}
+    >
       <AccountProvider
         fallback={(state) => (
           <div className="flex flex-1 items-center justify-center">
@@ -67,10 +72,15 @@ function Layout({ children }: { children: ReactNode }) {
   }
 
   const { signedOut } = useAccount();
+  // The chat history belongs to the chat; the other sections use the full width.
+  const onChat = pathname === "/dashboard";
 
   return (
     <>
-      <Header drawerOpen={drawerOpen} onToggleDrawer={() => setDrawerOpen((v) => !v)} />
+      <Header
+        drawerOpen={drawerOpen}
+        onToggleDrawer={onChat ? () => setDrawerOpen((v) => !v) : null}
+      />
       {signedOut && (
         <div
           role="alert"
@@ -82,20 +92,20 @@ function Layout({ children }: { children: ReactNode }) {
           </Link>
         </div>
       )}
-      <div className="relative flex min-h-0 flex-1">
-        <aside
-          aria-label="Chat history"
-          className="border-border hidden w-72 shrink-0 border-r bg-white md:block"
-        >
-          <HistorySidebar />
-        </aside>
+      {/* The chat is an inset panel beside its history; the other sections fill the screen. */}
+      <div className={cn("relative flex min-h-0 flex-1", onChat && "md:pr-3 md:pb-3")}>
+        {onChat && (
+          <aside aria-label="Chat history" className="hidden w-72 shrink-0 md:block">
+            <HistorySidebar />
+          </aside>
+        )}
 
-        {drawerOpen && (
+        {onChat && drawerOpen && (
           <div className="absolute inset-0 z-30 flex md:hidden">
             <aside
               id="history-drawer"
               aria-label="Chat history"
-              className="border-border h-full w-[min(20rem,85vw)] border-r bg-white"
+              className="h-full w-[min(20rem,85vw)] bg-[#f6f1f3] shadow-xl"
             >
               <HistorySidebar onPick={() => setDrawerOpen(false)} />
             </aside>
@@ -108,7 +118,15 @@ function Layout({ children }: { children: ReactNode }) {
           </div>
         )}
 
-        <main id="main" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+        <main
+          id="main"
+          className={cn(
+            "dashboard-canvas relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto",
+            onChat
+              ? "md:rounded-2xl md:border md:border-[#ebe0e6] md:shadow-[0_1px_3px_rgb(60_20_40/0.06)]"
+              : "border-t border-[#ebe0e6]",
+          )}
+        >
           <PersistentChat />
           {children}
         </main>
@@ -122,29 +140,34 @@ function Header({
   onToggleDrawer,
 }: {
   drawerOpen: boolean;
-  onToggleDrawer: () => void;
+  /** Null where there is no history to open (every section but the chat). */
+  onToggleDrawer: (() => void) | null;
 }) {
   const { account } = useAccount();
   const pathname = usePathname();
   const tabs = TABS.filter((t) => !t.businessOnly || account.company);
 
   return (
-    <header className="border-border shrink-0 border-b bg-white">
+    <header className="shrink-0">
       <div className="flex h-16 items-center gap-2 px-3 md:gap-6 md:px-5">
-        <button
-          type="button"
-          onClick={onToggleDrawer}
-          aria-expanded={drawerOpen}
-          aria-controls="history-drawer"
-          className="hover:bg-muted flex size-10 shrink-0 items-center justify-center rounded-full transition-colors duration-150 md:hidden"
-        >
-          {drawerOpen ? (
-            <X aria-hidden className="size-5" />
-          ) : (
-            <Menu aria-hidden className="size-5" />
-          )}
-          <span className="sr-only">{drawerOpen ? "Close chat history" : "Open chat history"}</span>
-        </button>
+        {onToggleDrawer && (
+          <button
+            type="button"
+            onClick={onToggleDrawer}
+            aria-expanded={drawerOpen}
+            aria-controls="history-drawer"
+            className="hover:bg-muted flex size-10 shrink-0 items-center justify-center rounded-full transition-colors duration-150 md:hidden"
+          >
+            {drawerOpen ? (
+              <X aria-hidden className="size-5" />
+            ) : (
+              <Menu aria-hidden className="size-5" />
+            )}
+            <span className="sr-only">
+              {drawerOpen ? "Close chat history" : "Open chat history"}
+            </span>
+          </button>
+        )}
         <Link href="/" className="flex shrink-0 items-center gap-2 rounded-sm">
           <span className="font-heading text-brand text-2xl leading-none font-bold tracking-tight">
             DNA
@@ -181,7 +204,9 @@ function TabList({ tabs, pathname }: { tabs: Tab[]; pathname: string }) {
               aria-current={active ? "page" : undefined}
               className={cn(
                 "flex h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold whitespace-nowrap transition-colors duration-150",
-                active ? "bg-brand-soft text-accent-foreground" : "hover:bg-muted",
+                active
+                  ? "text-brand bg-white shadow-[0_1px_2px_rgb(60_20_40/0.08)]"
+                  : "hover:bg-white/70",
               )}
             >
               <tab.icon aria-hidden className="size-4" />

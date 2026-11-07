@@ -4,13 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { Building2, ChevronDown, LogOut, Settings, UserRound } from "lucide-react";
 import { useAccount } from "./account-context";
-
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  return (
-    (parts[0]?.[0] ?? "") + (parts.length > 1 ? (parts.at(-1)?.[0] ?? "") : "")
-  ).toUpperCase();
-}
+import { initials } from "./avatar";
 
 /** The profile button at the top right; opens who you are, Account and Log out. */
 export function ProfileMenu() {

@@ -1,3 +1,5 @@
+from datetime import UTC, datetime, timedelta
+
 import pytest
 from django.test import Client
 
@@ -241,10 +243,37 @@ def test_handoff_creates_a_ticket_on_the_agent_board(monkeypatch, client):
     assert ticket["severity"] == "critical"
     assert ticket["team"] == "operator_support_agent"
     assert ticket["demo"] is False
+    assert ticket["customer_asked"] is False  # the advice itself called for a person
     assert [line["role"] for line in ticket["transcript"]] == ["customer", "assistant", "customer"]
     assert ticket["advice"]["action_label"]
-    # Demo tickets fill the board alongside the real one.
-    assert any(t["demo"] for t in board)
+    # Only real handoffs: no synthetic tickets fill the board.
+    assert [t["reference"] for t in board] == [reference]
+
+
+def test_customer_can_ask_for_a_person_when_the_advice_does_not(monkeypatch, client):
+    tickets._memory.clear()
+    _sign_in(monkeypatch, client)
+    monkeypatch.setattr(brain, "decide_multi_turn", Script(done(final())))
+    sid = post(
+        client,
+        "/api/sessions",
+        {"audience": "consumer", "language": "en", "message": "Is this parcel text real?"},
+    ).json()["session_id"]
+
+    reference = post(client, f"/api/sessions/{sid}/handoff").json()["reference"]
+
+    ticket = next(t for t in client.get("/api/agent/tickets").json() if t["reference"] == reference)
+    assert ticket["customer_asked"] is True
+    assert ticket["severity"] == "medium"  # the assistant's own risk, not raised
+
+
+def test_old_demo_tickets_are_cleared_from_the_board(monkeypatch, client):
+    tickets._memory.clear()
+    tickets._memory["DEMO-001"] = {"reference": "DEMO-001", "demo": True}
+    monkeypatch.setattr(tickets, "_purged", False)
+    _sign_in(monkeypatch, client)
+
+    assert client.get("/api/agent/tickets").json() == []
 
 
 def test_agent_can_move_a_ticket(monkeypatch, client):
@@ -268,6 +297,53 @@ def test_agent_can_move_a_ticket(monkeypatch, client):
         "/api/agent/tickets/NOPE", {"status": "done"}, content_type="application/json"
     )
     assert missing.status_code == 404
+
+
+def test_picking_up_a_ticket_records_who_and_when(monkeypatch, client):
+    tickets._memory.clear()
+    _sign_in(monkeypatch, client)
+    reference = _handoff_case(monkeypatch, client)
+
+    def move(status):
+        return client.patch(
+            f"/api/agent/tickets/{reference}", {"status": status}, content_type="application/json"
+        ).json()
+
+    picked = move("in_progress")
+    assert picked["assigned_to"] == "Demo Agent"
+    assert picked["picked_up_at"] and not picked["resolved_at"]
+    # On hold keeps the agent and the pick-up time; resolving stamps the end.
+    held = move("blocked")
+    assert held["assigned_to"] == "Demo Agent" and held["picked_up_at"] == picked["picked_up_at"]
+    done_ = move("done")
+    assert done_["resolved_at"]
+    # Back to the queue: nobody has it any more.
+    back = move("backlog")
+    assert back["assigned_to"] is None and back["picked_up_at"] is None
+    assert back["resolved_at"] is None
+
+
+def _waiting(reference, severity, minutes_ago, team="operator_support_agent"):
+    return {
+        "reference": reference,
+        "status": "backlog",
+        "severity": severity,
+        "team": team,
+        "created_at": datetime.now(UTC) - timedelta(minutes=minutes_ago),
+    }
+
+
+def test_queue_puts_the_most_severe_and_oldest_first():
+    line = [
+        _waiting("A", "high", 30),
+        _waiting("B", "critical", 5),
+        _waiting("C", "high", 10),
+        _waiting("D", "critical", 50, team="security_specialist"),
+        {**_waiting("E", "critical", 60), "status": "in_progress"},
+    ]
+    position = {t["reference"]: tickets.queue_position(t, line) for t in line}
+    # Critical B jumps the older high tickets; other teams and picked-up tickets don't count.
+    assert position == {"A": 2, "B": 1, "C": 3, "D": 1, "E": None}
 
 
 def test_delete_now_removes_the_conversation(monkeypatch, client):
@@ -375,12 +451,16 @@ def test_campaign_radar_tells_the_nth_person_without_storing_text(monkeypatch, c
     monkeypatch.setattr(brain, "decide_multi_turn", lambda *a, **k: done(final()))
     message = "My parcel is stuck at customs, they want a fee at parcel-hold.example/pay"
 
-    first = post(
-        client, "/api/sessions", {"audience": "consumer", "language": "en", "message": message}
-    )
-    note = first.json()["campaign"]
-    # The demo campaign already has 9 reports with this domain.
-    assert note["others"] >= campaigns.MIN_REPORTS
+    def ask():
+        return post(
+            client, "/api/sessions", {"audience": "consumer", "language": "en", "message": message}
+        ).json()["campaign"]
+
+    # The first few customers are not told: a handful of reports stays private.
+    for _ in range(campaigns.MIN_REPORTS):
+        assert ask() is None
+    note = ask()
+    assert note["others"] == campaigns.MIN_REPORTS
     assert note["theme"] == "Parcel or customs fee"
 
     unrelated = post(

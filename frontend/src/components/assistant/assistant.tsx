@@ -144,6 +144,8 @@ type Props = {
   resume?: ConversationDetail | null;
   /** Called after each reply from the service, e.g. to refresh a history list. */
   onActivity?: (sessionId: string) => void;
+  /** Panel without its own header, for hosts that show their own (the dashboard). */
+  bare?: boolean;
   /** Drawer is covering the viewport. Ignored on the full-screen page. */
   expanded?: boolean;
   onToggleExpanded?: () => void;
@@ -159,6 +161,7 @@ export function Assistant({
   onClose,
   resume = null,
   onActivity,
+  bare = false,
   expanded = false,
   onToggleExpanded,
 }: Props) {
@@ -553,13 +556,15 @@ export function Assistant({
     return (
       <I18nContext value={t}>
         <div className="flex h-full flex-col">
-          <PanelHeader
-            language={language}
-            onLanguageChange={setLanguage}
-            expanded={expanded}
-            onToggleExpanded={onToggleExpanded}
-            onClose={onClose}
-          />
+          {!bare && (
+            <PanelHeader
+              language={language}
+              onLanguageChange={setLanguage}
+              expanded={expanded}
+              onToggleExpanded={onToggleExpanded}
+              onClose={onClose}
+            />
+          )}
           <div className="flex-1 overflow-y-auto overscroll-contain">
             <div
               id="assistant-main"

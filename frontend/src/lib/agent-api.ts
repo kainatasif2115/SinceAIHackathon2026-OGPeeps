@@ -35,6 +35,7 @@ const ticketSchema = z.object({
     .nullable(),
   summary: z.string(),
   demo: z.boolean(),
+  customer_asked: z.boolean().default(false),
   created_at: z.string(),
   updated_at: z.string(),
 });

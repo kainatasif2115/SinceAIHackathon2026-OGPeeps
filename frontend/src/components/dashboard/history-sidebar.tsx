@@ -10,6 +10,18 @@ import { useChat } from "./chat-context";
 const time = (iso: string) =>
   new Date(iso).toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" });
 
+/** Chats split into "Today" and "Earlier" (history only goes back 24 hours). */
+function groups(items: AccountConversation[]): [string, AccountConversation[]][] {
+  const today = new Date().toDateString();
+  const isToday = (c: AccountConversation) => new Date(c.started_at).toDateString() === today;
+  return (
+    [
+      ["Today", items.filter(isToday)],
+      ["Earlier", items.filter((c) => !isToday(c))],
+    ] as [string, AccountConversation[]][]
+  ).filter(([, list]) => list.length > 0);
+}
+
 /** Recent conversations, newest first, like a chat app's history. */
 export function HistorySidebar({ onPick }: { onPick?: () => void }) {
   const { history, activeId, opening, newChat, openChat } = useChat();
@@ -23,7 +35,7 @@ export function HistorySidebar({ onPick }: { onPick?: () => void }) {
             newChat();
             onPick?.();
           }}
-          className="border-border hover:bg-muted flex h-10 w-full items-center gap-2 rounded-xl border bg-white px-3 text-sm font-semibold transition-colors duration-150"
+          className="bg-brand text-brand-foreground hover:bg-brand/90 flex h-11 w-full items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors duration-150"
         >
           <Plus aria-hidden className="size-4" />
           New chat
@@ -31,31 +43,37 @@ export function HistorySidebar({ onPick }: { onPick?: () => void }) {
       </div>
 
       <nav aria-label="Recent chats" className="min-h-0 flex-1 overflow-y-auto px-3">
-        <p className="text-muted-foreground px-2 pt-1 pb-2 text-xs font-semibold">Recent chats</p>
         {history === null ? (
           <LoaderCircle
             aria-label="Loading chats"
             className="text-brand mx-2 size-5 animate-spin"
           />
         ) : history.length === 0 ? (
-          <p className="text-muted-foreground px-2 text-sm">
+          <p className="text-muted-foreground px-2 pt-2 text-sm">
             Your chats from the last 24 hours show up here.
           </p>
         ) : (
-          <ul className="flex flex-col gap-0.5">
-            {history.map((c) => (
-              <HistoryItem
-                key={c.session_id}
-                conversation={c}
-                active={c.session_id === activeId}
-                busy={c.session_id === opening}
-                onOpen={() => {
-                  void openChat(c.session_id);
-                  onPick?.();
-                }}
-              />
-            ))}
-          </ul>
+          groups(history).map(([label, items]) => (
+            <div key={label} className="pb-3">
+              <h2 className="text-muted-foreground px-2 pt-1 pb-1.5 text-xs font-semibold">
+                {label}
+              </h2>
+              <ul className="flex flex-col gap-0.5">
+                {items.map((c) => (
+                  <HistoryItem
+                    key={c.session_id}
+                    conversation={c}
+                    active={c.session_id === activeId}
+                    busy={c.session_id === opening}
+                    onOpen={() => {
+                      void openChat(c.session_id);
+                      onPick?.();
+                    }}
+                  />
+                ))}
+              </ul>
+            </div>
+          ))
         )}
       </nav>
 
@@ -88,7 +106,9 @@ function HistoryItem({
         aria-current={active ? "true" : undefined}
         className={cn(
           "flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors duration-150",
-          active ? "bg-brand-soft" : "hover:bg-muted",
+          active
+            ? "text-foreground bg-white font-semibold shadow-[0_1px_2px_rgb(60_20_40/0.08)]"
+            : "hover:bg-white/70",
         )}
       >
         <span

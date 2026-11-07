@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useLayoutEffect, useState, type FormEvent } from "react";
+import { useId, useLayoutEffect, useState, useSyncExternalStore, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Building2, Eye, EyeOff, Info, LoaderCircle, UserRound } from "lucide-react";
@@ -42,6 +42,8 @@ const KINDS = [
 const FIELD =
   "border-input focus-visible:border-brand h-11 w-full rounded-xl border bg-white px-3.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklch,var(--brand),transparent_75%)]";
 
+const noSubscribe = () => () => {};
+
 /** Sign-up and login share one form; sign-up adds the name field and the privacy note. */
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
@@ -49,7 +51,15 @@ export function AuthForm({ mode }: { mode: Mode }) {
   // Hidden pages stay in the document, so ids must be unique across them.
   const passwordId = useId();
   const rulesId = useId();
-  const [kind, setKind] = useState<AccountKind>("private");
+  // Opened from a colleague's invite link (/signup?invited=1): a business account that
+  // joins the inviting company, so there is no company name to type.
+  const invited = useSyncExternalStore(
+    noSubscribe,
+    () => mode === "signup" && new URLSearchParams(location.search).get("invited") === "1",
+    () => false,
+  );
+  const [kindChoice, setKind] = useState<AccountKind | null>(null);
+  const kind: AccountKind = kindChoice ?? (invited ? "business" : "private");
   const [company, setCompany] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -57,12 +67,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   // Next keeps a page's state when you navigate away (React Activity). Start clean every
   // time: no stuck spinner, old error, or typed password left in the page.
   useLayoutEffect(
     () => () => {
-      setKind("private");
+      setKind(null);
       setCompany("");
       setName("");
       setEmail("");
@@ -138,7 +147,13 @@ export function AuthForm({ mode }: { mode: Mode }) {
             </div>
           </fieldset>
         )}
-        {mode === "signup" && kind === "business" && (
+        {mode === "signup" && invited && kind === "business" && (
+          <p className="bg-brand-soft text-accent-foreground rounded-xl px-3.5 py-3 text-sm">
+            A colleague invited you to their company&apos;s team. Sign up with the email address
+            they invited and you&apos;ll join it straight away.
+          </p>
+        )}
+        {mode === "signup" && !invited && kind === "business" && (
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             Company name
             <input

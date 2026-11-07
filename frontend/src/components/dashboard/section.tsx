@@ -25,7 +25,7 @@ export function Card({ children, labelledBy }: { children: ReactNode; labelledBy
   return (
     <section
       aria-labelledby={labelledBy}
-      className="rounded-3xl border border-[#f3e4ec] bg-white p-5 sm:p-6"
+      className="rounded-2xl border border-[#eee3e8] bg-white p-5 shadow-[0_1px_2px_rgb(60_20_40/0.04),0_4px_16px_rgb(60_20_40/0.04)] sm:p-6"
     >
       {children}
     </section>

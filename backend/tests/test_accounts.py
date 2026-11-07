@@ -1,7 +1,7 @@
 import pytest
 from django.test import Client
 
-from api import accounts, sessions
+from api import accounts, sessions, tickets
 from assistant import brain
 from tests.fakes import Script, ask, ask_consent, done, final
 
@@ -15,6 +15,7 @@ def client(settings):
     settings.PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
     sessions._memory.clear()
     accounts._memory.clear()
+    tickets._memory.clear()
     return Client()
 
 
@@ -121,6 +122,11 @@ def test_handoff_status_shows_on_the_account(client, monkeypatch):
 
     assert listed[0]["handoff_reference"].startswith("DSA-")
     assert listed[0]["handoff_status"] == "backlog"
+    handoff = listed[0]["handoff"]
+    assert handoff["team_label"] and handoff["assigned_to"] is None
+    # Nobody else is waiting for this team, so this one is first in line.
+    assert handoff["queue_position"] == 1
+    assert "transcript" not in handoff and "summary" not in handoff
 
 
 def test_deleting_the_account_removes_it_and_its_conversations(client, monkeypatch):

@@ -95,6 +95,11 @@ export function AnswerCard({ answer, sessionId, headingId, onStartOver }: Props)
           </section>
         )}
 
+        {/* The AI didn't call for a person, but the customer can still ask for one. */}
+        {!answer.escalation_required && (
+          <HandoffPanel sessionId={sessionId} escalationLabel={null} optional={{ unsure }} />
+        )}
+
         <section
           aria-labelledby={`${headingId}-sources`}
           className="border-border flex flex-col gap-2 border-t pt-5"

@@ -13,10 +13,18 @@ type State =
   | { status: "done"; handoff: Handoff }
   | { status: "error"; error: unknown };
 
-type Props = { sessionId: string; escalationLabel: string | null };
+type Props = {
+  sessionId: string;
+  escalationLabel: string | null;
+  /**
+   * The answer did not call for a person, but the customer may still ask for one: a
+   * quieter offer under the advice, made a proper button when the assistant is unsure.
+   */
+  optional?: { unsure: boolean };
+};
 
 /** "Talk to a person": calls the handoff endpoint and shows what is passed on. */
-export function HandoffPanel({ sessionId, escalationLabel }: Props) {
+export function HandoffPanel({ sessionId, escalationLabel, optional }: Props) {
   const t = useT();
   const [state, setState] = useState<State>({ status: "idle" });
   const doneHeading = useRef<HTMLHeadingElement>(null);
@@ -66,6 +74,38 @@ export function HandoffPanel({ sessionId, escalationLabel }: Props) {
             </dd>
           </div>
         </dl>
+      </section>
+    );
+  }
+
+  if (optional) {
+    const busy = state.status === "loading";
+    return (
+      <section
+        aria-label={t.talkAnyway}
+        className="border-border flex flex-col gap-2 rounded-md border border-dashed p-4"
+      >
+        <p className="text-muted-foreground max-w-prose text-sm">
+          {t.talkAnywayPrompt(optional.unsure)}
+        </p>
+        {state.status === "error" && (
+          <p role="alert" className="text-destructive text-sm font-medium">
+            {t.handoffError} {describeError(state.error, t)}
+          </p>
+        )}
+        <Button
+          variant={optional.unsure ? "default" : "outline"}
+          onClick={start}
+          aria-disabled={busy || undefined}
+          className="self-start"
+        >
+          {busy ? (
+            <LoaderCircle aria-hidden className="size-4 animate-spin" />
+          ) : (
+            <Headset aria-hidden className="size-4" />
+          )}
+          {busy ? t.handoffLoading : t.talkAnyway}
+        </Button>
       </section>
     );
   }

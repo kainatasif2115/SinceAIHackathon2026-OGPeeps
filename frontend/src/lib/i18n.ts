@@ -151,6 +151,11 @@ const en = {
       ? `This is best handled by a person: ${who}.`
       : "This is best handled together with a person who can act on your account.",
   talkToPerson: "Talk to a person",
+  talkAnyway: "Talk to a person anyway",
+  talkAnywayPrompt: (unsure: boolean): string =>
+    unsure
+      ? "Not sure about this answer? A person from customer service can look at it with you."
+      : "Still uneasy? You can ask a person to look at it, even if nothing needs doing.",
   handoffLoading: "Connecting…",
   handoffDone: "A person will take over",
   handoffReference: "Your reference",
@@ -331,6 +336,11 @@ const fi: Dictionary = {
       ? `Tämä hoituu parhaiten ihmisen kanssa: ${who}.`
       : "Tämä hoituu parhaiten ihmisen kanssa, joka voi toimia tililläsi.",
   talkToPerson: "Puhu ihmisen kanssa",
+  talkAnyway: "Puhu silti ihmisen kanssa",
+  talkAnywayPrompt: (unsure) =>
+    unsure
+      ? "Etkö ole varma vastauksesta? Asiakaspalvelun ihminen voi katsoa sen kanssasi."
+      : "Mietityttääkö yhä? Voit pyytää ihmistä katsomaan asiaa, vaikka mitään ei tarvitsisi tehdä.",
   handoffLoading: "Yhdistetään…",
   handoffDone: "Ihminen jatkaa tästä",
   handoffReference: "Viitteesi",
@@ -511,6 +521,11 @@ const sv: Dictionary = {
       ? `Det här sköts bäst av en person: ${who}.`
       : "Det här sköts bäst tillsammans med en person som kan hantera ditt konto.",
   talkToPerson: "Prata med en person",
+  talkAnyway: "Prata med en person ändå",
+  talkAnywayPrompt: (unsure) =>
+    unsure
+      ? "Osäker på svaret? En person från kundtjänst kan titta på det med dig."
+      : "Känns det ändå fel? Du kan be en person titta på det, även om inget behöver göras.",
   handoffLoading: "Kopplar…",
   handoffDone: "En person tar över",
   handoffReference: "Ditt referensnummer",

@@ -16,6 +16,20 @@ const accountSchema = z.object({
   pending_invite: z.string().nullable(),
 });
 
+const handoffSchema = z.object({
+  reference: z.string(),
+  status: z.enum(["backlog", "in_progress", "blocked", "done"]),
+  team_label: z.string(),
+  severity: z.enum(["critical", "high", "medium", "low"]),
+  assigned_to: z.string().nullable(),
+  created_at: z.string(),
+  picked_up_at: z.string().nullable(),
+  resolved_at: z.string().nullable(),
+  queue_position: z.number().nullable(),
+  shared: z.array(z.string()),
+  screenshots: z.number(),
+});
+
 const conversationSchema = z.object({
   session_id: z.string(),
   title: z.string(),
@@ -27,6 +41,7 @@ const conversationSchema = z.object({
   action_label: z.string().nullable(),
   handoff_reference: z.string().nullable(),
   handoff_status: z.enum(["backlog", "in_progress", "blocked", "done"]).nullable(),
+  handoff: handoffSchema.nullable().optional(),
 });
 
 const teamSchema = z.object({
@@ -61,6 +76,7 @@ export type Account = z.infer<typeof accountSchema>;
 export type ConversationDetail = z.infer<typeof conversationDetailSchema>;
 export type AccountKind = Account["kind"];
 export type AccountConversation = z.infer<typeof conversationSchema>;
+export type Handoff = z.infer<typeof handoffSchema>;
 export type Team = z.infer<typeof teamSchema>;
 export type TeamConversation = z.infer<typeof teamConversationSchema>;
 

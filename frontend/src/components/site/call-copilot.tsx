@@ -13,11 +13,11 @@ import {
   ShieldCheck,
   TriangleAlert,
 } from "lucide-react";
-import type { Language } from "@/lib/api";
+import type { Audience, Language } from "@/lib/api";
 import { SAMPLE_CALL, analyse, levelOf, type Flag } from "@/lib/call-copilot";
 import { ListenError, canListen, listenContinuously } from "@/lib/voice";
 import { cn } from "@/lib/utils";
-import { Assistant } from "@/components/assistant/assistant";
+import { Assistant, type InitialRequest } from "@/components/assistant/assistant";
 import { Select } from "@/components/agent/select";
 
 type Stage = "idle" | "live" | "advice";
@@ -28,7 +28,15 @@ const SAMPLE_PACE_MS = 2600;
  * says in real time (rules in the browser, no AI), then hands the transcript to
  * the normal assistant for one clear next step.
  */
-export function CallCopilot() {
+type Props = {
+  /**
+   * Inside the signed-in dashboard: no page header of its own (the dashboard has one),
+   * and the advice opens in the dashboard's chat, so it is saved to the account.
+   */
+  embedded?: { audience: Audience; onAdvice: (request: InitialRequest) => void };
+};
+
+export function CallCopilot({ embedded }: Props = {}) {
   const [stage, setStage] = useState<Stage>("idle");
   const [source, setSource] = useState<"mic" | "sample">("sample");
   const [language, setLanguage] = useState<Language>("en");
@@ -92,6 +100,16 @@ export function CallCopilot() {
 
   function endCall() {
     controller.current?.abort();
+    if (embedded) {
+      const said = interim ? [...lines, interim] : lines;
+      embedded.onAdvice({
+        text: callMessage(said, analyse(said)),
+        audience: embedded.audience,
+        language,
+        scenario: null,
+      });
+      return;
+    }
     if (interim) setLines((prev) => [...prev, interim]);
     setInterim("");
     setStage("advice");
@@ -104,31 +122,34 @@ export function CallCopilot() {
     setStage("idle");
   }
 
+  const Main = embedded ? "div" : "main";
   return (
-    <div className="theme-dna flex min-h-full flex-1 flex-col bg-white">
-      <header className="border-border border-b bg-white">
-        <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between gap-3 px-4 sm:px-6">
-          <div className="flex items-center gap-2.5">
-            <span className="font-heading text-brand text-2xl leading-none font-bold tracking-tight">
-              DNA
-            </span>
-            <span className="bg-border h-6 w-px" aria-hidden />
-            <span className="font-heading flex items-center gap-1.5 font-semibold">
-              <Ear aria-hidden className="text-brand size-4.5" />
-              Call co-pilot
-            </span>
+    <div className={cn("flex min-h-full flex-1 flex-col", !embedded && "theme-dna bg-white")}>
+      {!embedded && (
+        <header className="border-border border-b bg-white">
+          <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between gap-3 px-4 sm:px-6">
+            <div className="flex items-center gap-2.5">
+              <span className="font-heading text-brand text-2xl leading-none font-bold tracking-tight">
+                DNA
+              </span>
+              <span className="bg-border h-6 w-px" aria-hidden />
+              <span className="font-heading flex items-center gap-1.5 font-semibold">
+                <Ear aria-hidden className="text-brand size-4.5" />
+                Call co-pilot
+              </span>
+            </div>
+            <Link
+              href="/"
+              className="text-brand hover:bg-brand-soft inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-semibold"
+            >
+              <ArrowLeft aria-hidden className="size-4" />
+              Home
+            </Link>
           </div>
-          <Link
-            href="/"
-            className="text-brand hover:bg-brand-soft inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-semibold"
-          >
-            <ArrowLeft aria-hidden className="size-4" />
-            Home
-          </Link>
-        </div>
-      </header>
+        </header>
+      )}
 
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
+      <Main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
         {stage === "idle" && (
           <section className="flex flex-col gap-6">
             <div className="flex max-w-2xl flex-col gap-3">
@@ -305,7 +326,7 @@ export function CallCopilot() {
             </div>
           </section>
         )}
-      </main>
+      </Main>
     </div>
   );
 }

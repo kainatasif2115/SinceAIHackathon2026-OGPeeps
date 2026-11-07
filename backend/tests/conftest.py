@@ -23,6 +23,13 @@ def no_real_credentials(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def no_real_database(settings):
+    # backend/.env may point at the developer's own MongoDB; tests use memory instead
+    # (test_mongo_sessions.py opts in to a separate test database).
+    settings.MONGODB_URI = ""
+
+
+@pytest.fixture(autouse=True)
 def fresh_usage_limits():
     from api import limits
 

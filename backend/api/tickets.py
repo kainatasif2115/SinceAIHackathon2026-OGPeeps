@@ -8,7 +8,7 @@ the same 24-hour retention as the chat itself.
 """
 
 import threading
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 from assistant import vocab
 
@@ -92,6 +92,8 @@ def from_conversation(reference: str, session_id: str, conv, final: dict | None)
         },
         "summary": presenter.handoff_summary(conv, final),
         "demo": False,
+        # The customer asked for a person although the advice did not call for one.
+        "customer_asked": bool(final) and not final.get("escalation_required"),
         "created_at": now,
         "updated_at": now,
     }
@@ -109,7 +111,7 @@ def create(ticket: dict) -> dict:
 
 
 def all_tickets() -> list[dict]:
-    _seed_demo_tickets()
+    _purge_demo_tickets()
     if db.is_configured():
         found = list(_collection().find())
     else:
@@ -118,128 +120,94 @@ def all_tickets() -> list[dict]:
     return sorted(found, key=lambda t: t["created_at"], reverse=True)
 
 
-def statuses(references: list[str]) -> dict[str, str]:
-    """Current status per ticket reference, for the customer's account page."""
-    if not references:
-        return {}
-    if db.is_configured():
-        found = _collection().find({"_id": {"$in": references}}, {"status": 1})
-        return {t["_id"]: t["status"] for t in found}
-    with _lock:
-        return {r: _memory[r]["status"] for r in references if r in _memory}
-
-
-def update_status(reference: str, status: str) -> dict | None:
+def update_status(reference: str, status: str, agent: str | None = None) -> dict | None:
+    """Moves a ticket and keeps its timeline: picking it up assigns it to the agent,
+    resolving stamps the time, and putting it back in the queue clears both."""
+    ticket = get(reference)
+    if not ticket:
+        return None
     now = datetime.now(UTC)
+    fields: dict = {"status": status, "updated_at": now}
+    if status == "backlog":
+        fields.update(assigned_to=None, picked_up_at=None, resolved_at=None)
+    else:
+        if not ticket.get("picked_up_at"):
+            fields["picked_up_at"] = now
+        if agent and (status == "in_progress" or not ticket.get("assigned_to")):
+            fields["assigned_to"] = agent
+        fields["resolved_at"] = now if status == "done" else None
     if db.is_configured():
         coll = _collection()
-        coll.update_one({"_id": reference}, {"$set": {"status": status, "updated_at": now}})
+        coll.update_one({"_id": reference}, {"$set": fields})
         return coll.find_one({"_id": reference})
     with _lock:
-        ticket = _memory.get(reference)
-        if ticket:
-            ticket.update(status=status, updated_at=now)
-        return ticket
+        _memory[reference].update(fields)
+        return _memory[reference]
 
 
-# --- Demo tickets ---------------------------------------------------------------------
-# A few synthetic tickets so the board is not empty when the demo starts. They are
-# marked demo=true and shown with a "Demo" tag; nothing in them is real.
-
-_DEMO = [
-    {
-        "minutes_ago": 42,
-        "status": "in_progress",
-        "severity": "critical",
-        "urgency": "immediate",
-        "team": "operator_support_agent",
-        "audience": "consumer",
-        "language": "fi",
-        "title": "Puhelin menetti kentän sen jälkeen, kun luin koodin soittajalle",
-        "action": "Contact operator customer service now",
-    },
-    {
-        "minutes_ago": 27,
-        "status": "backlog",
-        "severity": "critical",
-        "urgency": "immediate",
-        "team": "business_security_support",
-        "audience": "small_business",
-        "language": "en",
-        "title": "Our accountant paid a €9,400 invoice after the 'CEO' emailed new bank details",
-        "action": "Contact your bank now",
-    },
-    {
-        "minutes_ago": 18,
-        "status": "blocked",
-        "severity": "high",
-        "urgency": "today",
-        "team": "security_specialist",
-        "audience": "consumer",
-        "language": "sv",
-        "title": "Jag installerade en app som 'banken' bad mig om i telefonen",
-        "action": "Disconnect the device and get it checked",
-    },
-    {
-        "minutes_ago": 9,
-        "status": "backlog",
-        "severity": "high",
-        "urgency": "today",
-        "team": "human_advisor",
-        "audience": "consumer",
-        "language": "en",
-        "title": "I think my ex can see my location and messages on my phone",
-        "action": "Get a trained advisor on the line",
-    },
-    {
-        "minutes_ago": 95,
-        "status": "done",
-        "severity": "medium",
-        "urgency": "today",
-        "team": "operator_support_agent",
-        "audience": "consumer",
-        "language": "fi",
-        "title": "Tilaukseeni lisättiin eSIM, jota en tilannut",
-        "action": "Contact operator customer service now",
-    },
-]
-
-
-def _seed_demo_tickets() -> None:
-    # Checked by the first demo reference, not "is the board empty", so a real
-    # handoff made before anyone opened the board still gets the demo tickets beside it.
+def get(reference: str) -> dict | None:
     if db.is_configured():
-        if _collection().count_documents({"_id": "DEMO-001"}, limit=1):
-            return
-    elif "DEMO-001" in _memory:
+        return _collection().find_one({"_id": reference})
+    with _lock:
+        return _memory.get(reference)
+
+
+SEVERITY_ORDER = {s: i for i, s in enumerate(SEVERITIES)}  # critical first
+
+
+def queue_position(ticket: dict, waiting: list[dict]) -> int | None:
+    """Place in line for a waiting ticket: same team, most severe first, then oldest."""
+    if ticket["status"] != "backlog":
+        return None
+    line = sorted(
+        (t for t in waiting if t["status"] == "backlog" and t["team"] == ticket["team"]),
+        key=lambda t: (SEVERITY_ORDER.get(t["severity"], 9), t["created_at"]),
+    )
+    refs = [t["reference"] for t in line]
+    return refs.index(ticket["reference"]) + 1 if ticket["reference"] in refs else None
+
+
+def handoffs(references: list[str]) -> dict[str, dict]:
+    """What a customer may see about their own handoffs: who has it, where it is in the
+    queue, and when it moved. Never the other tickets' contents."""
+    if not references:
+        return {}
+    everything = all_tickets()
+    out = {}
+    for ticket in everything:
+        if ticket["reference"] not in references:
+            continue
+        out[ticket["reference"]] = {
+            "reference": ticket["reference"],
+            "status": ticket["status"],
+            "team_label": ticket["team_label"],
+            "severity": ticket["severity"],
+            "assigned_to": ticket.get("assigned_to"),
+            "created_at": ticket["created_at"],
+            "picked_up_at": ticket.get("picked_up_at"),
+            "resolved_at": ticket.get("resolved_at"),
+            "queue_position": queue_position(ticket, everything),
+            "shared": [presenter.field_label(f, "en") for f in ticket["consent"]["allowed"]],
+            "screenshots": ticket["screenshots"],
+        }
+    return out
+
+
+# --- Old demo tickets -------------------------------------------------------------------
+# Earlier builds seeded synthetic tickets (demo=true) so the board was never empty. The
+# board now shows real handoffs only; this clears any that are still stored.
+
+_purged = False
+
+
+def _purge_demo_tickets() -> None:
+    global _purged
+    if _purged:
         return
-    now = datetime.now(UTC)
-    for n, d in enumerate(_DEMO, start=1):
-        created = now - timedelta(minutes=d["minutes_ago"])
-        create(
-            {
-                "reference": f"DEMO-{n:03d}",
-                "session_id": None,
-                "status": d["status"],
-                "severity": d["severity"],
-                "urgency": d["urgency"],
-                "team": d["team"],
-                "team_label": team_label(d["team"]),
-                "audience": d["audience"],
-                "language": d["language"],
-                "title": d["title"],
-                "transcript": [{"role": "customer", "text": d["title"]}],
-                "screenshots": 0,
-                "consent": {"allowed": [], "declined": []},
-                "advice": {
-                    "action_label": d["action"],
-                    "advice_text": "Synthetic demo ticket.",
-                    "steps": [],
-                    "confidence": 0.8,
-                },
-                "summary": "Synthetic demo ticket for the support-console prototype.",
-                "demo": True,
-                "created_at": created,
-                "updated_at": created,
-            }
-        )
+    if db.is_configured():
+        _collection().delete_many({"demo": True})
+    else:
+        with _lock:
+            for ref in [r for r, t in _memory.items() if t.get("demo")]:
+                del _memory[ref]
+    _purged = True

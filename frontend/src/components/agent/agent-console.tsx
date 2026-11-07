@@ -448,9 +448,12 @@ function TicketCard({
               New
             </span>
           )}
-          {ticket.demo && (
-            <span className="text-muted-foreground border-border rounded-full border px-2 py-0.5 text-[0.6875rem] font-medium">
-              Demo
+          {ticket.customer_asked && (
+            <span
+              title="The advice did not call for a person; the customer asked for one."
+              className="text-muted-foreground border-border rounded-full border px-2 py-0.5 text-[0.6875rem] font-medium"
+            >
+              Customer asked
             </span>
           )}
         </span>
