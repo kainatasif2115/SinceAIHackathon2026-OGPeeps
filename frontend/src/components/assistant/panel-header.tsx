@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, Maximize2, Minimize2, ShieldCheck, X } from "lucide-react";
+import { Info, Maximize2, Minimize2, X } from "lucide-react";
 import { LANGUAGES, type Language } from "@/lib/api";
 import { useT } from "./i18n-context";
 import { SegmentedControl } from "./segmented-control";
@@ -29,10 +29,12 @@ export function PanelHeader({
           id="assistant-panel-title"
           className="font-heading flex min-w-0 items-center gap-2 text-lg font-semibold"
         >
-          <span className="bg-brand text-brand-foreground flex size-8 shrink-0 items-center justify-center rounded-full">
-            <ShieldCheck aria-hidden className="size-4.5" />
+          <span className="text-brand shrink-0 text-xl leading-none font-bold tracking-tight">
+            DNA
           </span>
-          <span className="truncate">{t.productName}</span>
+          <span className="truncate">
+            <span className="font-normal">-</span> {t.productName}
+          </span>
         </h2>
         <SegmentedControl
           legend={t.languageLegend}
