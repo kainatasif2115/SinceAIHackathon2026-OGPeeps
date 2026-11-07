@@ -18,7 +18,7 @@ export function AccountLink() {
   if (account === undefined) return <span className="w-10 shrink-0" aria-hidden />;
   return (
     <Link
-      href={account ? "/account" : "/login"}
+      href={account ? "/dashboard" : "/login"}
       className="hover:bg-muted inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-semibold whitespace-nowrap transition-colors duration-150"
     >
       <UserRound aria-hidden className="size-4" />

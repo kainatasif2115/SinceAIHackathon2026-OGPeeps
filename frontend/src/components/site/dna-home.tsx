@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { getScenarios, type Audience, type Scenario } from "@/lib/api";
+import { getAccount } from "@/lib/account-api";
 import type { InitialRequest } from "@/components/assistant/assistant";
 import type { ImageAttachment } from "@/lib/media";
 import type { ScenariosState } from "@/components/assistant/scenario-list";
@@ -42,6 +43,21 @@ export function DnaHome() {
     getScenarios()
       .then((list) => setScenarios({ status: "ready", scenarios: list }))
       .catch(() => setScenarios({ status: "error" }));
+  }, []);
+
+  // A business account starts in Business mode, once per sign-in, so switching to
+  // Private for a personal matter sticks while you browse.
+  const audienceSetFor = useRef<string | null>(null);
+  useEffect(() => {
+    getAccount()
+      .then((account) => {
+        const key = account?.email ?? null;
+        if (key === audienceSetFor.current) return;
+        audienceSetFor.current = key;
+        setAudience(account?.kind === "business" ? "small_business" : "consumer");
+      })
+      .catch(() => undefined);
+    // Runs on mount and whenever Next shows the preserved page again (after login/logout).
   }, []);
 
   function openPanel() {

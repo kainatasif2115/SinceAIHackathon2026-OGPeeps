@@ -129,10 +129,20 @@ Every assistant message, including questions and the answer card, has two small 
 - They're kept with the conversation for 24 hours, like the text.
 - The privacy line reminds users never to type passwords, card numbers or codes.
 
+### Dashboard (`/dashboard`, signed in)
+
+- Where login and sign-up land. A white **sidebar** (logo back to the homepage, name and account type, sections, **Log out** at the bottom) and the chosen section on the soft-pink canvas. On phones the sidebar becomes a top bar with the logo, Log out and a swipeable row of sections.
+- Sections: **Chat** (the assistant, same component as the homepage panel), **Your checks** (history and handoff status; for an owner also the team's checks), **Team** (business accounts only) and **Account** (profile, invite, log out, delete).
+- Business accounts get a **Business / Private** switch above the chat with a line saying who will see the check. Private accounts don't see it.
+- The chat lives in the dashboard frame and is only hidden in other sections, so a conversation survives moving around. The current section has `aria-current="page"`.
+- `/account` redirects to `/dashboard/account`.
+
 ### Account pages (`/signup`, `/login`, `/account`)
 
 - Same DNA theme and header as the homepage, with a "Home" link. The homepage header shows **Log in**, or the first name once signed in.
 - **Sign-up / login:** one centred card. Labels sit above fields, the password has a show/hide button, and sign-up lists the password rules under the field. Errors from the server appear in a `role="alert"` line. A note says what is stored and that accounts are optional.
+- **Account type:** sign-up starts with "Who is this account for?": two equal cards, **Private person** and **Business**, as a radio group. Business adds a company-name field, with a note that invited colleagues leave it empty.
+- **Business accounts** show a badge (Business · company · owner/member), a **Team** section (members, pending invites, invite form and Remove for the owner; Leave for members) and, for the owner, **Your team's checks** with who made each one. A line explains that only Business-mode checks are shared. A pending invite shows as a tinted banner with **Join**.
 - **Account page:** a greeting with the email, a **Check a message** button, "Your recent checks" (title, time, risk badge with icon and label, the action, and handoff status in words), then **Log out** and **Delete my account**. Deleting asks once more in a tinted box that says what is removed and that it can't be undone.
 
 ### Start view

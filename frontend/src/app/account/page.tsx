@@ -1,8 +1,6 @@
-import type { Metadata } from "next";
-import { AccountView } from "@/components/account/account-view";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Your account · DNA - Security Assistant" };
-
+/** The account page moved into the dashboard. */
 export default function AccountPage() {
-  return <AccountView />;
+  redirect("/dashboard/account");
 }
