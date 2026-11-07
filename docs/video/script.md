@@ -117,16 +117,16 @@ Speed up every wait for the AI; never speed up the answer card.
 >
 > It isn't perfect, and we show where. Here, a supplier says their bank account has changed. The advice is right: don't pay, call them on a number you already have. But it picked "contact your bank" as the main step, which is more than this customer needed. When it gets it wrong, it errs on the safe side, and every failure is documented.
 
-### Scene 6: Transition card (4 s)
+### Scene 6: Transition (6 s)
 
-**Show:** `cards/02-extras.png`.
+**Show:** a hard cut to black for half a second, then the card `cards/02-extras.png` slams in with a short whoosh. Pop the seven white feature chips in one by one, fast, in time with the music. Bring the music up here.
 
 **Say:**
-> That's the brief. Now the extras.
-
----
-
-## Act 2: The extras (1:15)
+> That was everything the challenge asked for.
+>
+> *(beat)*
+>
+> But a scam doesn't wait for you to type. So we didn't stop there.
 
 ### Scene 7: Built like a real product (8 s)
 
