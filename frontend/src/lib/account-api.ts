@@ -14,6 +14,7 @@ const accountSchema = z.object({
   company: z.string().nullable(),
   role: z.enum(["owner", "member"]).nullable(),
   pending_invite: z.string().nullable(),
+  demo: z.boolean().default(false),
 });
 
 const handoffSchema = z.object({
@@ -124,6 +125,20 @@ export async function signUp(input: {
 
 export async function logIn(email: string, password: string): Promise<Account> {
   return json(await post("/api/account/login", { email, password }), accountSchema);
+}
+
+/** Whether the one-click "explore" accounts are switched on for this service. */
+export async function getDemoStatus(): Promise<boolean> {
+  const { enabled } = await json(
+    await call("/api/account/demo"),
+    z.object({ enabled: z.boolean() }),
+  );
+  return enabled;
+}
+
+/** Sign in as a freshly rebuilt demo account: a private person or a company's owner. */
+export async function startDemo(kind: "individual" | "organization"): Promise<Account> {
+  return json(await post("/api/account/demo", { kind }), accountSchema);
 }
 
 export async function logOut(): Promise<void> {

@@ -145,6 +145,18 @@ def update_status(reference: str, status: str, agent: str | None = None) -> dict
         return _memory[reference]
 
 
+def delete_for_sessions(session_ids: list[str]) -> None:
+    """Remove the tickets made from these chats (used when a demo account is rebuilt)."""
+    if not session_ids:
+        return
+    if db.is_configured():
+        _collection().delete_many({"session_id": {"$in": session_ids}})
+        return
+    with _lock:
+        for ref in [r for r, t in _memory.items() if t.get("session_id") in session_ids]:
+            del _memory[ref]
+
+
 def get(reference: str) -> dict | None:
     if db.is_configured():
         return _collection().find_one({"_id": reference})

@@ -64,6 +64,11 @@ export function ProfileMenu() {
           <div className="px-3 pt-2 pb-3">
             <p className="truncate font-semibold">{account.name}</p>
             <p className="text-muted-foreground truncate text-xs">{account.email}</p>
+            {account.demo && (
+              <p className="bg-brand-soft text-accent-foreground mt-1.5 w-fit rounded-md px-1.5 py-0.5 text-xs font-semibold">
+                Demo account
+              </p>
+            )}
             <p className="text-muted-foreground mt-1.5 flex items-center gap-1.5 text-xs">
               {account.company ? (
                 <>

@@ -1,7 +1,7 @@
 import pytest
 from django.test import Client
 
-from api import accounts, sessions, tickets
+from api import accounts, sessions, teams, tickets
 from assistant import brain
 from tests.fakes import Script, ask, ask_consent, done, final
 
@@ -199,3 +199,62 @@ def test_nobody_else_can_open_your_conversation(client, monkeypatch):
 
     assert stranger.get(f"/api/account/conversations/{chat['session_id']}").status_code == 404
     assert Client().get(f"/api/account/conversations/{chat['session_id']}").status_code == 401
+
+
+def _demo_login(client, kind):
+    return client.post("/api/account/demo", {"kind": kind}, content_type="application/json")
+
+
+def test_demo_login_is_off_unless_switched_on(client):
+    assert client.get("/api/account/demo").json() == {"enabled": False}
+    assert _demo_login(client, "individual").status_code == 404
+
+
+def test_demo_individual_gets_chats_and_handoffs_in_each_state(client, monkeypatch):
+    monkeypatch.setenv("DEMO_LOGIN_ENABLED", "1")
+    teams._memory.clear()
+    assert client.get("/api/account/demo").json() == {"enabled": True}
+
+    res = _demo_login(client, "individual")
+
+    assert res.status_code == 200 and res.json()["demo"] is True
+    assert client.get("/api/account/me").json()["name"] == "Maija Korhonen"
+    chats = client.get("/api/account/conversations").json()
+    assert len(chats) == 6 and all(c["state"] == "answered" for c in chats)
+    handoffs = [c["handoff"] for c in chats if c["handoff"]]
+    assert sorted(h["status"] for h in handoffs) == ["backlog", "backlog", "done", "in_progress"]
+    assert sorted(h["queue_position"] for h in handoffs if h["status"] == "backlog") == [1, 2]
+    assert all(h["assigned_to"] == "Demo Agent" for h in handoffs if h["status"] != "backlog")
+    # A chat can be reopened like any other.
+    opened = client.get(f"/api/account/conversations/{chats[0]['session_id']}")
+    assert opened.status_code == 200 and opened.json()["messages"][-1]["role"] == "assistant"
+
+
+def test_demo_organization_has_a_team_a_colleague_and_an_invite(client, monkeypatch):
+    monkeypatch.setenv("DEMO_LOGIN_ENABLED", "1")
+    teams._memory.clear()
+
+    me = _demo_login(client, "organization").json()
+
+    assert me["role"] == "owner" and me["company"] == "Kahvila Aalto Oy" and me["demo"] is True
+    team = client.get("/api/account/team").json()
+    assert [m["name"] for m in team["members"]] == ["Aino Mäkelä", "Mikko Lahtinen"]
+    assert team["invites"] == ["sara.new@demo.example"]
+    shared = client.get("/api/account/team/conversations").json()
+    assert len(shared) == 2 and all(c["author"] == "Mikko Lahtinen" for c in shared)
+
+
+def test_demo_login_starts_from_scratch_every_time(client, monkeypatch):
+    monkeypatch.setenv("DEMO_LOGIN_ENABLED", "1")
+    teams._memory.clear()
+    _demo_login(client, "individual")
+    first = client.get("/api/account/conversations").json()
+    client.delete(f"/api/sessions/{first[0]['session_id']}")
+
+    _demo_login(client, "individual")
+    _demo_login(client, "organization")
+    _demo_login(client, "individual")
+
+    again = client.get("/api/account/conversations").json()
+    assert len(again) == 6  # rebuilt, not added to
+    assert client.get("/api/agent/tickets").status_code == 401  # no staff access from a demo

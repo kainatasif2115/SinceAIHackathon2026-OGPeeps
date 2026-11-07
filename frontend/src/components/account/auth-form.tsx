@@ -1,10 +1,17 @@
 "use client";
 
-import { useId, useLayoutEffect, useState, useSyncExternalStore, type FormEvent } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useState,
+  useSyncExternalStore,
+  type FormEvent,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Building2, Eye, EyeOff, Info, LoaderCircle, UserRound } from "lucide-react";
-import { logIn, signUp, type AccountKind } from "@/lib/account-api";
+import { getDemoStatus, logIn, signUp, startDemo, type AccountKind } from "@/lib/account-api";
 import { ApiError } from "@/lib/api";
 import { AccountShell } from "./account-shell";
 
@@ -67,6 +74,30 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The "explore" buttons are only offered where the service has demo accounts switched on.
+  const [demoEnabled, setDemoEnabled] = useState(false);
+  const [demoBusy, setDemoBusy] = useState<"individual" | "organization" | null>(null);
+
+  useEffect(() => {
+    if (mode !== "login") return;
+    getDemoStatus()
+      .then(setDemoEnabled)
+      .catch(() => setDemoEnabled(false));
+  }, [mode]);
+
+  async function explore(kind: "individual" | "organization") {
+    if (busy || demoBusy) return;
+    setDemoBusy(kind);
+    setError(null);
+    try {
+      await startDemo(kind);
+      router.push("/dashboard");
+    } catch {
+      setError("Couldn't open the demo right now. Please try again.");
+      setDemoBusy(null);
+    }
+  }
+
   // Next keeps a page's state when you navigate away (React Activity). Start clean every
   // time: no stuck spinner, old error, or typed password left in the page.
   useLayoutEffect(
@@ -79,6 +110,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       setShowPassword(false);
       setBusy(false);
       setError(null);
+      setDemoBusy(null);
     },
     [],
   );
@@ -257,6 +289,36 @@ export function AuthForm({ mode }: { mode: Mode }) {
             {copy.switchLink}
           </Link>
         </p>
+
+        {mode === "login" && demoEnabled && (
+          <div className="border-border flex flex-col gap-2.5 border-t pt-5">
+            <p className="text-muted-foreground text-center text-xs">
+              Just looking around? Skip the sign-up: these open a ready-made demo with chats,
+              handoffs and a team already in place.
+            </p>
+            {(
+              [
+                ["individual", "Explore as an individual", UserRound],
+                ["organization", "Explore as part of an organization", Building2],
+              ] as const
+            ).map(([demoKind, label, Icon]) => (
+              <button
+                key={demoKind}
+                type="button"
+                onClick={() => void explore(demoKind)}
+                aria-disabled={demoBusy !== null || undefined}
+                className="border-brand/40 text-brand hover:bg-brand-soft inline-flex h-11 items-center justify-center gap-2 rounded-full border text-sm font-semibold transition-colors duration-150"
+              >
+                {demoBusy === demoKind ? (
+                  <LoaderCircle aria-hidden className="size-4 animate-spin" />
+                ) : (
+                  <Icon aria-hidden className="size-4" />
+                )}
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {mode === "signup" && (
           <p className="text-muted-foreground flex items-start gap-2 text-xs">

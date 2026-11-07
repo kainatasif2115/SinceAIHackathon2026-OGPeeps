@@ -90,7 +90,7 @@ step "Backend: build and deploy"
 ENV_VARS="DJANGO_ALLOWED_HOSTS=.run.app,MONGODB_DB=$(value MONGODB_DB | grep . || echo ogpeeps)"
 [ -n "$(value AGENT_DEMO_USER)" ] && ENV_VARS+=",AGENT_DEMO_USER=$(value AGENT_DEMO_USER)"
 # Optional credit limits (defaults: 30 answers per visitor an hour, 1500 a day in total).
-for name in RATE_LIMIT_PER_HOUR DAILY_AI_LIMIT; do
+for name in RATE_LIMIT_PER_HOUR DAILY_AI_LIMIT DEMO_LOGIN_ENABLED; do
   [ -n "$(value $name)" ] && ENV_VARS+=",$name=$(value $name)"
 done
 build "$IMAGES/$BACKEND" backend/Dockerfile .
