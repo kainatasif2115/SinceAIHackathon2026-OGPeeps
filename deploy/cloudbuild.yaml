@@ -1,0 +1,17 @@
+# Builds one image for deploy/gcp.sh. Cloud Build runs on x86, which Cloud Run needs
+# (a laptop with an ARM chip would build the wrong kind of image).
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - ${_DOCKERFILE}
+      - --build-arg
+      - BACKEND_URL=${_BACKEND_URL}
+      - -t
+      - ${_IMAGE}
+      - ${_CONTEXT}
+images:
+  - ${_IMAGE}
+options:
+  logging: CLOUD_LOGGING_ONLY

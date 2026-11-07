@@ -4,6 +4,8 @@ Team OGPeeps · DNA × Since AI Hackathon 2026 (Turku, 6–8 Nov)
 
 A prototype assistant that helps consumers and small businesses who have run into a suspicious call, message or link, or a possible account compromise. It gives them one clear, proportionate next step. It explains why, asks only for what it needs, says when it's unsure, and hands off to a human when needed.
 
+**Live demo:** https://ogpeeps-frontend-349509127423.europe-north1.run.app (Google Cloud Run, Finland; see [`docs/deploy.md`](docs/deploy.md)). The first request after a quiet period can take a few seconds while it starts.
+
 > Prototype only, not a live DNA security service. Uses synthetic data; no DNA production systems or real customer data.
 
 **What it does:**
@@ -106,6 +108,7 @@ Open http://localhost:3000. The page shows whether it can reach the backend. The
 | `make eval-multi N=30` | Talk to the organisers' simulated user on N dev cases and score it (uses Claude) |
 | `make predict-test` | Answer all 335 test inputs into `test_predictions.jsonl` and validate it (uses Claude) |
 | `make validate FILE=…` | Check a submission file before handing it in |
+| `make deploy GCP_PROJECT=…` | Build and deploy both apps to Google Cloud Run ([`docs/deploy.md`](docs/deploy.md)) |
 
 Commands marked "uses AI credits" need the ElevenLabs setup above (or an Anthropic key) and use credits. As a rough guide, one answer costs a few cents' worth. Runs are resumable: rerun the same command to fill in any cases that failed.
 
