@@ -1,23 +1,29 @@
 import logging
 import os
 import secrets
+from datetime import UTC, datetime
 
 from django.http import HttpResponse
 from ninja import File, Form, NinjaAPI, Schema, Status
 from ninja.errors import HttpError
 from ninja.files import UploadedFile
 
+from api import accounts, cases, db, presenter, results, sessions, tickets, voice
 from api import agent_auth as agent_auth_mod
-from api import cases, db, presenter, results, sessions, tickets, voice
+from api.accounts import customer_auth
 from api.agent_auth import agent_auth
 from api.schemas import (
+    AccountOut,
     AgentLoginIn,
     AgentOut,
     ConsentIn,
+    ConversationOut,
     HandoffOut,
+    LoginIn,
     ReplyIn,
     ScenarioOut,
     SessionOut,
+    SignUpIn,
     SpeakIn,
     StartIn,
     TicketOut,
@@ -84,7 +90,10 @@ def start_session(request, body: StartIn):
     conv = Conversation(case=case)
     conv.add_images([image.model_dump() for image in body.images], turn=0)
     session_id = sessions.new_id()
-    return _advance(session_id, conv, {"scenario_id": body.scenario_id})
+    doc = {"scenario_id": body.scenario_id, "started_at": datetime.now(UTC)}
+    if user := accounts.current_user(request):
+        doc["user_id"] = user["_id"]  # so it shows on the account page
+    return _advance(session_id, conv, doc)
 
 
 @api.post("/sessions/{session_id}/reply", response=SessionOut)
@@ -121,6 +130,88 @@ def delete_session(request, session_id: str):
     its own copy of the summary for the human agent and expires on its own."""
     if not sessions.delete(session_id):
         raise HttpError(404, "Conversation not found or expired.")
+    return Status(204, None)
+
+
+# Optional customer accounts (api/accounts.py). The assistant works without one.
+
+
+def _sign_in(request, response: HttpResponse, user: dict) -> dict:
+    response.set_cookie(
+        accounts.COOKIE,
+        accounts.issue_token(user),
+        max_age=accounts.MAX_AGE,
+        httponly=True,
+        samesite="Strict",
+        secure=request.is_secure(),
+    )
+    return accounts.public(user)
+
+
+@api.post("/account/signup", response=AccountOut)
+def account_signup(request, response: HttpResponse, body: SignUpIn):
+    try:
+        user = accounts.create(body.email, body.name, body.password)
+    except accounts.SignUpError as err:
+        raise HttpError(400, str(err)) from err
+    return _sign_in(request, response, user)
+
+
+@api.post("/account/login", response=AccountOut)
+def account_login(request, response: HttpResponse, body: LoginIn):
+    try:
+        user = accounts.authenticate(body.email, body.password)
+    except accounts.LockedOut as err:
+        raise HttpError(429, "Too many wrong passwords. Try again in 15 minutes.") from err
+    if not user:
+        raise HttpError(401, "Wrong email or password.")
+    return _sign_in(request, response, user)
+
+
+@api.post("/account/logout", response={204: None})
+def account_logout(request, response: HttpResponse):
+    response.delete_cookie(accounts.COOKIE, samesite="Strict")
+    return Status(204, None)
+
+
+@api.get("/account/me", response=AccountOut, auth=customer_auth)
+def account_me(request):
+    return accounts.public(request.auth)
+
+
+@api.get("/account/conversations", response=list[ConversationOut], auth=customer_auth)
+def account_conversations(request):
+    docs = sessions.for_user(request.auth["_id"])
+    status = tickets.statuses([d["handoff_reference"] for d in docs if d.get("handoff_reference")])
+    out = []
+    for d in docs:
+        case = d["conversation"]["case"]
+        final = d.get("final")
+        reference = d.get("handoff_reference")
+        out.append(
+            {
+                "session_id": d["_id"],
+                "title": sessions.excerpt(case["opening_message"]),
+                "language": case["language"],
+                "started_at": d.get("started_at") or d["updated_at"],
+                "expires_at": d["expires_at"],
+                "state": "answered" if final else "in_progress",
+                "risk_level": final["risk_level"] if final else None,
+                "action_label": presenter.answer(final, "en")["action_label"] if final else None,
+                "handoff_reference": reference,
+                "handoff_status": status.get(reference) if reference else None,
+            }
+        )
+    return out
+
+
+@api.delete("/account", response={204: None}, auth=customer_auth)
+def account_delete(request, response: HttpResponse):
+    """Deletes the account and its conversations now. Handoff tickets keep their own
+    copy for the support agent and expire after 24 hours like everything else."""
+    sessions.delete_for_user(request.auth["_id"])
+    accounts.delete(request.auth["_id"])
+    response.delete_cookie(accounts.COOKIE, samesite="Strict")
     return Status(204, None)
 
 
@@ -238,7 +329,7 @@ def _require_pending(doc: dict, kind: str) -> dict:
 
 
 def _extra(doc: dict) -> dict:
-    keep = ("scenario_id", "pending", "final", "handoff_reference")
+    keep = ("scenario_id", "pending", "final", "handoff_reference", "user_id", "started_at")
     return {k: doc[k] for k in keep if k in doc}
 
 

@@ -9,4 +9,4 @@
 **/.next
 **/.venv
 runs/
-results/
+# results/ is uploaded: the backend image ships the evaluator output for the staff console.

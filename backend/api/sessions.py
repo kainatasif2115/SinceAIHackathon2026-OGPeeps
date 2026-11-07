@@ -67,12 +67,12 @@ def scenario_summary(case: dict) -> dict:
         "language": lang,
         # The dataset's own titles reveal the answer ("(benign)", "given or not?"),
         # so the example is labelled with the start of what the user wrote.
-        "title": _excerpt(case["opening_message"]),
+        "title": excerpt(case["opening_message"]),
         "opening_message": case["opening_message"],
     }
 
 
-def _excerpt(text: str, limit: int = 80) -> str:
+def excerpt(text: str, limit: int = 80) -> str:
     text = " ".join(text.split())
     return text if len(text) <= limit else text[: limit - 1].rsplit(" ", 1)[0] + "…"
 
@@ -227,6 +227,26 @@ def delete(session_id: str) -> bool:
         return _collection().delete_one({"_id": session_id}).deleted_count > 0
     with _lock:
         return _memory.pop(session_id, None) is not None
+
+
+def for_user(user_id: str) -> list[dict]:
+    """A signed-in customer's conversations that have not expired yet, newest first."""
+    if db.is_configured():
+        found = list(_collection().find({"user_id": user_id}))
+    else:
+        with _lock:
+            found = [copy.deepcopy(d) for d in _memory.values() if d.get("user_id") == user_id]
+    return sorted(found, key=lambda d: d.get("started_at") or d["updated_at"], reverse=True)
+
+
+def delete_for_user(user_id: str) -> int:
+    if db.is_configured():
+        return _collection().delete_many({"user_id": user_id}).deleted_count
+    with _lock:
+        ids = [k for k, d in _memory.items() if d.get("user_id") == user_id]
+        for k in ids:
+            del _memory[k]
+    return len(ids)
 
 
 def new_id() -> str:

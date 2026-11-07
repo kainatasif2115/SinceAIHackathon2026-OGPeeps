@@ -190,3 +190,36 @@ class AgentLoginIn(Schema):
 
 class AgentOut(Schema):
     name: str
+
+
+# --- Customer accounts (optional) ---------------------------------------------------
+
+
+class SignUpIn(Schema):
+    email: str = Field(min_length=3, max_length=254)
+    name: str = Field(min_length=1, max_length=100)
+    password: str = Field(min_length=1, max_length=200)
+
+
+class LoginIn(Schema):
+    email: str = Field(min_length=3, max_length=254)
+    password: str = Field(min_length=1, max_length=200)
+
+
+class AccountOut(Schema):
+    email: str
+    name: str
+    created_at: datetime
+
+
+class ConversationOut(Schema):
+    session_id: str
+    title: str
+    language: Language
+    started_at: datetime
+    expires_at: datetime
+    state: Literal["in_progress", "answered"]
+    risk_level: str | None = None
+    action_label: str | None = None
+    handoff_reference: str | None = None
+    handoff_status: Literal["backlog", "in_progress", "blocked", "done"] | None = None

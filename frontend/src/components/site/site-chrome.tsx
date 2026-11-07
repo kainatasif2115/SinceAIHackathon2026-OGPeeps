@@ -2,6 +2,7 @@
 
 import { MessageCircle } from "lucide-react";
 import type { Audience } from "@/lib/api";
+import { AccountLink } from "@/components/account/account-link";
 import { cn } from "@/lib/utils";
 
 const AUDIENCE_TABS: { value: Audience; label: string }[] = [
@@ -81,15 +82,18 @@ export function SiteHeader({ onOpenAssistant }: { onOpenAssistant: () => void })
           </ul>
         </nav>
 
-        <button
-          type="button"
-          onClick={onOpenAssistant}
-          className="bg-brand text-brand-foreground hover:bg-brand/90 inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full px-0 text-sm font-semibold whitespace-nowrap transition-colors duration-150 min-[380px]:w-auto min-[380px]:px-4"
-        >
-          <MessageCircle aria-hidden className="size-4" />
-          <span className="sr-only min-[380px]:not-sr-only sm:hidden">Check</span>
-          <span className="hidden sm:inline">Check a message</span>
-        </button>
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <AccountLink />
+          <button
+            type="button"
+            onClick={onOpenAssistant}
+            className="bg-brand text-brand-foreground hover:bg-brand/90 inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full px-0 text-sm font-semibold whitespace-nowrap transition-colors duration-150 min-[380px]:w-auto min-[380px]:px-4"
+          >
+            <MessageCircle aria-hidden className="size-4" />
+            <span className="sr-only min-[380px]:not-sr-only sm:hidden">Check</span>
+            <span className="hidden sm:inline">Check a message</span>
+          </button>
+        </div>
       </div>
     </header>
   );

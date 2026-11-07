@@ -128,6 +128,12 @@ Every assistant message, including questions and the answer card, has two small 
 - They're kept with the conversation for 24 hours, like the text.
 - The privacy line reminds users never to type passwords, card numbers or codes.
 
+### Account pages (`/signup`, `/login`, `/account`)
+
+- Same DNA theme and header as the homepage, with a "Home" link. The homepage header shows **Log in**, or the first name once signed in.
+- **Sign-up / login:** one centred card. Labels sit above fields, the password has a show/hide button, and sign-up lists the password rules under the field. Errors from the server appear in a `role="alert"` line. A note says what is stored and that accounts are optional.
+- **Account page:** a greeting with the email, a **Check a message** button, "Your recent checks" (title, time, risk badge with icon and label, the action, and handoff status in words), then **Log out** and **Delete my account**. Deleting asks once more in a tinted box that says what is removed and that it can't be undone.
+
 ### Start view
 
 - The heading "What happened?", a one-line explanation, the message box, then a muted privacy box: "We keep this conversation for 24 hours, then delete it. Never type passwords, card numbers or codes here."

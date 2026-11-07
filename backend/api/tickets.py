@@ -118,6 +118,17 @@ def all_tickets() -> list[dict]:
     return sorted(found, key=lambda t: t["created_at"], reverse=True)
 
 
+def statuses(references: list[str]) -> dict[str, str]:
+    """Current status per ticket reference, for the customer's account page."""
+    if not references:
+        return {}
+    if db.is_configured():
+        found = _collection().find({"_id": {"$in": references}}, {"status": 1})
+        return {t["_id"]: t["status"] for t in found}
+    with _lock:
+        return {r: _memory[r]["status"] for r in references if r in _memory}
+
+
 def update_status(reference: str, status: str) -> dict | None:
     now = datetime.now(UTC)
     if db.is_configured():

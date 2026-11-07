@@ -84,11 +84,12 @@ build() { # build IMAGE DOCKERFILE CONTEXT [BACKEND_URL]
 }
 
 step "Backend: build and deploy"
+ENV_VARS="DJANGO_ALLOWED_HOSTS=.run.app,MONGODB_DB=$(value MONGODB_DB | grep . || echo ogpeeps)"
+[ -n "$(value AGENT_DEMO_USER)" ] && ENV_VARS+=",AGENT_DEMO_USER=$(value AGENT_DEMO_USER)"
 build "$IMAGES/$BACKEND" backend/Dockerfile .
 gcloud run deploy "$BACKEND" --image "$IMAGES/$BACKEND" --region "$REGION" \
   --allow-unauthenticated --memory 512Mi --cpu 1 --max-instances 3 --timeout 300 \
-  --set-env-vars "DJANGO_ALLOWED_HOSTS=.run.app,MONGODB_DB=$(value MONGODB_DB | grep . || echo ogpeeps)" \
-  --set-secrets "$SECRETS"
+  --set-env-vars "$ENV_VARS" --set-secrets "$SECRETS"
 BACKEND_URL="$(gcloud run services describe "$BACKEND" --region "$REGION" --format 'value(status.url)')"
 
 step "Frontend: build (proxying /api to $BACKEND_URL) and deploy"

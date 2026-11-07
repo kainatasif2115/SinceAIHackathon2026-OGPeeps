@@ -14,6 +14,12 @@ The brief asks for "documented decisions", so add an entry whenever the team set
 
 ---
 
+## 2026-11-07: Optional customer accounts with email and password
+
+**Decision:** Customers can sign up and log in with an email and password, but nothing requires it. Accounts live in MongoDB (`users`), passwords are hashed with Django's default hasher and checked against Django's password rules, and login sets a signed, HttpOnly, SameSite=Strict cookie. Signed-in customers get an account page with their recent checks and handoff status, and can delete their account and its conversations at any time. Five wrong passwords lock an account for 15 minutes.
+**Why:** Someone who has just been scammed should get help immediately, not meet a sign-up wall, and judges should be able to try the demo with no friction. An account adds follow-up value (handoff status) while storing as little as possible, which fits the privacy criterion. In production the operator's own customer login would take its place.
+**Alternatives considered:** Required accounts (friction for scared users), Google sign-in (needs an OAuth consent screen and sends login data to another company), and a third-party auth service (more setup, more data processors).
+
 ## 2026-11-07: Host the demo on Google Cloud Run in Finland
 
 **Decision:** Two Cloud Run services (Django API and Next.js site) in europe-north1, images built by Cloud Build, keys in Secret Manager, sessions in a free MongoDB Atlas cluster. One script, `make deploy`, does it all (see `docs/deploy.md`).

@@ -1,0 +1,195 @@
+"use client";
+
+import { useId, useLayoutEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, Info, LoaderCircle, UserRound } from "lucide-react";
+import { logIn, signUp } from "@/lib/account-api";
+import { ApiError } from "@/lib/api";
+import { AccountShell } from "./account-shell";
+
+type Mode = "signup" | "login";
+
+const COPY = {
+  signup: {
+    title: "Create an account",
+    intro: "Optional. You can check messages without an account.",
+    submit: "Create account",
+    switchText: "Already have an account?",
+    switchLink: "Log in",
+    switchHref: "/login",
+  },
+  login: {
+    title: "Log in",
+    intro: "See your recent checks and the status of any handoff.",
+    submit: "Log in",
+    switchText: "No account yet?",
+    switchLink: "Create one",
+    switchHref: "/signup",
+  },
+} as const;
+
+const FIELD =
+  "border-input focus-visible:border-brand h-11 w-full rounded-xl border bg-white px-3.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklch,var(--brand),transparent_75%)]";
+
+/** Sign-up and login share one form; sign-up adds the name field and the privacy note. */
+export function AuthForm({ mode }: { mode: Mode }) {
+  const router = useRouter();
+  const copy = COPY[mode];
+  // Hidden pages stay in the document, so ids must be unique across them.
+  const passwordId = useId();
+  const rulesId = useId();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Next keeps a page's state when you navigate away (React Activity). Start clean every
+  // time: no stuck spinner, old error, or typed password left in the page.
+  useLayoutEffect(
+    () => () => {
+      setName("");
+      setEmail("");
+      setPassword("");
+      setShowPassword(false);
+      setBusy(false);
+      setError(null);
+    },
+    [],
+  );
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      if (mode === "signup") await signUp(email, name, password);
+      else await logIn(email, password);
+      router.push("/account");
+    } catch (err) {
+      setError(
+        err instanceof ApiError && err.status > 0
+          ? err.detail
+          : "Can't reach the service. Check your connection and try again.",
+      );
+      setBusy(false);
+    }
+  }
+
+  return (
+    <AccountShell>
+      <form
+        onSubmit={submit}
+        className="flex h-fit w-full max-w-sm flex-col gap-5 rounded-3xl border border-[#f3e4ec] bg-white p-6 shadow-[0_16px_48px_rgb(218_0_112/0.10)] sm:p-8"
+      >
+        <div className="flex flex-col items-center gap-3 text-center">
+          <span className="bg-brand-soft text-brand flex size-12 items-center justify-center rounded-full">
+            <UserRound aria-hidden className="size-5.5" />
+          </span>
+          <h1 className="text-2xl font-bold tracking-tight">{copy.title}</h1>
+          <p className="text-muted-foreground text-sm">{copy.intro}</p>
+        </div>
+
+        {mode === "signup" && (
+          <label className="flex flex-col gap-1.5 text-sm font-medium">
+            Name
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoComplete="name"
+              maxLength={100}
+              required
+              className={FIELD}
+            />
+          </label>
+        )}
+        <label className="flex flex-col gap-1.5 text-sm font-medium">
+          Email
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            maxLength={254}
+            required
+            className={FIELD}
+          />
+        </label>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={passwordId} className="text-sm font-medium">
+            Password
+          </label>
+          <div className="relative">
+            <input
+              id={passwordId}
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              aria-describedby={mode === "signup" ? rulesId : undefined}
+              maxLength={200}
+              required
+              className={`${FIELD} pr-12`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
+              className="text-muted-foreground hover:text-foreground focus-visible:outline-brand absolute top-1/2 right-1.5 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg focus-visible:outline-2"
+            >
+              {showPassword ? (
+                <EyeOff aria-hidden className="size-4.5" />
+              ) : (
+                <Eye aria-hidden className="size-4.5" />
+              )}
+            </button>
+          </div>
+          {mode === "signup" && (
+            <p id={rulesId} className="text-muted-foreground text-xs">
+              At least 8 characters, not only numbers, and not a common password.
+            </p>
+          )}
+        </div>
+
+        {error && (
+          <p role="alert" className="text-destructive text-sm">
+            {error}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          aria-disabled={busy || undefined}
+          className="bg-brand text-brand-foreground hover:bg-brand/90 inline-flex h-11 items-center justify-center gap-2 rounded-full text-sm font-semibold transition-colors duration-150"
+        >
+          {busy && <LoaderCircle aria-hidden className="size-4 animate-spin" />}
+          {copy.submit}
+        </button>
+
+        <p className="text-center text-sm">
+          {copy.switchText}{" "}
+          <Link
+            href={copy.switchHref}
+            className="text-brand font-semibold underline-offset-4 hover:underline"
+          >
+            {copy.switchLink}
+          </Link>
+        </p>
+
+        {mode === "signup" && (
+          <p className="text-muted-foreground flex items-start gap-2 text-xs">
+            <Info aria-hidden className="mt-px size-3.5 shrink-0" />
+            We keep only your name, email and a scrambled form of your password. Conversations are
+            still deleted after 24 hours, and you can delete your account at any time.
+          </p>
+        )}
+      </form>
+    </AccountShell>
+  );
+}

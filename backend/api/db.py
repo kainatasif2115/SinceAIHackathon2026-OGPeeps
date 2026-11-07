@@ -18,7 +18,8 @@ def _client() -> MongoClient:
         raise ImproperlyConfigured(
             "MONGODB_URI is not set. Copy backend/.env.example to backend/.env."
         )
-    return MongoClient(settings.MONGODB_URI)
+    # tz_aware: dates come back marked as UTC, so the browser shows local times correctly.
+    return MongoClient(settings.MONGODB_URI, tz_aware=True)
 
 
 def get_db() -> Database:
