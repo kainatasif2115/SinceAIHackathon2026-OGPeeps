@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Assistant } from "@/components/assistant/assistant";
 
 export const metadata: Metadata = {
-  title: "Security assistant: what should I do now?",
+  title: "DNA - Security Assistant",
 };
 
 /** The assistant on its own, phone-first, as it would sit inside an operator's app. */

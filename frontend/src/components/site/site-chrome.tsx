@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageCircle, ShieldCheck } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import type { Audience } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -61,10 +61,8 @@ export function SiteHeader({ onOpenAssistant }: { onOpenAssistant: () => void })
           <span className="font-heading text-brand shrink-0 text-xl leading-none font-bold tracking-tight sm:text-2xl">
             DNA
           </span>
-          <span className="bg-border h-5 w-px shrink-0 sm:h-6" aria-hidden />
-          <span className="font-heading flex min-w-0 items-center gap-1.5 text-sm font-semibold whitespace-nowrap sm:text-base">
-            <ShieldCheck aria-hidden className="text-brand hidden size-4 shrink-0 sm:block sm:size-4.5" />
-            Security assistant
+          <span className="font-heading min-w-0 text-sm font-semibold whitespace-nowrap sm:text-base">
+            - Security Assistant
           </span>
         </a>
 
