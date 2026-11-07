@@ -42,7 +42,7 @@ const URGENCY: Record<string, string> = {
   immediate: "right now",
 };
 const RUN_LABEL: Record<CaseRun, string> = {
-  multi: "Conversations (30)",
+  multi: "Conversations (120)",
   single: "Single answers (588)",
 };
 
