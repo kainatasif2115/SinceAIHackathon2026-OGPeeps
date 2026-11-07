@@ -461,7 +461,7 @@ def test_case_browser_shows_chats_with_official_verdicts(monkeypatch, client):
     _sign_in(monkeypatch, client)
 
     listing = client.get("/api/agent/cases?run=multi").json()
-    assert len(listing["cases"]) == 30
+    assert len(listing["cases"]) == 120
     first = listing["cases"][0]
     assert {"case_id", "journey", "language", "passed", "failures"} <= set(first)
 
@@ -472,7 +472,7 @@ def test_case_browser_shows_chats_with_official_verdicts(monkeypatch, client):
     assert chat["evidence"]["artifact"]["body"]  # every case comes with a forwarded item
 
     single = client.get("/api/agent/cases?run=single").json()["cases"]
-    assert sum(c["passed"] for c in single) == 485  # 82.5 % of 588, as the evaluator says
+    assert sum(c["passed"] for c in single) == 527  # 89.6 % of 588, as the evaluator says
 
     assert client.get("/api/agent/cases?run=nope").status_code == 404
     assert client.get("/api/agent/cases/multi/NOPE").status_code == 404

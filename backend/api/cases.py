@@ -11,13 +11,14 @@ from assistant import simset, vocab
 
 from .results import RESULTS_DIR
 
+# The final runs, the same ones the Results page scores.
 RUNS = {
     "multi": {
-        "file": "dev_multi_30_predictions.jsonl",
-        "label": "Multi-turn conversations (30)",
+        "file": "dev_multi_120_predictions.jsonl",
+        "label": "Multi-turn conversations (120)",
     },
     "single": {
-        "file": "dev_full_588_predictions.jsonl",
+        "file": "dev_final_588_predictions.jsonl",
         "label": "Single-turn answers (588)",
     },
     "twins": {
