@@ -60,8 +60,6 @@ type SeverityStyle = {
   dot: string;
   /** Thick left edge on the ticket card, so severity reads at a glance. */
   edge: string;
-  /** Card background: the more severe, the more it stands out. */
-  card: string;
 };
 
 // Same icons as the risk levels on the chat's answer card.
@@ -73,7 +71,6 @@ export const SEVERITY_META: Record<Severity, SeverityStyle> = {
     chip: "bg-risk-critical text-risk-critical-fg ring-1 ring-inset ring-risk-critical-line/40",
     dot: "bg-risk-critical-line",
     edge: "border-l-risk-critical-line",
-    card: "bg-[#fff6f6]",
   },
   high: {
     label: "High",
@@ -81,7 +78,6 @@ export const SEVERITY_META: Record<Severity, SeverityStyle> = {
     chip: "bg-risk-high text-risk-high-fg",
     dot: "bg-risk-high-line",
     edge: "border-l-risk-high-line",
-    card: "bg-[#fffaf4]",
   },
   medium: {
     label: "Medium",
@@ -89,7 +85,6 @@ export const SEVERITY_META: Record<Severity, SeverityStyle> = {
     chip: "bg-risk-medium text-risk-medium-fg",
     dot: "bg-risk-medium-line",
     edge: "border-l-risk-medium-line",
-    card: "bg-white",
   },
   low: {
     label: "Low",
@@ -97,7 +92,6 @@ export const SEVERITY_META: Record<Severity, SeverityStyle> = {
     chip: "bg-risk-safe text-risk-safe-fg",
     dot: "bg-risk-safe-line",
     edge: "border-l-risk-safe-line",
-    card: "bg-white",
   },
 };
 

@@ -452,8 +452,7 @@ function TicketCard({
       onDragEnd={onDragEnd}
       onClick={onOpen}
       className={cn(
-        "flex w-full cursor-grab flex-col gap-2.5 rounded-xl border p-3.5 text-left shadow-sm transition-[box-shadow,opacity,border-color] duration-150 hover:shadow-md active:cursor-grabbing",
-        severity.card,
+        "flex w-full cursor-grab flex-col gap-2.5 rounded-xl border bg-white p-3.5 text-left shadow-sm transition-[box-shadow,opacity,border-color] duration-150 hover:shadow-md active:cursor-grabbing",
         fresh ? "border-brand ring-brand/30 ring-4" : "border-transparent",
         // Finished work steps back so open tickets stand out.
         ticket.status === "done" && "opacity-70 shadow-none hover:opacity-100",
