@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent, type KeyboardEvent } from "react";
-import { CircleExclamationPoint, LoaderCircle, SendHorizontal } from "lucide-react";
+import { ArrowUp, CircleExclamationPoint, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { Language } from "@/lib/api";
@@ -115,28 +115,71 @@ export function Composer({
           {label}
         </label>
       )}
-      <Textarea
-        id={id}
-        value={value}
-        onChange={(event) => {
-          onChange(event.target.value);
-          if (error) setError(null);
-        }}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        rows={rows}
-        readOnly={busy}
-        autoFocus={autoFocus}
-        aria-labelledby={label ? undefined : labelledBy}
-        aria-invalid={error || tooLong ? true : undefined}
-        aria-describedby={describedBy}
-        className="max-h-72 min-h-24 resize-none"
-      />
-      <AttachmentTray
-        images={attachments.images}
-        onRemove={attachments.remove}
-        error={attachments.error}
-      />
+      {/* Chat-app style: one card holds the text and a bottom toolbar. */}
+      <div
+        className={cn(
+          "bg-card border-input flex flex-col rounded-2xl border px-3 pt-2 pb-2 transition-colors",
+          "focus-within:border-ring focus-within:ring-ring focus-within:ring-1",
+          (error || tooLong) && "border-destructive",
+        )}
+      >
+        <Textarea
+          id={id}
+          value={value}
+          onChange={(event) => {
+            onChange(event.target.value);
+            if (error) setError(null);
+          }}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          rows={rows}
+          readOnly={busy}
+          autoFocus={autoFocus}
+          aria-labelledby={label ? undefined : labelledBy}
+          aria-invalid={error || tooLong ? true : undefined}
+          aria-describedby={describedBy}
+          className="max-h-72 min-h-16 resize-none border-0 bg-transparent px-1 shadow-none focus-visible:ring-0 aria-invalid:ring-0"
+        />
+        <AttachmentTray
+          images={attachments.images}
+          onRemove={attachments.remove}
+          error={attachments.error}
+        />
+        <div className="flex items-center gap-1 pt-1">
+          <AttachButton
+            onFiles={(files) => void attachments.add(files)}
+            disabled={busy || attachments.full}
+          />
+          <p id={`${id}-hint`} className="text-muted-foreground mr-auto pl-2 text-xs">
+            <span className="sr-only">{t.sendHint}</span>
+            {nearLimit && (
+              <span className={cn("tabular-nums", tooLong && "text-destructive")}>
+                {value.length}/{MAX_MESSAGE_LENGTH}
+              </span>
+            )}
+          </p>
+          <MicButton
+            supported={speech.supported}
+            listening={speech.listening}
+            onToggle={speech.toggle}
+            disabled={busy}
+          />
+          <Button
+            type="submit"
+            size="icon"
+            aria-disabled={busy || undefined}
+            aria-label={t.send}
+            title={t.send}
+            className="rounded-[10px]"
+          >
+            {busy ? (
+              <LoaderCircle aria-hidden className="size-5 animate-spin" />
+            ) : (
+              <ArrowUp aria-hidden className="size-5" />
+            )}
+          </Button>
+        </div>
+      </div>
       <VoiceStatus listening={speech.listening} error={speech.error} />
       {error && (
         <p
@@ -148,36 +191,6 @@ export function Composer({
           {error}
         </p>
       )}
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <div className="-ml-2 flex items-center">
-          <AttachButton
-            onFiles={(files) => void attachments.add(files)}
-            disabled={busy || attachments.full}
-          />
-          <MicButton
-            supported={speech.supported}
-            listening={speech.listening}
-            onToggle={speech.toggle}
-            disabled={busy}
-          />
-        </div>
-        <p id={`${id}-hint`} className="text-muted-foreground mr-auto text-xs">
-          <span className="hidden [@media(pointer:fine)]:inline">{t.sendHint}</span>
-          {nearLimit && (
-            <span className={cn("ml-2 tabular-nums", tooLong && "text-destructive")}>
-              {value.length}/{MAX_MESSAGE_LENGTH}
-            </span>
-          )}
-        </p>
-        <Button type="submit" size="lg" aria-disabled={busy || undefined}>
-          {busy ? (
-            <LoaderCircle aria-hidden className="size-4 animate-spin" />
-          ) : (
-            <SendHorizontal aria-hidden className="size-4" />
-          )}
-          {t.send}
-        </Button>
-      </div>
     </form>
   );
 }
