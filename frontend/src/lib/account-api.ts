@@ -10,6 +10,10 @@ const accountSchema = z.object({
   email: z.string(),
   name: z.string(),
   created_at: z.string(),
+  kind: z.enum(["private", "business"]),
+  company: z.string().nullable(),
+  role: z.enum(["owner", "member"]).nullable(),
+  pending_invite: z.string().nullable(),
 });
 
 const conversationSchema = z.object({
@@ -25,8 +29,22 @@ const conversationSchema = z.object({
   handoff_status: z.enum(["backlog", "in_progress", "blocked", "done"]).nullable(),
 });
 
+const teamSchema = z.object({
+  name: z.string(),
+  role: z.enum(["owner", "member"]),
+  members: z.array(
+    z.object({ name: z.string(), email: z.string(), role: z.enum(["owner", "member"]) }),
+  ),
+  invites: z.array(z.string()),
+});
+
+const teamConversationSchema = conversationSchema.extend({ author: z.string() });
+
 export type Account = z.infer<typeof accountSchema>;
+export type AccountKind = Account["kind"];
 export type AccountConversation = z.infer<typeof conversationSchema>;
+export type Team = z.infer<typeof teamSchema>;
+export type TeamConversation = z.infer<typeof teamConversationSchema>;
 
 async function call(path: string, init?: RequestInit): Promise<Response> {
   let res: Response;
@@ -60,8 +78,14 @@ function post(path: string, body: unknown): Promise<Response> {
   });
 }
 
-export async function signUp(email: string, name: string, password: string): Promise<Account> {
-  return json(await post("/api/account/signup", { email, name, password }), accountSchema);
+export async function signUp(input: {
+  email: string;
+  name: string;
+  password: string;
+  kind: AccountKind;
+  company: string;
+}): Promise<Account> {
+  return json(await post("/api/account/signup", input), accountSchema);
 }
 
 export async function logIn(email: string, password: string): Promise<Account> {
@@ -88,4 +112,42 @@ export async function listConversations(): Promise<AccountConversation[]> {
 
 export async function deleteAccount(): Promise<void> {
   await call("/api/account", { method: "DELETE" });
+}
+
+// --- Business teams ------------------------------------------------------------------
+
+const enc = encodeURIComponent;
+
+export async function getTeam(): Promise<Team> {
+  return json(await call("/api/account/team"), teamSchema);
+}
+
+export async function inviteColleague(email: string): Promise<Team> {
+  return json(await post("/api/account/team/invites", { email }), teamSchema);
+}
+
+export async function cancelInvite(email: string): Promise<Team> {
+  return json(
+    await call(`/api/account/team/invites/${enc(email)}`, { method: "DELETE" }),
+    teamSchema,
+  );
+}
+
+export async function removeMember(email: string): Promise<Team> {
+  return json(
+    await call(`/api/account/team/members/${enc(email)}`, { method: "DELETE" }),
+    teamSchema,
+  );
+}
+
+export async function joinTeam(): Promise<Account> {
+  return json(await call("/api/account/team/join", { method: "POST" }), accountSchema);
+}
+
+export async function leaveTeam(): Promise<Account> {
+  return json(await call("/api/account/team/leave", { method: "POST" }), accountSchema);
+}
+
+export async function listTeamConversations(): Promise<TeamConversation[]> {
+  return json(await call("/api/account/team/conversations"), z.array(teamConversationSchema));
 }

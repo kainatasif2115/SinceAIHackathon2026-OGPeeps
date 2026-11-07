@@ -133,6 +133,8 @@ Every assistant message, including questions and the answer card, has two small 
 
 - Same DNA theme and header as the homepage, with a "Home" link. The homepage header shows **Log in**, or the first name once signed in.
 - **Sign-up / login:** one centred card. Labels sit above fields, the password has a show/hide button, and sign-up lists the password rules under the field. Errors from the server appear in a `role="alert"` line. A note says what is stored and that accounts are optional.
+- **Account type:** sign-up starts with "Who is this account for?": two equal cards, **Private person** and **Business**, as a radio group. Business adds a company-name field, with a note that invited colleagues leave it empty.
+- **Business accounts** show a badge (Business · company · owner/member), a **Team** section (members, pending invites, invite form and Remove for the owner; Leave for members) and, for the owner, **Your team's checks** with who made each one. A line explains that only Business-mode checks are shared. A pending invite shows as a tinted banner with **Join**.
 - **Account page:** a greeting with the email, a **Check a message** button, "Your recent checks" (title, time, risk badge with icon and label, the action, and handoff status in words), then **Log out** and **Delete my account**. Deleting asks once more in a tinted box that says what is removed and that it can't be undone.
 
 ### Start view

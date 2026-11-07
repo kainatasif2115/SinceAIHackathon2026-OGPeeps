@@ -2,8 +2,9 @@
 
 Anyone can use the assistant without an account. Signing in only adds an
 account page with your recent conversations (still deleted after 24 hours) and
-the status of any handoff. Accounts live in MongoDB, or in process memory when
-no database is configured.
+the status of any handoff. An account is for a private person or a business;
+business accounts belong to a company team (api/teams.py). Accounts live in
+MongoDB, or in process memory when no database is configured.
 
 Passwords are hashed with Django's default hasher (PBKDF2) and checked against
 Django's password rules. Signing in sets a signed, HttpOnly, SameSite=Strict
@@ -56,7 +57,7 @@ def normalise_email(email: str) -> str:
     return email.strip().lower()
 
 
-def create(email: str, name: str, password: str) -> dict:
+def create(email: str, name: str, password: str, kind: str = "private") -> dict:
     email = normalise_email(email)
     if not EMAIL.match(email):
         raise SignUpError("Enter a valid email address.")
@@ -68,6 +69,9 @@ def create(email: str, name: str, password: str) -> dict:
         "_id": secrets.token_hex(12),
         "email": email,
         "name": name.strip(),
+        "kind": kind,
+        "team_id": None,
+        "role": None,
         "password": make_password(password),
         "created_at": datetime.now(UTC),
         "failed_logins": 0,
@@ -138,6 +142,17 @@ def user_from_token(token: str | None) -> dict | None:
 def current_user(request) -> dict | None:
     """The signed-in customer, if any. For endpoints that also work without an account."""
     return user_from_token(request.COOKIES.get(COOKIE))
+
+
+def in_team(team_id: str) -> list[dict]:
+    if db.is_configured():
+        return list(_collection().find({"team_id": team_id}))
+    with _lock:
+        return [u for u in _memory.values() if u.get("team_id") == team_id]
+
+
+def update(user_id: str, **fields) -> None:
+    _update(user_id, **fields)
 
 
 def public(user: dict) -> dict:

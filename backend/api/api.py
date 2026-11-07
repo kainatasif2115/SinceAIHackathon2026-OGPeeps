@@ -18,6 +18,7 @@ from api import (
     redteam,
     results,
     sessions,
+    teams,
     tickets,
     twins,
     voice,
@@ -32,6 +33,7 @@ from api.schemas import (
     ConsentIn,
     ConversationOut,
     HandoffOut,
+    InviteIn,
     LoginIn,
     RedTeamIn,
     ReplyIn,
@@ -40,6 +42,8 @@ from api.schemas import (
     SignUpIn,
     SpeakIn,
     StartIn,
+    TeamConversationOut,
+    TeamOut,
     TicketOut,
     TicketUpdateIn,
     TranscriptOut,
@@ -109,6 +113,8 @@ def start_session(request, body: StartIn):
     doc = {"scenario_id": body.scenario_id, "started_at": datetime.now(UTC)}
     if user := accounts.current_user(request):
         doc["user_id"] = user["_id"]  # so it shows on the account page
+        if body.audience == "small_business" and user.get("team_id"):
+            doc["team_id"] = user["team_id"]  # shared with the company's owner
     # Only the typed message is fingerprinted (screenshots are not), and the note
     # is informational: it never changes the assistant's advice.
     campaign = campaigns.check_and_record(body.message, body.language, body.audience)
@@ -152,7 +158,8 @@ def delete_session(request, session_id: str):
     return Status(204, None)
 
 
-# Optional customer accounts (api/accounts.py). The assistant works without one.
+# Optional customer accounts (api/accounts.py) and business teams (api/teams.py).
+# The assistant works without an account.
 
 
 def _sign_in(request, response: HttpResponse, user: dict) -> dict:
@@ -164,13 +171,13 @@ def _sign_in(request, response: HttpResponse, user: dict) -> dict:
         samesite="Strict",
         secure=request.is_secure(),
     )
-    return accounts.public(user)
+    return teams.profile(user)
 
 
 @api.post("/account/signup", response=AccountOut)
 def account_signup(request, response: HttpResponse, body: SignUpIn):
     try:
-        user = accounts.create(body.email, body.name, body.password)
+        user = teams.sign_up(body.email, body.name, body.password, body.kind, body.company)
     except accounts.SignUpError as err:
         raise HttpError(400, str(err)) from err
     return _sign_in(request, response, user)
@@ -195,12 +202,104 @@ def account_logout(request, response: HttpResponse):
 
 @api.get("/account/me", response=AccountOut, auth=customer_auth)
 def account_me(request):
-    return accounts.public(request.auth)
+    return teams.profile(request.auth)
 
 
 @api.get("/account/conversations", response=list[ConversationOut], auth=customer_auth)
 def account_conversations(request):
-    docs = sessions.for_user(request.auth["_id"])
+    return _summaries(sessions.for_user(request.auth["_id"]))
+
+
+@api.delete("/account", response={204: None}, auth=customer_auth)
+def account_delete(request, response: HttpResponse):
+    """Deletes the account and its conversations now. An owner's team is closed and its
+    members keep their accounts as private ones. Handoff tickets keep their own copy
+    for the support agent and expire after 24 hours like everything else."""
+    user = request.auth
+    if user.get("role") == "owner" and (team := teams.team_of(user)):
+        teams.dissolve(team)
+    sessions.delete_for_user(user["_id"])
+    accounts.delete(user["_id"])
+    response.delete_cookie(accounts.COOKIE, samesite="Strict")
+    return Status(204, None)
+
+
+@api.get("/account/team", response=TeamOut, auth=customer_auth)
+def team_view(request):
+    return teams.view(_my_team(request), request.auth)
+
+
+@api.post("/account/team/invites", response=TeamOut, auth=customer_auth)
+def team_invite(request, body: InviteIn):
+    team = _my_team(request, owner=True)
+    try:
+        teams.invite(team, body.email)
+    except teams.TeamError as err:
+        raise HttpError(400, str(err)) from err
+    return teams.view(team, request.auth)
+
+
+@api.delete("/account/team/invites/{email}", response=TeamOut, auth=customer_auth)
+def team_cancel_invite(request, email: str):
+    team = _my_team(request, owner=True)
+    teams.cancel_invite(team, email)
+    return teams.view(team, request.auth)
+
+
+@api.delete("/account/team/members/{email}", response=TeamOut, auth=customer_auth)
+def team_remove_member(request, email: str):
+    team = _my_team(request, owner=True)
+    try:
+        teams.remove_member(team, email)
+    except teams.TeamError as err:
+        raise HttpError(400, str(err)) from err
+    return teams.view(team, request.auth)
+
+
+@api.post("/account/team/join", response=AccountOut, auth=customer_auth)
+def team_join(request):
+    user = request.auth
+    if teams.team_of(user):
+        raise HttpError(409, "You're already in a team. Leave it first.")
+    team = teams.find_invite(user["email"])
+    if not team:
+        raise HttpError(404, "There's no invite for this email.")
+    teams.join(user, team)
+    return teams.profile(accounts.get(user["_id"]))
+
+
+@api.post("/account/team/leave", response=AccountOut, auth=customer_auth)
+def team_leave(request):
+    _my_team(request)
+    if request.auth.get("role") == "owner":
+        raise HttpError(409, "The owner can't leave. Delete the account to close the team.")
+    teams.leave(request.auth)
+    return teams.profile(accounts.get(request.auth["_id"]))
+
+
+@api.get("/account/team/conversations", response=list[TeamConversationOut], auth=customer_auth)
+def team_conversations(request):
+    """The checks staff made in business mode. Owner only; private-mode checks never
+    appear here."""
+    team = _my_team(request, owner=True)
+    docs = sessions.for_team(team["_id"])
+    names = {u["_id"]: u["name"] for u in accounts.in_team(team["_id"])}
+    return [
+        {**summary, "author": names.get(doc.get("user_id"), "Former member")}
+        for doc, summary in zip(docs, _summaries(docs), strict=True)
+    ]
+
+
+def _my_team(request, owner: bool = False) -> dict:
+    team = teams.team_of(request.auth)
+    if not team:
+        raise HttpError(404, "You're not in a team.")
+    if owner and request.auth.get("role") != "owner":
+        raise HttpError(403, "Only the team's owner can do this.")
+    return team
+
+
+def _summaries(docs: list[dict]) -> list[dict]:
     status = tickets.statuses([d["handoff_reference"] for d in docs if d.get("handoff_reference")])
     out = []
     for d in docs:
@@ -222,16 +321,6 @@ def account_conversations(request):
             }
         )
     return out
-
-
-@api.delete("/account", response={204: None}, auth=customer_auth)
-def account_delete(request, response: HttpResponse):
-    """Deletes the account and its conversations now. Handoff tickets keep their own
-    copy for the support agent and expire after 24 hours like everything else."""
-    sessions.delete_for_user(request.auth["_id"])
-    accounts.delete(request.auth["_id"])
-    response.delete_cookie(accounts.COOKIE, samesite="Strict")
-    return Status(204, None)
 
 
 # Support-agent console. The prototype has one demo staff account (api/agent_auth.py);
@@ -375,7 +464,15 @@ def _require_pending(doc: dict, kind: str) -> dict:
 
 
 def _extra(doc: dict) -> dict:
-    keep = ("scenario_id", "pending", "final", "handoff_reference", "user_id", "started_at")
+    keep = (
+        "scenario_id",
+        "pending",
+        "final",
+        "handoff_reference",
+        "user_id",
+        "team_id",
+        "started_at",
+    )
     return {k: doc[k] for k in keep if k in doc}
 
 

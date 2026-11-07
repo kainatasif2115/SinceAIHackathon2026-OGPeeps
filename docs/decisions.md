@@ -14,6 +14,12 @@ The brief asks for "documented decisions", so add an entry whenever the team set
 
 ---
 
+## 2026-11-07: Private and business accounts, with teams
+
+**Decision:** Sign-up asks whether the account is for a private person or a business. A business account creates the company's team with its creator as owner. The owner invites colleagues by email; signing up as a business with an invited email joins the team, and an existing account sees a "Join" banner. The owner sees the checks staff make in Business mode, can remove members and cancel invites; members can leave. Deleting the owner's account closes the team, and members keep their accounts as private ones. The homepage chat starts in Business mode for business accounts.
+**Why:** The brief has two audiences, consumers and small businesses. Business advice depends on company context (staff accounts, payment approval, the IT partner), and small businesses act as a team: an owner should see that a colleague reported a fake invoice. Only Business-mode checks are shared, so staff can still check personal matters privately; removing people who leave is itself a security habit the dataset tests (ex-employee access).
+**Alternatives considered:** Business accounts without teams (no shared view), sharing every check with the owner (privacy problem for staff), and real email invitations (needs an email service; in production the operator's business-customer records would define the team).
+
 ## 2026-11-07: Two checker rules for proportionate answers
 
 **Decision:** The safety checker now (1) drops the human handoff when the action is something the user does themselves (check through the official channel, don't interact and delete, or change a password when the risk is below critical), removing "I am connecting you now" sentences but keeping conditional offers ("If you already gave a code, tell me and I will connect you"); and (2) raises a password change to at least high risk and "today", because login details may be in someone else's hands.
