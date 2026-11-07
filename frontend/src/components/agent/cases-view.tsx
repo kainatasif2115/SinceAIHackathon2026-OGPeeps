@@ -23,6 +23,7 @@ import {
 } from "@/lib/agent-api";
 import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { Select } from "./select";
 import { FAILURES, JOURNEYS } from "./results-view";
 
 const LANGUAGE_NAMES: Record<string, string> = { fi: "Finnish", en: "English", sv: "Swedish" };
@@ -142,11 +143,11 @@ export function CasesView({ onSessionExpired }: { onSessionExpired: () => void }
               className={cn(control, "w-full pl-9")}
             />
           </label>
-          <select
+          <Select
+            active={journey !== "all"}
             aria-label="Journey"
             value={journey}
             onChange={(e) => setJourney(e.target.value)}
-            className={control}
           >
             <option value="all">All journeys</option>
             {Object.entries(JOURNEYS).map(([value, label]) => (
@@ -154,12 +155,12 @@ export function CasesView({ onSessionExpired }: { onSessionExpired: () => void }
                 {label}
               </option>
             ))}
-          </select>
-          <select
+          </Select>
+          <Select
+            active={language !== "all"}
             aria-label="Language"
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className={control}
           >
             <option value="all">All languages</option>
             {Object.entries(LANGUAGE_NAMES).map(([value, label]) => (
@@ -167,17 +168,17 @@ export function CasesView({ onSessionExpired }: { onSessionExpired: () => void }
                 {label}
               </option>
             ))}
-          </select>
-          <select
+          </Select>
+          <Select
+            active={verdict !== "all"}
             aria-label="Result"
             value={verdict}
             onChange={(e) => setVerdict(e.target.value as Verdict)}
-            className={control}
           >
             <option value="all">Passed and failed</option>
             <option value="passed">Passed only</option>
             <option value="failed">Failed only</option>
-          </select>
+          </Select>
           {list && (
             <p className="text-muted-foreground ml-auto text-sm">
               {visible.length} of {list.length} shown ·{" "}

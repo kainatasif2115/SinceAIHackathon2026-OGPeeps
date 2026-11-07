@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { Building2, Clock, ImageIcon, LockKeyhole, ShieldCheck, User, X } from "lucide-react";
 import { TICKET_STATUSES, type Ticket, type TicketStatus } from "@/lib/agent-api";
 import { cn } from "@/lib/utils";
+import { Select } from "./select";
 import { SEVERITY_META, STATUS_META, ago } from "./ticket-meta";
 
 const URGENCY_LABELS: Record<Ticket["urgency"], string> = {
@@ -107,17 +108,16 @@ export function TicketDetail({
                     aria-hidden
                     className={cn("size-2.5 rounded-full", STATUS_META[ticket.status].dot)}
                   />
-                  <select
+                  <Select
                     value={ticket.status}
                     onChange={(e) => onMove(e.target.value as TicketStatus)}
-                    className="border-input h-9 rounded-full border bg-white px-3 text-sm font-medium"
                   >
                     {TICKET_STATUSES.map((status) => (
                       <option key={status} value={status}>
                         {STATUS_META[status].label}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </label>
               </div>
             </header>

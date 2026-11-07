@@ -24,6 +24,7 @@ import {
 } from "@/lib/agent-api";
 import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { Select } from "./select";
 import { TicketDetail } from "./ticket-detail";
 import { SEVERITY_META, STATUS_META, ago, duration } from "./ticket-meta";
 
@@ -225,31 +226,27 @@ export function AgentConsole({
 
           <label className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Team</span>
-            <select
-              value={team}
-              onChange={(e) => setTeam(e.target.value)}
-              className="border-input h-9 rounded-full border bg-white px-3 text-sm"
-            >
+            <Select active={team !== "all"} value={team} onChange={(e) => setTeam(e.target.value)}>
               <option value="all">All teams</option>
               {teams.map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
 
           <label className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Customer</span>
-            <select
+            <Select
+              active={audience !== "all"}
               value={audience}
               onChange={(e) => setAudience(e.target.value as Audience)}
-              className="border-input h-9 rounded-full border bg-white px-3 text-sm"
             >
               <option value="all">All</option>
               <option value="consumer">Private</option>
               <option value="small_business">Business</option>
-            </select>
+            </Select>
           </label>
 
           {filtersActive && (
