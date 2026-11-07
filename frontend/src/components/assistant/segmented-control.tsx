@@ -52,7 +52,9 @@ export function SegmentedControl<T extends string>({
             lang={option.lang}
             className={cn(
               "text-muted-foreground relative flex cursor-pointer items-center justify-center rounded-sm font-medium transition-colors duration-150 select-none",
-              size === "sm" ? "min-h-7 min-w-8 px-2 text-xs font-semibold" : "min-h-9 px-2.5 text-sm",
+              size === "sm"
+                ? "min-h-7 min-w-8 px-2 text-xs font-semibold"
+                : "min-h-9 px-2.5 text-sm",
               "hover:text-foreground has-[:checked]:bg-primary has-[:checked]:text-primary-foreground",
               "has-[:focus-visible]:outline-ring has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2",
               "has-[:disabled]:cursor-not-allowed",

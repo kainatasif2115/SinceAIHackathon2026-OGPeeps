@@ -35,9 +35,8 @@ export function ChatPanel({
   const [expanded, setExpanded] = useState(false);
   if (open && !mounted) setMounted(true);
 
-  useEffect(() => {
-    if (!open) setExpanded(false);
-  }, [open]);
+  // Closing the drawer also leaves full-window mode.
+  if (!open && expanded) setExpanded(false);
 
   useEffect(() => {
     if (!open) return;

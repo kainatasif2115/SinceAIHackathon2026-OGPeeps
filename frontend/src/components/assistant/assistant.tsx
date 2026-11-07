@@ -163,11 +163,13 @@ export function Assistant({
     document.documentElement.lang = language;
   }, [language]);
 
-  // The homepage strip chooses the audience. Follow it until a conversation starts.
-  useEffect(() => {
-    if (variant !== "panel" || entries.length > 0) return;
+  // The homepage strip chooses the audience. Follow it until a conversation starts
+  // (adjusted during render rather than in an effect, as React recommends).
+  const [followedAudience, setFollowedAudience] = useState(defaultAudience);
+  if (variant === "panel" && entries.length === 0 && followedAudience !== defaultAudience) {
+    setFollowedAudience(defaultAudience);
     setAudience(defaultAudience);
-  }, [variant, defaultAudience, entries.length]);
+  }
 
   useEffect(() => {
     getScenarios()
