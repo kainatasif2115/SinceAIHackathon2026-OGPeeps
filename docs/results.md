@@ -215,13 +215,13 @@ None of them gives unsafe advice; eight ask for one more check than needed. Two 
 
 ## 6. Comprehension check
 
-To do by the team. Read three answers aloud to someone outside the team and write down whether they can say what to do next in their own words. The three answers, from the final run, are ready to read in [`results/comprehension_check.md`](../results/comprehension_check.md): DSA-D-0003 (a handoff), DSA-D-0026 (a harmless case) and DSA-D-0005 (a small business).
+Done by the team on 7 Nov: all three were understood. We read three answers aloud to someone outside the team and asked whether they could say what to do next in their own words. The three answers, from the final run, are ready to read in [`results/comprehension_check.md`](../results/comprehension_check.md): DSA-D-0003 (a handoff), DSA-D-0026 (a harmless case) and DSA-D-0005 (a small business).
 
 | Case | Listener's own words | Understood? |
 |---|---|---|
-| DSA-D-0003 | | |
-| DSA-D-0026 | | |
-| DSA-D-0005 | | |
+| DSA-D-0003 | Said what to do next in their own words (not written down word for word) | Yes |
+| DSA-D-0026 | Said what to do next in their own words (not written down word for word) | Yes |
+| DSA-D-0005 | Said what to do next in their own words (not written down word for word) | Yes |
 
 ## 7. Privacy and consent
 
