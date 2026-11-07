@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Mic, RotateCcw } from "lucide-react";
+import { CircleCheck, Mic, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   answerConsent,
@@ -144,6 +144,8 @@ type Props = {
   resume?: ConversationDetail | null;
   /** Called after each reply from the service, e.g. to refresh a history list. */
   onActivity?: (sessionId: string) => void;
+  /** Called after the user deletes this conversation, e.g. to drop it from a history list. */
+  onDeleted?: (sessionId: string) => void;
   /** Panel without its own header, for hosts that show their own (the dashboard). */
   bare?: boolean;
   /** Drawer is covering the viewport. Ignored on the full-screen page. */
@@ -161,6 +163,7 @@ export function Assistant({
   onClose,
   resume = null,
   onActivity,
+  onDeleted,
   bare = false,
   expanded = false,
   onToggleExpanded,
@@ -414,7 +417,19 @@ export function Assistant({
 
   const content = (
     <>
-      {!inConversation ? (
+      {deleted ? (
+        // The conversation is gone from the service, so it also leaves the screen.
+        <div role="status" className="flex flex-col items-start gap-4 py-6">
+          <p className="flex items-center gap-2 text-lg font-medium">
+            <CircleCheck aria-hidden className="text-risk-safe-fg size-5 shrink-0" />
+            {t.privacyDeleted}
+          </p>
+          <Button onClick={startOver}>
+            <RotateCcw aria-hidden className="size-3.5" />
+            {t.startOver}
+          </Button>
+        </div>
+      ) : !inConversation ? (
         <StartView
           topic={topic}
           talkButton={talkButton}
@@ -497,7 +512,10 @@ export function Assistant({
                 screenshots={screenshotCount}
                 expiresAt={lastTurnAt ? new Date(lastTurnAt + 24 * 60 * 60 * 1000) : null}
                 handedOff={finalEntry.answer.escalation_required}
-                onDeleted={() => setDeleted(true)}
+                onDeleted={() => {
+                  setDeleted(true);
+                  onDeleted?.(session.id);
+                }}
               />
             </div>
           )}

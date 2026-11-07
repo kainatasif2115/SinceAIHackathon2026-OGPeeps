@@ -29,6 +29,7 @@ type ChatContextValue = {
   openChat: (sessionId: string) => Promise<void>;
   /** The chat got a reply: mark that conversation active and refresh the list. */
   onActivity: (sessionId: string) => void;
+  onDeleted: (sessionId: string) => void;
 };
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -114,6 +115,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [refresh],
   );
 
+  const onDeleted = useCallback(
+    (sessionId: string) => {
+      setActiveId((current) => (current === sessionId ? null : current));
+      setHistory((prev) => prev?.filter((c) => c.session_id !== sessionId) ?? prev);
+      refresh();
+    },
+    [refresh],
+  );
+
   return (
     <ChatContext
       value={{
@@ -129,6 +139,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         startVoice,
         openChat,
         onActivity,
+        onDeleted,
       }}
     >
       {children}

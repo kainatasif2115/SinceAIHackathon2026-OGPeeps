@@ -10,7 +10,7 @@ import { DashboardWelcome } from "./welcome";
  * assistant's own header is hidden; the dashboard header already says where you are.
  */
 export function ChatSection() {
-  const { chatKey, resume, initial, voice, onActivity } = useChat();
+  const { chatKey, resume, initial, voice, onActivity, onDeleted } = useChat();
 
   if (!resume && !initial && !voice) return <DashboardWelcome key={chatKey} />;
 
@@ -28,6 +28,7 @@ export function ChatSection() {
         startInVoice={voice !== null}
         defaultAudience={initial?.audience ?? resume?.audience ?? voice?.audience ?? "consumer"}
         onActivity={onActivity}
+        onDeleted={onDeleted}
       />
     </div>
   );
