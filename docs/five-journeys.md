@@ -2,14 +2,14 @@
 
 Manual check of the five sample journeys in the chat. Do this in the running demo, not by typing the story into the homepage box. Picking the example attaches the case, including the link verdict, the phone record, and the eSIM event. Typing the same words yourself uses a generic customer, and the hidden facts are missing.
 
-Checked on 7 Nov 2026. All five passed after the risk-badge fixes in `backend/assistant/checker.py`.
+Checked on 7 Nov 2026. All five passed after the risk-badge fixes in `backend/assistant/checker.py`, and passed again in the evening on the final code and the new ElevenLabs agent (see the table at the end).
 
 ## Before you start
 
-1. `make backend` and `make frontend`. Open http://localhost:3000/assistant (the homepage chat panel works too).
+1. `make backend` and `make frontend`. Sign in and open `/dashboard`: a **private** account for cases 2–4, a **business** account for cases 1 and 5. The homepage only shows three English examples, so these Finnish cases are picked from the signed-in home.
 2. The header must say the service is connected. If a send comes back in about a second with **Turn 0 of 6** and the sentence "I am connecting you now to a person in our customer service", the model never ran. `ELEVENLABS_AGENT_ID` is empty. Run `make agent`, restart the backend, and send again.
-3. Between cases, click **Start over**. Audience and language lock once a chat has started.
-4. Click **EN** at the top after the example fills the box, then send. The buttons and the answer card come back in English. Leave the Finnish text in the box as it is.
+3. Between cases, click **New chat** in the sidebar. Audience comes from the account (business or private), and language locks once a chat has started.
+4. Click **EN** (top right of the home) after the example fills the box, then send. The buttons and the answer card come back in English. Leave the Finnish text in the box as it is.
 5. If a permission card appears, click **Allow**. **Not now** hides the account and device facts the answer depends on.
 6. An old card does not update after a code change. Start over and send the example again.
 
@@ -17,11 +17,11 @@ A real answer takes a few seconds and moves the counter off **Turn 0 of 6**.
 
 ## Every case
 
-1. Set the audience named below. On the homepage strip, **Private** is Consumer and **Business** is Small business.
-2. In **Or try an example**, click **Show more** until you see the **FI** row whose first words match.
-3. Click that row. The line **Using example:** appears and the box fills. Do not rewrite it.
-4. Click **EN**, then **Send**.
-5. Answer any question with the English line for that case. Stop when the answer card appears.
+1. Sign in with the account type named below: **Consumer** is a private account, **Small business** a business account.
+2. On the home, click **FI** (top right). The example chips under the message box switch to Finnish, one per situation.
+3. Click the chip whose message starts with the words below (hover it to see the full message). The line **Example:** appears and the box fills. Do not rewrite it.
+4. Click **EN**, then send.
+5. Answer any question with the English line for that case, and **Allow** any permission card. Stop when the answer card appears.
 
 ## 1. Suspicious message — `DSA-D-0056`
 
@@ -99,10 +99,12 @@ The badge is forced to **High** when the first message is an unpaid request to p
 
 ## What we saw on 7 Nov
 
-| Journey | Case | Result |
-|---|---|---|
-| Suspicious message | DSA-D-0056 | Pass. High, do not open the link, no handoff. |
-| Clicked link | DSA-D-0105 | Pass after the badge fix. Critical, flight mode, security specialist. |
-| Suspicious call | DSA-D-0160 | Pass. Critical, stop the eSIM transfer, then the bank. |
-| Breach notice | DSA-D-0337 | Pass. Critical, lock the number, do not wait for signal. |
-| Small-business incident | DSA-D-0018 | Pass after the badge fix. High, do not pay, no handoff. |
+| Journey | Case | Afternoon | Evening, final code and new agent |
+|---|---|---|---|
+| Suspicious message | DSA-D-0056 | Pass. High, do not open the link, no handoff. | Pass. Asked whether the link was opened, then High, today: a familiar thread proves nothing, check in the bank's own app. No handoff. |
+| Clicked link | DSA-D-0105 | Pass after the badge fix. Critical, flight mode, security specialist. | Pass. Asked to check installed apps (allowed), then Critical, right now: flight mode, no banking on that phone, security specialist. |
+| Suspicious call | DSA-D-0160 | Pass. Critical, stop the eSIM transfer, then the bank. | Pass. Asked whether the code was read out, then to check SIM events (allowed); Critical, right now: stop the eSIM, lock the number, then the bank. |
+| Breach notice | DSA-D-0337 | Pass. Critical, lock the number, do not wait for signal. | Pass. Asked whether the eSIM was the customer's own, then to check the subscription; Critical, right now: operator agent locks the number, then the bank. The headline says "Talk to a person now" rather than "Contact operator customer service". |
+| Small-business incident | DSA-D-0018 | Pass after the badge fix. High, do not pay, no handoff. | Pass. Asked whether the money was sent, then High, today: do not pay, call the supplier on a known number, keep two-person approval. No handoff. |
+
+Every evening run was a real conversation: each asked at least one deciding question, and three also asked permission to check account data.

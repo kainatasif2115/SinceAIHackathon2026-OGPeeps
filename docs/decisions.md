@@ -14,6 +14,30 @@ The brief asks for "documented decisions", so add an entry whenever the team set
 
 ---
 
+## 2026-11-07: Final measured run instead of the replayed estimate
+
+**Decision:** We reran the full evaluation on the live code and the deployed ElevenLabs agent (588 dev cases, 120 conversations at 24 per journey, all 335 test answers) and report those numbers: 89.6 % safe-action pass and 95.0 % in conversation. The replayed estimate (92.9 %) stays in `results.md` only for comparison.
+**Why:** The estimate reused old answers for 480 cases; fresh answers turned out a little more cautious. Judges should see what the shipped system actually does.
+**Alternatives considered:** Publishing the estimate (higher but not measured), and one conversation at a time (about 2 hours; five journeys in parallel took minutes).
+
+## 2026-11-07: "Talk to a person" is always available
+
+**Decision:** When the advice doesn't call for a person, the answer still offers "Talk to a person anyway" (a full button when the assistant is unsure). Those tickets are tagged "Customer asked" for staff and keep the assistant's risk as their priority, so they queue behind urgent cases.
+**Why:** A security assistant must never trap someone with a bot, and the low-confidence note ("talk to a person before acting") needed an actual way to do it. The evaluator scores the assistant's own escalation decision, so this doesn't change scores.
+**Alternatives considered:** Only offering a person when the assistant escalates (people who feel uneasy have no way out), and raising the priority of customer-requested tickets (would push urgent cases down).
+
+## 2026-11-07: The staff console shows real data only
+
+**Decision:** The console no longer seeds synthetic tickets or scam-radar reports; old ones are deleted the first time the board or radar loads. The board starts empty and fills with real handoffs.
+**Why:** A demo built on invented data hides whether the flow really works; with real handoffs, the customer's tracking and the staff board show the same ticket.
+**Alternatives considered:** Keeping demo tickets marked "Demo" (still looked like activity that didn't happen).
+
+## 2026-11-07: Tests never use the developer's database
+
+**Decision:** Every test runs with the in-memory store; only `test_mongo_sessions.py` opts in to a separate test database.
+**Why:** Tests were writing to the local MongoDB and filling the localhost rate limit, so the developer's own chats started getting "too many tries".
+**Alternatives considered:** Clearing the counters after each run (still mixes test data with real local data).
+
 ## 2026-11-07: Private and business accounts, with teams
 
 **Decision:** Sign-up asks whether the account is for a private person or a business. A business account creates the company's team with its creator as owner. The owner invites colleagues by email; signing up as a business with an invited email joins the team, and an existing account sees a "Join" banner. The owner sees the checks staff make in Business mode, can remove members and cancel invites; members can leave. Deleting the owner's account closes the team, and members keep their accounts as private ones. The homepage chat starts in Business mode for business accounts.

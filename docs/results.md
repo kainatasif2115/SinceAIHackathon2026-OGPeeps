@@ -51,6 +51,8 @@ Claude Sonnet 5.5 via ElevenLabs, measured on 7 November on the current code wit
 | Small-business incident | 156 | 84.6 % | 13.9 % | 100.0 % | to do |
 | **All** | **588** | **89.6 %** (95% CI 87.2–92.2) | **6.8 %** | **95.5 %** | to do |
 
+**Human review:** 30 answers from this run (6 per journey, in English, including 10 harmless cases and 3 the evaluator failed) are ready to score in the organisers' form, [`results/human_review_form.csv`](../results/human_review_form.csv): safe, clear, proportionate, and asked only what was needed. The last column above is filled in from it.
+
 Compared with the organisers' rules baseline on the same 588 cases, and with our own run before the fixes:
 
 | | Safe-action pass | False alarms on benign | Escalation recall | Unsafe statements | Clarity | Privacy | Weighted proxy (of 80 automated points) |
@@ -199,11 +201,13 @@ The data is mixed: 18 of 49 consumer "contact your bank" cases do need a handoff
 
 ## 6. Comprehension check
 
-To do by the team. Read three answers aloud to someone outside the team and write down whether they can say what to do next in their own words. Suggested answers: DSA-D-0003 (handoff), DSA-D-0006 (benign, Finnish), and one small-business answer.
+To do by the team. Read three answers aloud to someone outside the team and write down whether they can say what to do next in their own words. The three answers, from the final run, are ready to read in [`results/comprehension_check.md`](../results/comprehension_check.md): DSA-D-0003 (a handoff), DSA-D-0026 (a harmless case) and DSA-D-0005 (a small business).
 
 | Case | Listener's own words | Understood? |
 |---|---|---|
-| | | |
+| DSA-D-0003 | | |
+| DSA-D-0026 | | |
+| DSA-D-0005 | | |
 
 ## 7. Privacy and consent
 

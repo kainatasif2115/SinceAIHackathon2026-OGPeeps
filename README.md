@@ -35,7 +35,7 @@ frontend/  Next.js chat page ──/api/*──▶  backend/  Django + Django Ni
 
 The Next.js app proxies `/api/*` to Django, so the browser only ever talks to one origin.
 
-**Accounts are optional.** Anyone can check a message without signing up. Customers who create an account (`/signup`, `/login`) get a dashboard (`/dashboard`) with a sidebar: the chat, their recent checks and the status of any handoff, their team (business accounts), and account settings including "delete my account". An account is for a **private person** or a **business**: a business account creates the company's team, the owner invites colleagues, and sees the checks they make in Business mode. Support staff sign in separately at `/agent`.
+**Accounts are optional.** Anyone can check a message without signing up. Customers who create an account (`/signup`, `/login`) get a dashboard (`/dashboard`) laid out like a chat app: **Chat** with the last 24 hours of history beside it, **Live call** (the call co-pilot listens to a call and hands what was said to the chat), **Your checks** (each handoff shows the place in line, which DNA agent picked it up, and a Sent → Picked up → Resolved timeline), and **Team** for business accounts. Account settings, including "delete my account", are in the profile menu. An account is for a **private person** or a **business**: a business account creates the company's team, the owner invites colleagues (the app gives a sign-up link to copy or email), and sees the checks they make in Business mode. Support staff sign in separately at `/agent`.
 
 ## Stack
 
