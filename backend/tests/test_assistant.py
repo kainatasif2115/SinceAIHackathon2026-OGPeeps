@@ -157,3 +157,11 @@ def _signal(case: dict, path: str):
     for part in path.split("."):
         cur = cur[part]
     return cur
+
+
+def test_missing_api_key_is_brain_unavailable(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
+
+    with pytest.raises(brain.BrainUnavailable):
+        brain.answer_single_turn({"case_id": "X", "language": "en"})

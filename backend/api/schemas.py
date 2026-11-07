@@ -1,8 +1,11 @@
 """Request and response shapes of the chat API (the contract with the frontend)."""
 
+import base64
+import binascii
 from typing import Literal
 
 from ninja import Field, Schema
+from pydantic import field_validator, model_validator
 
 Audience = Literal["consumer", "small_business"]
 Language = Literal["fi", "en", "sv"]
@@ -20,15 +23,50 @@ class ScenarioOut(Schema):
     opening_message: str
 
 
+# Screenshots are resized in the browser (longest side 1568 px, JPEG), so a few hundred
+# KB is typical. The cap keeps a whole conversation well inside a MongoDB document.
+MAX_IMAGES_PER_MESSAGE = 3
+MAX_IMAGE_BASE64_CHARS = 2_000_000  # about 1.5 MB decoded
+ImageType = Literal["image/jpeg", "image/png", "image/webp", "image/gif"]
+
+
+class ImageIn(Schema):
+    media_type: ImageType
+    data: str = Field(min_length=1, max_length=MAX_IMAGE_BASE64_CHARS)
+
+    @field_validator("data")
+    @classmethod
+    def _is_base64(cls, value: str) -> str:
+        try:
+            base64.b64decode(value, validate=True)
+        except binascii.Error as err:
+            raise ValueError("Image data must be base64.") from err
+        return value
+
+
 class StartIn(Schema):
     audience: Audience
     language: Language
-    message: str = Field(min_length=1, max_length=2000)
+    message: str = Field(default="", max_length=2000)
+    images: list[ImageIn] = Field(default_factory=list, max_length=MAX_IMAGES_PER_MESSAGE)
     scenario_id: str | None = None
+
+    @model_validator(mode="after")
+    def _has_content(self):
+        if not self.message.strip() and not self.images:
+            raise ValueError("Write a message or attach a screenshot.")
+        return self
 
 
 class ReplyIn(Schema):
-    text: str = Field(min_length=1, max_length=2000)
+    text: str = Field(default="", max_length=2000)
+    images: list[ImageIn] = Field(default_factory=list, max_length=MAX_IMAGES_PER_MESSAGE)
+
+    @model_validator(mode="after")
+    def _has_content(self):
+        if not self.text.strip() and not self.images:
+            raise ValueError("Write an answer or attach a screenshot.")
+        return self
 
 
 class ConsentIn(Schema):

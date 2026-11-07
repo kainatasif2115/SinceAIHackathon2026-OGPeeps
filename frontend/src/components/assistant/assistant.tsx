@@ -11,12 +11,14 @@ import {
   type Answer,
   type Audience,
   type ConsentTurn,
+  type ImageInput,
   type Language,
   type QuestionTurn,
   type Scenario,
   type Session,
 } from "@/lib/api";
 import { getDictionary, type Dictionary } from "@/lib/i18n";
+import type { ImageAttachment } from "@/lib/media";
 import { AnswerCard } from "./answer-card";
 import { AppHeader } from "./app-header";
 import { Composer } from "./composer";
@@ -31,7 +33,7 @@ import { StartView } from "./start-view";
 import { ThinkingStatus } from "./thinking-status";
 
 type Entry =
-  | { id: string; kind: "user"; text: string }
+  | { id: string; kind: "user"; text: string; images: string[] }
   | { id: string; kind: "question"; turn: QuestionTurn }
   | { id: string; kind: "consent"; turn: ConsentTurn; choice: boolean | null }
   | { id: string; kind: "final"; answer: Answer };
@@ -41,6 +43,13 @@ type Failure = { error: unknown; retry: (() => void) | null };
 
 let entryCounter = 0;
 const nextId = () => `entry-${++entryCounter}`;
+
+function userEntry(text: string, images: ImageAttachment[]): Entry {
+  return { id: nextId(), kind: "user", text, images: images.map((i) => i.previewUrl) };
+}
+
+const toInput = (images: ImageAttachment[]): ImageInput[] =>
+  images.map(({ media_type, data }) => ({ media_type, data }));
 
 function entryFromSession(session: Session): Entry {
   const { turn } = session;
@@ -74,6 +83,7 @@ export type InitialRequest = {
   audience: Audience;
   language: Language;
   scenario: Scenario | null;
+  images?: ImageAttachment[];
 };
 
 type Props = {
@@ -101,7 +111,7 @@ export function Assistant({
   const [replyDraft, setReplyDraft] = useState("");
 
   const [entries, setEntries] = useState<Entry[]>(() =>
-    initial ? [{ id: nextId(), kind: "user", text: initial.text }] : [],
+    initial ? [userEntry(initial.text, initial.images ?? [])] : [],
   );
   const [session, setSession] = useState<SessionMeta | null>(null);
   const [loading, setLoading] = useState(initial !== null);
@@ -162,12 +172,13 @@ export function Assistant({
     }
   }
 
-  function handleStart(text: string) {
-    setEntries([{ id: nextId(), kind: "user", text }]);
+  function handleStart(text: string, images: ImageAttachment[]) {
+    setEntries([userEntry(text, images)]);
     const input = {
       audience,
       language,
       message: text,
+      images: toInput(images),
       scenario_id: scenario?.id,
     };
     void run(() => startSession(input));
@@ -180,6 +191,7 @@ export function Assistant({
       audience: initial.audience,
       language: initial.language,
       message: initial.text,
+      images: toInput(initial.images ?? []),
       scenario_id: initial.scenario?.id,
     };
     void run(() => startSession(input));
@@ -187,12 +199,12 @@ export function Assistant({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handleReply(text: string) {
+  function handleReply(text: string, images: ImageAttachment[]) {
     if (!session || loading) return;
     const id = session.id;
-    setEntries((prev) => [...prev, { id: nextId(), kind: "user", text }]);
+    setEntries((prev) => [...prev, userEntry(text, images)]);
     setReplyDraft("");
-    void run(() => reply(id, text));
+    void run(() => reply(id, text, toInput(images)));
   }
 
   function handleConsent(entryId: string, granted: boolean) {
@@ -281,7 +293,7 @@ export function Assistant({
             {entries.map((entry) => (
               <li key={entry.id}>
                 {entry.kind === "user" ? (
-                  <UserMessage text={entry.text} />
+                  <UserMessage text={entry.text} images={entry.images} />
                 ) : (
                   <AssistantTurn id={entry.id}>
                     {entry.kind === "question" && <QuestionMessage turn={entry.turn} />}
@@ -319,6 +331,7 @@ export function Assistant({
               onChange={setReplyDraft}
               onSubmit={handleReply}
               busy={loading}
+              language={language}
               label={t.answerLabel}
               placeholder={t.answerPlaceholder}
               rows={2}

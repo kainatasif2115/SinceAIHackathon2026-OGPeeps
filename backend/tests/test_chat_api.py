@@ -111,3 +111,84 @@ def test_brain_failure_still_gives_safe_advice(monkeypatch, client):
     assert turn["answer"]["escalation_required"] is True
     assert turn["answer"]["escalation_target"] == "business_security_support"
     assert "Yhdistän" in turn["answer"]["advice_text"]
+
+
+# A 1x1 PNG, enough to exercise the screenshot path end to end.
+PIXEL = (
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAE"
+    "hQGAhKmMIQAAAABJRU5ErkJggg=="
+)
+
+
+def test_screenshots_reach_the_brain(monkeypatch, client):
+    script = Script(ask("Did you tap the link?", ["link_details"]), done(final()))
+    monkeypatch.setattr(brain, "decide_multi_turn", script)
+
+    sid = post(
+        client,
+        "/api/sessions",
+        {
+            "audience": "consumer",
+            "language": "en",
+            "message": "Is this text real?",
+            "images": [{"media_type": "image/png", "data": PIXEL}],
+        },
+    ).json()["session_id"]
+    post(
+        client,
+        f"/api/sessions/{sid}/reply",
+        {"text": "", "images": [{"media_type": "image/png", "data": PIXEL}]},
+    )
+
+    first_images = script.calls[0][1]["images"]
+    assert [i["turn"] for i in first_images] == [0]
+    second_args, second_kwargs = script.calls[1]
+    assert [i["turn"] for i in second_kwargs["images"]] == [0, 1]
+    history = second_args[1]
+    assert history[-1] == {
+        "role": "user",
+        "text": "(I sent only a screenshot.)",
+        "screenshots_attached": 1,
+    }
+
+
+def test_screenshot_only_start_is_allowed(monkeypatch, client):
+    monkeypatch.setattr(brain, "decide_multi_turn", Script(done(final())))
+
+    res = post(
+        client,
+        "/api/sessions",
+        {
+            "audience": "consumer",
+            "language": "fi",
+            "images": [{"media_type": "image/png", "data": PIXEL}],
+        },
+    )
+
+    assert res.status_code == 200
+    assert res.json()["turn"]["type"] == "final"
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"message": ""},
+        {"message": "x", "images": [{"media_type": "image/png", "data": "not base64!"}]},
+        {"message": "x", "images": [{"media_type": "image/svg+xml", "data": PIXEL}]},
+        {"message": "x", "images": [{"media_type": "image/png", "data": PIXEL}] * 4},
+    ],
+)
+def test_bad_screenshots_are_rejected(client, body):
+    res = post(client, "/api/sessions", {"audience": "consumer", "language": "en", **body})
+    assert res.status_code == 422
+
+
+def test_brain_gets_screenshots_as_image_blocks():
+    content = brain.with_images(
+        "case text", [{"media_type": "image/png", "data": PIXEL, "turn": 0}]
+    )
+
+    assert content[0]["text"] == brain.SCREENSHOT_NOTE
+    assert content[2]["source"] == {"type": "base64", "media_type": "image/png", "data": PIXEL}
+    assert content[-1] == {"type": "text", "text": "case text"}
+    assert brain.with_images("case text", []) == "case text"

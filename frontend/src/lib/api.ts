@@ -91,10 +91,14 @@ export type Session = z.infer<typeof sessionSchema>;
 export type Handoff = z.infer<typeof handoffSchema>;
 export type Health = z.infer<typeof healthSchema>;
 
+/** A screenshot as the API takes it: base64 without the data: prefix. */
+export type ImageInput = { media_type: "image/jpeg"; data: string };
+
 export type StartInput = {
   audience: Audience;
   language: Language;
   message: string;
+  images?: ImageInput[];
   scenario_id?: string;
 };
 
@@ -162,9 +166,17 @@ export async function startSession(input: StartInput): Promise<Session> {
   return request("/api/sessions", sessionSchema, input);
 }
 
-export async function reply(sessionId: string, text: string): Promise<Session> {
+export async function reply(
+  sessionId: string,
+  text: string,
+  images: ImageInput[] = [],
+): Promise<Session> {
+  // The canned replies do not depend on screenshots, so the mock ignores them.
   if (isMockMode) return (await mock()).mockReply(sessionId, text);
-  return request(`/api/sessions/${encodeURIComponent(sessionId)}/reply`, sessionSchema, { text });
+  return request(`/api/sessions/${encodeURIComponent(sessionId)}/reply`, sessionSchema, {
+    text,
+    images,
+  });
 }
 
 export async function answerConsent(sessionId: string, granted: boolean): Promise<Session> {

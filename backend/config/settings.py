@@ -32,6 +32,10 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() == "true"
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
+# Chat requests can carry up to three screenshots (about 2 MB of base64 each, see
+# api/schemas.py); Django's 2.5 MB default would reject the largest of them.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
+
 
 # Application definition
 
