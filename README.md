@@ -99,7 +99,7 @@ Open http://localhost:3000. The page shows whether it can reach the backend. The
 | `make backend` | Run the Django API on port 8000 |
 | `make frontend` | Run the Next.js app on port 3000 |
 | `make test` | Run backend tests |
-| `make check` | Format check, lint and tests for both apps (same as CI) |
+| `make check` | Format check, lint and tests for both apps |
 | `make baseline` | Score the organisers' rules baseline on the 588 dev cases |
 | `make eval-sample N=60` | Answer and score N dev cases spread over the five journeys (uses Claude) |
 | `make eval-dev` | Answer and score all 588 dev cases, single-turn (uses Claude) |
@@ -112,7 +112,7 @@ Commands marked "uses AI credits" need the ElevenLabs setup above (or an Anthrop
 ## Project structure
 
 ```
-.github/              PR template and CI (backend + frontend jobs)
+.github/              PR template
 backend/
   config/             Django project settings and URLs
   api/                Django app: API endpoints (Ninja) and MongoDB helper
