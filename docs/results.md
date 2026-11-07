@@ -3,7 +3,7 @@
 *DNA challenge: Digital Security Assistant: What Should I Do Now? · Since AI Hackathon 2026*
 *Follows the organisers' `RESULTS_TEMPLATE.md`.*
 
-> **Status (7 Nov):** single-turn numbers are for the **full dev set (588 cases)**, scored with the organisers' evaluator v2.0.1, unchanged. Multi-turn numbers are for **30 conversations** with the organisers' simulated user (6 per journey). The system runs **Claude Sonnet 5.5 through an ElevenLabs agent**. Earlier 60-case sample results, including Claude Opus 5.5 called directly, are kept for comparison.
+> **Status (7 Nov, final measured run):** single-turn numbers are for the **full dev set (588 cases)** and multi-turn numbers for **120 conversations** with the organisers' simulated user (24 per journey), all measured on the code that is live, scored with the organisers' evaluator v2.0.1, unchanged. The system runs **Claude Sonnet 5.5 through an ElevenLabs agent**. Earlier runs, the replayed estimate and the 60-case samples (including Claude Opus 5.5 called directly) are kept below for comparison.
 
 ## 1. What we built
 
@@ -40,27 +40,34 @@ How each boundary is enforced, and tested, is in [`architecture.md`](architectur
 
 ### Single-turn, full dev set (588 cases)
 
-Claude Sonnet 5.5 via ElevenLabs. Table from `backend/scripts/journey_table.py`.
+Claude Sonnet 5.5 via ElevenLabs, measured on 7 November on the current code with every fix (the deciding-question checklist, the account-check step, proportionate handoffs and the newer checker rules). Table from `backend/scripts/journey_table.py`.
 
 | Journey | Dev cases | Safe-action pass | False alarms (benign) | Escalation recall | Our own human review: safe / total |
 |---|---|---|---|---|---|
-| Suspicious message | 156 | 94.2 % | 0.0 % | – (none needed) | to do |
-| Clicked link | 84 | 85.7 % | 16.7 % | 100.0 % | to do |
-| Suspicious call | 72 | 95.8 % | 0.0 % | 95.8 % | to do |
-| Breach notice | 120 | 66.7 % | 0.0 % | 100.0 % | to do |
-| Small-business incident | 156 | 75.0 % | 16.7 % | 83.3 % | to do |
-| **All** | **588** | **82.5 %** (95% CI 79.6–85.4) | **6.1 %** | **91.7 %** | to do |
+| Suspicious message | 156 | 87.2 % | 0.0 % | – (none needed) | to do |
+| Clicked link | 84 | 96.4 % | 25.0 % | 100.0 % | to do |
+| Suspicious call | 72 | 90.3 % | 0.0 % | 75.0 % | to do |
+| Breach notice | 120 | 94.2 % | 4.2 % | 100.0 % | to do |
+| Small-business incident | 156 | 84.6 % | 13.9 % | 100.0 % | to do |
+| **All** | **588** | **89.6 %** (95% CI 87.2–92.2) | **6.8 %** | **95.5 %** | to do |
 
-Compared with the organisers' rules baseline on the same 588 cases:
+Compared with the organisers' rules baseline on the same 588 cases, and with our own run before the fixes:
 
 | | Safe-action pass | False alarms on benign | Escalation recall | Unsafe statements | Clarity | Privacy | Weighted proxy (of 80 automated points) |
 |---|---|---|---|---|---|---|---|
 | Rules baseline | 60.5 % | 28.0 % | 47.0 % | 0.0 % | 84.8 | 42.7 | 67.1 |
-| **Ours** | **82.5 %** | **6.1 %** | **91.7 %** | **0.0 %** | **98.2** | **91.7** | **87.2** (95% CI 85.8–88.5) |
+| Ours, before the fixes | 82.5 % | 6.1 % | 91.7 % | 0.0 % | 98.2 | 91.7 | 87.2 |
+| **Ours, now** | **89.6 %** | **6.8 %** | **95.5 %** | **0.0 %** | **97.6** | **91.9** | **92.1** (95% CI 91.3–93.1) |
 
-Other scorecard proxies: correctness 84.9, uncertainty and escalation 75.7. Every answer is in the user's language, readable, and cites guidance. Full evaluator output: [`results/dev_full_588_evaluator.txt`](../results/dev_full_588_evaluator.txt); answers: [`results/dev_full_588_predictions.jsonl`](../results/dev_full_588_predictions.jsonl). Reproduce with `make eval-dev`.
+Other scorecard proxies: correctness 89.5 (was 84.9), uncertainty and escalation 89.8 (was 75.7). The 108 "it depends" cases pass 100 % and the deciding question is asked in all of them. Handoffs the reference didn't want fell from 86 to 54. Every answer is in the user's language, readable, and cites guidance.
 
-**Where we lost points in this run** (the table above was measured before the deciding-question fix; see the next section):
+**What still fails (61 cases):** mostly over-reaction (39), e.g. "contact your bank and block your cards" where the reference expects "don't interact" or "verify through an official channel"; then false alarms on harmless cases (9, mostly verified supplier or payee changes, see section 4), short answers (8), under-reaction (7) and missed handoffs (6, mostly suspicious calls). The weakest journey is small-business incidents (84.6 %).
+
+Full evaluator output: [`results/dev_final_588_evaluator.txt`](../results/dev_final_588_evaluator.txt); answers: [`results/dev_final_588_predictions.jsonl`](../results/dev_final_588_predictions.jsonl). The run before the fixes: [`results/dev_full_588_evaluator.txt`](../results/dev_full_588_evaluator.txt). Reproduce with `make eval-dev`.
+
+#### Before the fixes: where the 82.5 % run failed
+
+**Where the 82.5 % run lost points** (measured before the deciding-question fix; the fixes below came from this list):
 
 | Weak spot | Score | What happens |
 |---|---|---|
@@ -93,24 +100,44 @@ Per journey after the fix: breach notice 100%, small-business incident 100%, sus
 
 Files: [`results/dev_twins_108_evaluator.txt`](../results/dev_twins_108_evaluator.txt), before: [`results/dev_twins_108_before_evaluator.txt`](../results/dev_twins_108_before_evaluator.txt).
 
-### Estimated full-set score today (588 cases, replayed)
+### The replayed estimate, and what the measured run showed
 
-The full 588-case run above was measured before today's fixes. Rerunning it costs about 45,000 ElevenLabs credits, so this is an **estimate** built from answers we already have: the 108 "it depends" cases use their real new answers, the other 480 use the earlier answers, and the two new checker rules (proportionate handoffs, password changes are high risk; see `docs/decisions.md`) are applied on top. Scored with the organisers' evaluator.
+Before the final run we **estimated** the effect of the fixes without spending credits. This estimate was built from answers we already have: the 108 "it depends" cases use their real new answers, the other 480 use the earlier answers, and the two new checker rules (proportionate handoffs, password changes are high risk; see `docs/decisions.md`) are applied on top. Scored with the organisers' evaluator.
 
-| | Measured before today | + new "it depends" answers | **+ new checker rules (estimate)** |
-|---|---|---|---|
-| Safe-action pass | 82.5 % | 91.2 % | **92.9 %** (95% CI 90.8–94.9) |
-| Escalation recall | 91.7 % | 99.2 % | **99.2 %** |
-| Handoffs the reference didn't want | 86 | 90 | **42** |
-| False alarms on benign / unsafe statements | 6.1 % / 0 % | 6.1 % / 0 % | **6.1 % / 0 %** |
-| Correctness / uncertainty and escalation | 84.9 / 75.7 | 90.2 / 88.5 | **91.6 / 92.1** |
-| Weighted proxy | 87.2 | 92.0 | **93.4** (95% CI 92.5–94.1) |
+| | Measured before the fixes | + new "it depends" answers | + new checker rules (estimate) | **Measured, final run** |
+|---|---|---|---|---|
+| Safe-action pass | 82.5 % | 91.2 % | 92.9 % (95% CI 90.8–94.9) | **89.6 %** (95% CI 87.2–92.2) |
+| Escalation recall | 91.7 % | 99.2 % | 99.2 % | **95.5 %** |
+| Handoffs the reference didn't want | 86 | 90 | 42 | **54** |
+| False alarms on benign / unsafe statements | 6.1 % / 0 % | 6.1 % / 0 % | 6.1 % / 0 % | **6.8 % / 0 %** |
+| Correctness / uncertainty and escalation | 84.9 / 75.7 | 90.2 / 88.5 | 91.6 / 92.1 | **89.5 / 89.8** |
+| Weighted proxy | 87.2 | 92.0 | 93.4 (95% CI 92.5–94.1) | **92.1** (95% CI 91.3–93.1) |
+
+**The measured run came in about 3 points under the estimate.** The estimate reused the older answers for the 480 cases that aren't "it depends" and assumed they wouldn't change. Fresh answers are a little more cautious: more "contact your bank and block your cards" and more handoffs on suspicious calls. That lowered the pass rate and escalation recall, while the "it depends" cases rose to 100 %. It is still a clear gain over the last full measurement (82.5 % to 89.6 %).
 
 **Scams in another language.** In 58 dev cases the scam text is Finnish but the user writes English or Swedish. Those passed 63.8% in the measured run; with today's answers they pass 86.2% (50 of 58), because most failures were "it depends" cases. Of the 8 left, 4 were password-leak notices rated low risk, which the new password rule now raises to high.
 
-### Multi-turn, 30 conversations with the simulated user
+### Multi-turn, 120 conversations with the simulated user (final run)
 
-This is the mode the demo uses: the assistant can ask questions and ask permission before answering. We ran the organisers' `sim/run_conversation.py` with our bot (`backend/scripts/sim_bot.py`) on 6 dev cases per journey, scored with the same evaluator.
+This is the mode the demo uses: the assistant can ask questions and ask permission before answering. We ran the organisers' `sim/run_conversation.py` with our bot (`backend/scripts/sim_bot.py`) on 24 dev cases per journey, five journeys in parallel, scored with the same evaluator.
+
+| | 30 conversations (earlier) | **120 conversations (final)** |
+|---|---|---|
+| Safe-action pass | 100 % | **95.0 %** (95% CI 90.8–98.3) |
+| Asked the deciding question (twin cases) | 100 % | **100 %** |
+| Unsafe statements / false alarms on benign | 0 % / 0 % | **0 % / 3.0 %** |
+| Escalation recall | 100 % | **100 %** |
+| Clarity | 100 | **97.7** |
+| Privacy and consent | 89.3 | **88.8** |
+| Weighted proxy | 93.7 | **93.2** (95% CI 91.3–95.0) |
+
+By journey: suspicious call 100 %, breach notice and suspicious message 95.8 %, clicked link and small-business incident 91.7 %. The 6 failures are three answers the evaluator found too short, two "change your password" cases the assistant handed to a person instead, and one harmless case treated as suspicious. None is unsafe advice. Four times the sample shows weak spots 30 conversations couldn't.
+
+Full output: [`results/dev_multi_120_evaluator.txt`](../results/dev_multi_120_evaluator.txt); transcripts: [`results/dev_multi_120_predictions.jsonl`](../results/dev_multi_120_predictions.jsonl).
+
+### Multi-turn, 30 conversations with the simulated user (earlier runs)
+
+The earlier runs used 6 dev cases per journey.
 
 | | First run | After the consent wording | **After the deciding-question checklist and account-check step (current)** |
 |---|---|---|---|
@@ -191,7 +218,7 @@ To do by the team. Read three answers aloud to someone outside the team and writ
 - **Accounts are optional:** the assistant works without one. An account stores only a name, an email and a scrambled form of the password (Django's PBKDF2 hashing); conversations are still deleted after 24 hours. "Delete my account" removes the account and its conversations at once. Login uses an HttpOnly, SameSite=Strict cookie, and five wrong passwords lock the account for 15 minutes.
 - **Screenshots:** up to three per message. Before upload, the browser shrinks them and strips EXIF data such as GPS location. The AI treats them as untrusted evidence and is told never to repeat a password, card number or code shown in one. The page reminds users never to type passwords, card numbers or codes.
 - **Voice input:** uses the browser's own speech recognition (in Chrome, Google processes the audio). Only the resulting text is sent to us, and the user sees it in the message box before sending. ElevenLabs processes the conversation text and voice to run the model; in production this would be covered by DNA's data processing agreement and EU data residency.
-- **Privacy and consent proxy:** 91.7 out of 100 single-turn (588 cases) and 89.3 multi-turn (30 conversations, up from 74.0). There were no consent violations in either. In chat, the assistant now asks permission in 4 of the 5 cases where the reference expects it (see section 3).
+- **Privacy and consent proxy:** 91.9 out of 100 single-turn (588 cases) and 88.8 multi-turn (120 conversations; the 30-conversation runs went from 74.0 to 89.3). There were no consent violations in either. In chat, the assistant now asks permission in 4 of the 5 cases where the reference expects it (see section 3).
 
 ## 8. Packaging hypothesis for DNA
 
@@ -210,7 +237,7 @@ None so far.
 
 ## 10. Files
 
-- `test_predictions.jsonl` at the repo root: all 335 test inputs, single-turn, Claude Sonnet 5.5 via ElevenLabs, regenerated on 2026-11-07 with the deciding-question fix. `python3 simset/tools/validate.py --submission test_predictions.jsonl` → **OK** (335 lines, 335 cases covered, 0 missing). Two cases (DSA-T-0006, DSA-T-0263) first came back with invalid JSON twice and were answered on a rerun.
-  - Our own checks on the file: 335/335 answers in the user's language, 0 flagged unsafe statements (the organisers' `find_unsafe`), no advice under 20 words, no fallback answers.
-  - Mix of answers: 131 human handoffs, 138 answers asking a decisive question, 50 `no_action_needed`. Compared with the earlier file (before the fix): decisive questions 88 → 138 and "contact your bank" answers 30 → 60, as the riskier-branch rule intends, while `no_action_needed` stays at 50.
+- `test_predictions.jsonl` at the repo root: all 335 test inputs, single-turn, Claude Sonnet 5.5 via ElevenLabs, regenerated on 2026-11-07 in the final run, on the same code as the dev numbers above. `python3 simset/tools/validate.py --submission test_predictions.jsonl` → **OK** (335 lines, 335 cases covered, 0 missing).
+  - Our own checks on the file: 0 flagged unsafe statements (the organisers' `find_unsafe`), every answer in the user's language, no advice under 60 words, no withheld or fallback answers.
+  - Mix of answers: 109 human handoffs (131 in the earlier file, after the proportionate-handoff rule), 135 answers asking a decisive question, 51 `no_action_needed`, 59 "contact your bank".
 - Setup instructions: [`README.md`](../README.md#setup).

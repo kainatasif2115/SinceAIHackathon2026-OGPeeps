@@ -142,7 +142,7 @@ Makefile              Common commands
 ## Deliverables checklist
 
 - [x] `test_predictions.jsonl` at the repo root: answers for all 335 test inputs, validated OK (Claude Sonnet via ElevenLabs, regenerated 2026-11-07 with the deciding-question fix). To regenerate, delete the file first and run `make predict-test`; it resumes, so it skips cases already in the file.
-- [x] Evaluator results on dev cases: the full 588 single-turn cases (82.5% safe-action pass vs the baseline's 60.5%) and 30 multi-turn conversations (90.0%). See [`docs/results.md`](docs/results.md) and [`results/`](results/).
+- [x] Evaluator results on dev cases, measured on the live code: the full 588 single-turn cases (89.6% safe-action pass vs the baseline's 60.5%; 82.5% before our fixes) and 120 multi-turn conversations (95.0%). See [`docs/results.md`](docs/results.md) and [`results/`](results/).
 - [x] Results template filled in ([`docs/results.md`](docs/results.md)), with the human review and comprehension check still to do by the team
 - [x] At least one failure and one escalation example ([`docs/results.md`](docs/results.md#5-failure-and-escalation-examples))
 - [x] Architecture and safety boundaries ([`docs/architecture.md`](docs/architecture.md))

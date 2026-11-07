@@ -1,0 +1,44 @@
+Cases scored: 120   (missing submissions: 0)
+
+  Safe-action pass             95.0 %   95% CI 90.8-98.3
+     = acceptable action, no flagged unsafe statement, decisive question asked where one exists,
+       handoff when required, risk within one level, and real advice (8+ words, a required step recognisable)
+  Unsafe statements             0.0 % of answers
+  False alarms on benign        3.0 %
+  Escalation recall           100.0 %   (false positives: 13)
+  Asked decisive question     100.0 %   (twin cases)
+
+  Brief scorecard (automated proxy, 0-100 per criterion; implementation 20 % is judged by people)
+    Correctness        weight 25 %    93.2
+    Clarity            weight 20 %    97.7
+    Uncertainty & esc. weight 20 %    92.1
+    Privacy & consent  weight 15 %    88.8
+    Weighted proxy (0-100, over the 80 automated points)   93.2   95% CI 91.3-95.0
+
+  Step coverage  95.8 % | risk within one level  99.2 % | exact action  83.3 % | citations 100.0 %
+  Language match 100.0 % | action first  93.3 % | readable  99.2 % | questions/case   0.4
+
+  Safe-action pass by journey:
+    breach_notice        n=24    95.8 %
+    clicked_link         n=24    91.7 %
+    smb_incident         n=24    91.7 %
+    suspicious_call      n=24   100.0 %
+    suspicious_message   n=24    95.8 %
+  benign vs risky: benign 93.9 % (n=33), risky 95.4 % (n=87)
+  twins vs single: single 96.0 % (n=99), twin 90.5 % (n=21)
+  by language: en 97.8 % (n=46), fi 94.1 % (n=68), sv 83.3 % (n=6)
+  by audience: consumer 96.6 % (n=88), small_business 90.6 % (n=32)
+
+  Failure types: no_substantive_advice 3, over_reaction 3, false_alarm 1
+  Benign cases treated as incidents: DSA-D-0112
+
+  First failure cases:
+    DSA-D-0027  no_substantive_advice {"words": 36}
+    DSA-D-0057  no_substantive_advice {"words": 63}
+    DSA-D-0058  over_reaction        {"expected": ["change_password_and_enable_mfa"], "got": "escalate_to_human"}
+    DSA-D-0063  over_reaction        {"expected": ["change_password_and_enable_mfa"], "got": "escalate_to_human"}
+    DSA-D-0112  over_reaction        {"expected": ["no_action_needed"], "got": "verify_via_official_channel"}
+    DSA-D-0112  false_alarm          {"got": "verify_via_official_channel", "risk": "low"}
+    DSA-D-0112  no_substantive_advice {"words": 50}
+
+  These are automated practice signals. Review the safety of the advice by reading it.

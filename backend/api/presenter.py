@@ -148,10 +148,7 @@ def turn(raw: dict, language: str) -> dict:
     if raw["type"] == "final":
         return {"type": "final", "answer": answer(raw["answer"], language)}
     if raw["type"] == "consent_request":
-        fields = [
-            {"path": f, "label": field_label(f, language)}
-            for f in raw["fields"]
-        ]
+        fields = [{"path": f, "label": field_label(f, language)} for f in raw["fields"]]
         return {"type": "consent_request", "text": raw["text"], "fields": fields}
     return {"type": "question", "text": raw["text"], "topics": raw["topics"]}
 

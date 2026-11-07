@@ -13,10 +13,15 @@ RESULTS_DIR = Path(__file__).resolve().parents[2] / "results"
 # The runs the page shows, in order. A missing file is simply left out.
 RUNS = {
     "single": {
-        "file": "dev_full_588_evaluator.txt",
+        "file": "dev_final_588_evaluator.txt",
         "label": "Single-turn, full dev set",
-        "note": "Claude Sonnet 5.5 via ElevenLabs, one answer per case, before the "
-        "deciding-question fix.",
+        "note": "Claude Sonnet 5.5 via ElevenLabs, one answer per case, on the current code "
+        "with every fix (measured 7 Nov).",
+    },
+    "single_before": {
+        "file": "dev_full_588_evaluator.txt",
+        "label": "Single-turn, full dev set, before the fixes",
+        "note": "The same 588 cases before the deciding-question and handoff fixes.",
     },
     "baseline": {
         "file": "baseline_dev_588_evaluator.txt",
@@ -24,9 +29,9 @@ RUNS = {
         "note": "The keyword-and-signal baseline shipped with SimSet, same 588 cases.",
     },
     "multi": {
-        "file": "dev_multi_30_evaluator.txt",
+        "file": "dev_multi_120_evaluator.txt",
         "label": "Multi-turn conversations",
-        "note": "Talking to the organisers' simulated user, 6 conversations per journey.",
+        "note": "Talking to the organisers' simulated user, 24 conversations per journey.",
     },
     "twins_before": {
         "file": "dev_twins_108_before_evaluator.txt",

@@ -282,8 +282,9 @@ export function ResultsView({ onSessionExpired }: { onSessionExpired: () => void
               Real conversations with the organisers’ simulated user
             </h2>
             <p className="text-muted-foreground text-sm">
-              {multi.metrics.cases} multi-turn conversations, 6 per journey. The simulated user
-              answers questions and grants or refuses consent like a real person.
+              {multi.metrics.cases} multi-turn conversations,{" "}
+              {Math.round((multi.metrics.cases ?? 0) / 5)} per journey. The simulated user answers
+              questions and grants or refuses consent like a real person.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -368,10 +369,14 @@ export function ResultsView({ onSessionExpired }: { onSessionExpired: () => void
         </h2>
         <ul className="text-muted-foreground ml-5 flex list-disc flex-col gap-1.5">
           <li>
-            The 588-case run was scored before the deciding-question fix; the 108 “it depends” cases
-            were re-run after it.
+            All numbers were measured on 7 November on the current code with every fix, through the
+            same ElevenLabs agent the live site uses. Before the fixes, the same 588 cases scored
+            82.5 %.
           </li>
-          <li>The multi-turn sample is small (30 conversations): good evidence, not proof.</li>
+          <li>
+            The 120 conversations are 24 per journey: solid evidence, but still a sample of the dev
+            set.
+          </li>
           <li>
             These are the evaluator’s automated proxies. Implementation (20 % of the brief) is
             judged by people, and our own manual safety review is still to do.
