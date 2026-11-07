@@ -79,15 +79,14 @@ export function RedTeam() {
         <div className="flex max-w-3xl flex-col gap-3">
           <p className="text-brand flex items-center gap-1.5 text-sm font-semibold">
             <Swords aria-hidden className="size-4" />
-            Red-team arena
+            Built to resist tricks
           </p>
           <h2 id="redteam-heading" className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Try to trick it
+            Go on, try to fool it
           </h2>
           <p className="text-muted-foreground text-lg">
-            Scammers hide instructions for AI inside their messages. Paste an attack, or pick one,
-            and see what our safeguards spotted, what the safety checker changed, and what the
-            customer would actually read.
+            Scammers now hide instructions for AI inside their messages. Paste one in, or pick one,
+            and watch our safeguards catch it.
           </p>
         </div>
 

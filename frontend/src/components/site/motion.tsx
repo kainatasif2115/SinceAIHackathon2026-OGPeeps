@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 const prefersReducedMotion = () =>
@@ -136,4 +136,44 @@ export function CountUp({
       </span>
     </span>
   );
+}
+
+const noSubscribe = () => () => {};
+
+/** True when the visitor asked their device for less motion (false while rendering on the server). */
+export function useReducedMotion(): boolean {
+  return useSyncExternalStore(noSubscribe, prefersReducedMotion, () => false);
+}
+
+/**
+ * How far the reader has scrolled through a tall, pinned section: 0 when its
+ * top reaches the top of the screen, 1 when its bottom reaches the bottom.
+ */
+export function useScrollProgress<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    let frame = 0;
+    function update() {
+      frame = 0;
+      const el = ref.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const travel = rect.height - window.innerHeight;
+      const p = travel > 0 ? -rect.top / travel : 0;
+      setProgress(Math.min(1, Math.max(0, p)));
+    }
+    function onScroll() {
+      if (!frame) frame = requestAnimationFrame(update);
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+  return { ref, progress };
 }

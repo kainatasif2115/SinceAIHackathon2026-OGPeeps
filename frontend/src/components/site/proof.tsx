@@ -39,12 +39,12 @@ export function Proof() {
     <section aria-labelledby="proof-heading" className="bg-[#fdf6fa]">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-20 sm:px-6">
         <Reveal className="flex max-w-2xl flex-col gap-3">
-          <p className="text-brand text-sm font-semibold">Tested, not promised</p>
+          <p className="text-brand text-sm font-semibold">Proven before it reaches you</p>
           <h2 id="proof-heading" className="text-3xl font-bold tracking-tight sm:text-5xl">
-            Scored on 588 cases by the organisers’ own evaluator
+            Tested on 588 scam situations in three languages
           </h2>
           <p className="text-muted-foreground text-lg">
-            Compared with the keyword-and-rules baseline the organisers ship with the test set.
+            Independently scored and compared with a standard rule-based scam checker.
           </p>
         </Reveal>
 

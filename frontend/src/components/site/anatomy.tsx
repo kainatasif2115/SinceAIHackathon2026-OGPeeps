@@ -70,12 +70,12 @@ export function Anatomy() {
     <section aria-labelledby="anatomy-heading" className="bg-white">
       <div className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6">
         <Reveal className="flex max-w-2xl flex-col gap-3">
-          <p className="text-brand text-sm font-semibold">Anatomy of a scam</p>
+          <p className="text-brand text-sm font-semibold">Learn the tricks</p>
           <h2 id="anatomy-heading" className="text-3xl font-bold tracking-tight sm:text-5xl">
-            Four tells in one text message
+            We read the small print so you don’t have to
           </h2>
           <p className="text-muted-foreground text-lg">
-            Scroll through a typical parcel scam and see what the assistant notices.
+            Scroll through a typical parcel scam and see the four tricks we catch.
           </p>
         </Reveal>
 

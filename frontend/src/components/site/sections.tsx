@@ -61,8 +61,8 @@ export function HelpTopics({ audience, onOpen }: { audience: Audience; onOpen: (
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-16 sm:px-6">
         <SectionHeading
           id="topics-heading"
-          eyebrow="What we help with"
-          title="Something feels off? Start here."
+          eyebrow="One place for every worry"
+          title="Whatever made you stop and think, start here"
         />
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {TOPICS[audience].map((topic) => (
@@ -92,42 +92,6 @@ export function HelpTopics({ audience, onOpen }: { audience: Audience; onOpen: (
   );
 }
 
-const STEPS = [
-  {
-    title: "Tell us what happened",
-    text: "In your own words, in Finnish, Swedish or English. No forms, no jargon.",
-  },
-  {
-    title: "Answer a question or two",
-    text: "Only what changes the advice. We ask before we check anything on your account.",
-  },
-  {
-    title: "Get one clear next step",
-    text: "How risky it is, how urgent, and exactly what to do. A person takes over when it’s serious.",
-  },
-];
-
-export function HowItWorks() {
-  return (
-    <section aria-labelledby="how-heading" id="how" className="bg-muted scroll-mt-20">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-16 sm:px-6">
-        <SectionHeading id="how-heading" eyebrow="How it works" title="Calm help in three steps" />
-        <ol className="grid gap-4 md:grid-cols-3">
-          {STEPS.map((step, index) => (
-            <li key={step.title} className="flex flex-col gap-4 rounded-2xl bg-white p-6">
-              <span className="bg-ink text-ink-foreground font-heading flex size-10 items-center justify-center rounded-full text-base font-semibold">
-                {index + 1}
-              </span>
-              <h3 className="text-lg font-semibold">{step.title}</h3>
-              <p className="text-muted-foreground">{step.text}</p>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
-  );
-}
-
 export function ScamsNow({
   audience,
   scenarios,
@@ -150,9 +114,9 @@ export function ScamsNow({
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-16 sm:px-6">
         <SectionHeading
           id="scams-heading"
-          eyebrow="Scams right now"
-          title="See how the assistant handles real situations"
-          intro="Synthetic cases from the hackathon’s evaluation set. Pick one to watch the conversation."
+          eyebrow="Going around right now"
+          title="Recognise any of these?"
+          intro="Pick one and watch how we’d help you through it."
         />
         {scenarios.status === "loading" && (
           <p className="text-muted-foreground text-sm">Loading examples…</p>
@@ -279,8 +243,8 @@ export function BeforeAfter() {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-16 sm:px-6">
         <SectionHeading
           id="before-after-heading"
-          eyebrow="Why this is different"
-          title="A warning tells you something is wrong. We tell you what to do."
+          eyebrow="Not just another warning"
+          title="Other apps tell you something is wrong. We tell you what to do."
         />
         <div className="grid gap-4 md:grid-cols-2">
           <figure className="border-border flex flex-col gap-4 rounded-2xl border bg-[#f4f4f6] p-6">
@@ -314,7 +278,7 @@ export function BeforeAfter() {
           <figure className="border-brand flex flex-col gap-4 rounded-2xl border-2 bg-white p-6 shadow-[0_12px_32px_rgb(218_0_112/0.12)]">
             <figcaption className="text-brand flex items-center gap-2 text-sm font-semibold">
               <ShieldCheck aria-hidden className="size-4" />
-              With the security assistant
+              With DNA Security Assistant
             </figcaption>
             <div className="overflow-hidden rounded-xl border border-black/5">
               <p className="bg-risk-medium text-risk-medium-fg flex items-center gap-2 px-4 py-2 text-sm font-semibold">

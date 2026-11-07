@@ -11,7 +11,8 @@ import { Hero } from "./hero";
 import { ScrollProgress } from "./motion";
 import { Proof } from "./proof";
 import { RedTeam } from "./red-team";
-import { BeforeAfter, HelpTopics, HowItWorks, ScamsNow, TrustBand } from "./sections";
+import { BeforeAfter, HelpTopics, ScamsNow, TrustBand } from "./sections";
+import { ChatReplay, RealOrScam, ScrollStatement } from "./scroll-stories";
 import { SiteFooter, SiteHeader, TopStrip } from "./site-chrome";
 
 /**
@@ -97,10 +98,12 @@ export function DnaHome() {
           onTalk={talk}
           onPickScenario={askScenario}
         />
+        <ScrollStatement />
         <BeforeAfter />
         <Anatomy />
+        <RealOrScam />
         <HelpTopics audience={audience} onOpen={openPanel} />
-        <HowItWorks />
+        <ChatReplay />
         <Proof />
         <ScamsNow audience={audience} scenarios={scenarios} onPick={askScenario} />
         <RedTeam />

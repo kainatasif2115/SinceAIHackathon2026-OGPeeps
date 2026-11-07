@@ -36,15 +36,15 @@ type Props = {
 
 const HEADLINE: Record<Audience, { title: string; intro: string; placeholder: string }> = {
   consumer: {
-    title: "Not sure about a message? Ask before you act.",
+    title: "Before you click, pay or reply: ask DNA.",
     intro:
-      "Tell us about the text, call, email or login alert that worries you. The security assistant asks one or two questions, then gives you one clear next step.",
+      "Tell us about the text, call or email that’s bothering you. In about a minute you’ll know how risky it is and exactly what to do, in Finnish, Swedish or English.",
     placeholder: "For example: I got a text saying my parcel is stuck in customs…",
   },
   small_business: {
-    title: "Odd invoice or urgent request from “the CEO”? Check it first.",
+    title: "Stop invoice fraud before anyone pays.",
     intro:
-      "Describe what reached you or your team. You get one clear next step for the business, and a person when it is serious.",
+      "Check an odd invoice, new bank details or an urgent request from “the CEO” before money leaves. When it’s serious, our business security team takes over.",
     placeholder: "For example: our supplier emailed new bank details for the next invoice…",
   },
 };
@@ -91,7 +91,7 @@ export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Pro
         <div className="flex flex-col gap-6">
           <p className="inline-flex items-center gap-2 self-start rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
             <ShieldCheck aria-hidden className="size-3.5" />
-            New · Security assistant prototype
+            New: DNA Security Assistant
           </p>
           <div className="flex flex-col gap-4">
             <h1
@@ -185,7 +185,7 @@ export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Pro
             className="inline-flex h-11 items-center gap-2 self-start rounded-full border-2 border-white/70 px-5 text-sm font-semibold transition-colors duration-150 hover:bg-white/15"
           >
             <PhoneCall aria-hidden className="size-4" />
-            Rather talk? Have a hands-free conversation
+            Prefer to talk? Start a hands-free conversation
           </button>
 
           <Link
@@ -193,13 +193,13 @@ export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Pro
             className="inline-flex items-center gap-2 self-start text-sm font-semibold underline-offset-4 hover:underline"
           >
             <Ear aria-hidden className="size-4" />
-            On a suspicious call right now? Let us listen with you
+            On a suspicious call right now? We’ll listen with you
             <ArrowRight aria-hidden className="size-4" />
           </Link>
 
           {examples.length > 0 && (
             <div className="flex flex-col gap-2">
-              <p className="text-sm font-semibold text-white">Or try a real-world example:</p>
+              <p className="text-sm font-semibold text-white">Or see how we handle:</p>
               <ul className="flex flex-wrap gap-2">
                 {examples.map((scenario) => (
                   <li key={scenario.id}>
