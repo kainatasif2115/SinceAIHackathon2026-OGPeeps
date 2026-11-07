@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  AlarmClock,
   Building2,
   Clock,
   Headset,
@@ -10,6 +11,7 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
+  Timer,
   User,
   X,
 } from "lucide-react";
@@ -25,7 +27,7 @@ import {
 import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { TicketDetail } from "./ticket-detail";
-import { SEVERITY_META, STATUS_META, ago } from "./ticket-meta";
+import { SEVERITY_META, STATUS_META, ago, duration } from "./ticket-meta";
 
 const POLL_MS = 4000;
 
@@ -440,6 +442,10 @@ function TicketCard({
   onDragEnd: () => void;
 }) {
   const severity = SEVERITY_META[ticket.severity];
+  // Response-time strip for open urgent tickets: the target, then how long it has waited.
+  const target = ticket.status === "done" ? null : severity.respondWithin;
+  const waited = (now - new Date(ticket.created_at).getTime()) / 60_000;
+  const overdue = target !== null && waited > target;
   return (
     <button
       type="button"
@@ -452,7 +458,7 @@ function TicketCard({
       onDragEnd={onDragEnd}
       onClick={onOpen}
       className={cn(
-        "flex w-full cursor-grab flex-col gap-2.5 rounded-xl border bg-white p-3.5 text-left shadow-sm transition-[box-shadow,opacity,border-color] duration-150 hover:shadow-md active:cursor-grabbing",
+        "flex w-full cursor-grab flex-col gap-2.5 overflow-hidden rounded-xl border bg-white p-3.5 text-left shadow-sm transition-[box-shadow,opacity,border-color] duration-150 hover:shadow-md active:cursor-grabbing",
         fresh ? "border-brand ring-brand/30 ring-4" : "border-transparent",
         // Finished work steps back so open tickets stand out.
         ticket.status === "done" && "opacity-70 shadow-none hover:opacity-100",
@@ -461,6 +467,26 @@ function TicketCard({
         dragging && "opacity-40",
       )}
     >
+      {target !== null && (
+        <span
+          className={cn(
+            "-mx-3.5 -mt-3.5 mb-0.5 flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold",
+            ticket.severity === "critical"
+              ? "bg-risk-critical text-risk-critical-fg"
+              : "bg-risk-high text-risk-high-fg",
+          )}
+        >
+          {overdue ? (
+            <AlarmClock aria-hidden className="size-3.5 shrink-0" />
+          ) : (
+            <Timer aria-hidden className="size-3.5 shrink-0" />
+          )}
+          {overdue
+            ? `Overdue by ${duration(waited - target)}`
+            : `Respond within ${duration(target)}`}
+          <span className="font-normal opacity-80">· waiting {duration(waited)}</span>
+        </span>
+      )}
       <span className="flex items-center justify-between gap-2">
         <span
           className={cn(
