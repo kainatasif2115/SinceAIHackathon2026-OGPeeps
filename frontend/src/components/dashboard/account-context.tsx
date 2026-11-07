@@ -57,7 +57,11 @@ export function AccountProvider({
       .then((account) =>
         account
           ? setState({ status: "ready", account, signedOut: false })
-          : router.replace("/login"),
+          : // No valid login: clear any stale cookie too, or the homepage would keep
+            // sending this visitor back here instead of showing the landing page.
+            void logOut()
+              .catch(() => undefined)
+              .then(() => router.replace("/login")),
       )
       .catch(() => setState({ status: "error" }));
   }, [router]);
