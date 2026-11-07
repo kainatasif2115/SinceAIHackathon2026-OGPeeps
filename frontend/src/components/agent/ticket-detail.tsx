@@ -102,6 +102,10 @@ export function TicketDetail({
                 </span>
                 <label className="ml-auto flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground">Status</span>
+                  <span
+                    aria-hidden
+                    className={cn("size-2.5 rounded-full", STATUS_META[ticket.status].dot)}
+                  />
                   <select
                     value={ticket.status}
                     onChange={(e) => onMove(e.target.value as TicketStatus)}

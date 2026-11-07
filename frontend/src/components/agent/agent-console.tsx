@@ -339,7 +339,8 @@ export function AgentConsole({
                     setDropTarget(null);
                   }}
                   className={cn(
-                    "flex min-h-[60vh] flex-col gap-3 rounded-2xl border border-[#f3e4ec] bg-[#fdf6fa] p-3 transition-colors duration-150",
+                    "flex min-h-[60vh] flex-col gap-3 rounded-2xl border border-t-4 border-[#f3e4ec] bg-[#fdf6fa] p-3 transition-colors duration-150",
+                    meta.bar,
                     dropTarget === status && "bg-brand-soft outline-brand outline-2 outline-dashed",
                   )}
                 >
@@ -348,10 +349,15 @@ export function AgentConsole({
                     className="flex items-center justify-between px-1 text-sm font-semibold"
                   >
                     <span className="flex items-center gap-2">
-                      <meta.icon aria-hidden className="text-muted-foreground size-4" />
+                      <meta.icon aria-hidden className={cn("size-4", meta.tone)} />
                       {meta.label}
                     </span>
-                    <span className="bg-brand-soft text-accent-foreground rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums">
+                    <span
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
+                        meta.badge,
+                      )}
+                    >
                       {column.length}
                     </span>
                   </h2>
@@ -451,6 +457,8 @@ function TicketCard({
       className={cn(
         "flex w-full cursor-grab flex-col gap-2.5 rounded-xl border bg-white p-3.5 text-left shadow-sm transition-[box-shadow,opacity,border-color] duration-150 hover:shadow-md active:cursor-grabbing",
         fresh ? "border-brand ring-brand/30 ring-4" : "border-transparent",
+        "border-l-4",
+        severity.edge,
         dragging && "opacity-40",
       )}
     >
