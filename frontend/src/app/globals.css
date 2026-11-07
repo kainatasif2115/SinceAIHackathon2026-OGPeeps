@@ -276,7 +276,7 @@
 
 /*
  * The homepage's "Ask security" button: pops in once the page has settled,
- * then a soft pulse behind it and a small wiggle of the icon every few seconds.
+ * then every few seconds it pops up a little, with a soft pulse behind it.
  */
 @keyframes launcher-pop {
   0% {
@@ -304,32 +304,32 @@
   }
 }
 
-@keyframes launcher-wiggle {
+/* Every few seconds the button pops up a little, to say "I'm here". */
+@keyframes launcher-bounce {
   0%,
-  80%,
+  70%,
   100% {
-    transform: rotate(0deg);
+    transform: translateY(0) scale(1);
   }
-  84%,
+  78% {
+    transform: translateY(-8px) scale(1.08);
+  }
+  86% {
+    transform: translateY(0) scale(0.97);
+  }
   92% {
-    transform: rotate(-14deg);
-  }
-  88%,
-  96% {
-    transform: rotate(14deg);
+    transform: translateY(-2px) scale(1.02);
   }
 }
 
 .launcher-pop {
-  animation: launcher-pop 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 800ms both;
+  animation:
+    launcher-pop 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 800ms both,
+    launcher-bounce 3.5s ease-in-out 2.5s infinite;
 }
 
 .launcher-pulse {
   animation: launcher-pulse 2.6s ease-out 1.6s infinite;
-}
-
-.launcher-wiggle {
-  animation: launcher-wiggle 4s ease-in-out 2s infinite;
 }
 
 /* Motion is opt-out: anyone who asks the OS for less motion gets none. */

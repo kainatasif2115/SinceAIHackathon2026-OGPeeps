@@ -128,7 +128,7 @@ export function ChatLauncher({ ref, hidden, onClick }: LauncherProps) {
       {/* A soft pulse behind the button, so it's noticed without being in the way. */}
       <span aria-hidden className="launcher-pulse bg-brand absolute inset-0 rounded-full" />
       <span className="bg-brand text-brand-foreground relative flex size-16 items-center justify-center gap-2.5 rounded-full shadow-[0_10px_30px_rgb(218_0_112/0.45)] ring-2 ring-white transition-transform duration-200 hover:-translate-y-1 hover:scale-105 sm:h-16 sm:w-auto sm:px-6">
-        <MessageCircle aria-hidden className="launcher-wiggle size-6" />
+        <MessageCircle aria-hidden className="size-6" />
         <span className="font-heading sr-only text-base font-semibold sm:not-sr-only">
           Ask security
         </span>
