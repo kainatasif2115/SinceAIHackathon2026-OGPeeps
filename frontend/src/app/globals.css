@@ -222,6 +222,32 @@
   }
 }
 
+/*
+ * The alarm clock on open critical tickets "rings": a quick shake, then a
+ * pause, every 2.5 s. With reduced motion (below) it stays still.
+ */
+@keyframes alarm-ring {
+  0%,
+  24%,
+  100% {
+    transform: rotate(0deg);
+  }
+  3%,
+  11%,
+  19% {
+    transform: rotate(-14deg);
+  }
+  7%,
+  15% {
+    transform: rotate(14deg);
+  }
+}
+
+.alarm-ring {
+  transform-origin: 50% 40%;
+  animation: alarm-ring 2.5s ease-in-out infinite;
+}
+
 /* Motion is opt-out: anyone who asks the OS for less motion gets none. */
 @media (prefers-reduced-motion: reduce) {
   *,

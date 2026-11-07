@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  AlarmClock,
   Building2,
   Clock,
   Headset,
@@ -465,7 +466,7 @@ function TicketCard({
     >
       {showWaiting && (
         <span className="bg-risk-critical text-risk-critical-fg -mx-3.5 -mt-3.5 mb-0.5 flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold">
-          <Clock aria-hidden className="size-3.5 shrink-0" />
+          <AlarmClock aria-hidden className="alarm-ring size-3.5 shrink-0" />
           Waiting {duration((now - new Date(ticket.created_at).getTime()) / 60_000)}
         </span>
       )}
