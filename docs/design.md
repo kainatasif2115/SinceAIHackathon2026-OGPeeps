@@ -110,10 +110,11 @@ Chat-app style: **one rounded card** (16px) holds the text area and a toolbar un
 
 ### Voice input
 
-- The microphone uses the browser's speech recognition in the selected language (fi-FI, sv-SE, en-GB).
-- While listening, the button turns red with a stop icon and a pulse, and a live status line says it's listening.
+- When the backend has ElevenLabs voice on, the browser records the audio and our backend turns it into text (ElevenLabs speech-to-text). The recording doesn't go to the browser maker, and it works in any browser that can record, Firefox included. Recordings stop after 60 seconds.
+- Otherwise (voice switched off) it falls back to the browser's own speech recognition in the selected language (fi-FI, sv-SE, en-GB).
+- While listening, the button turns red with a stop icon and a pulse, and a live status line says it's listening; while the recording is turned into text it says "Turning your voice into text…".
 - The words appear in the message box, so the user can check them before sending.
-- The button is hidden in browsers without speech recognition (e.g. Firefox).
+- The button is hidden only in browsers that can neither record nor recognise speech.
 - Errors (permission denied, nothing heard) show a plain message under the box.
 
 ### Copy and read aloud
@@ -127,6 +128,12 @@ Every assistant message, including questions and the answer card, has two small 
 - The browser shrinks them to at most 1568px and re-encodes them, which strips EXIF location data.
 - They're kept with the conversation for 24 hours, like the text.
 - The privacy line reminds users never to type passwords, card numbers or codes.
+
+### Account pages (`/signup`, `/login`, `/account`)
+
+- Same DNA theme and header as the homepage, with a "Home" link. The homepage header shows **Log in**, or the first name once signed in.
+- **Sign-up / login:** one centred card. Labels sit above fields, the password has a show/hide button, and sign-up lists the password rules under the field. Errors from the server appear in a `role="alert"` line. A note says what is stored and that accounts are optional.
+- **Account page:** a greeting with the email, a **Check a message** button, "Your recent checks" (title, time, risk badge with icon and label, the action, and handoff status in words), then **Log out** and **Delete my account**. Deleting asks once more in a tinted box that says what is removed and that it can't be undone.
 
 ### Start view
 

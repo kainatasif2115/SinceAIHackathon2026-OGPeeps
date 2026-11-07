@@ -69,4 +69,4 @@ validate: ## Check a submission file: make validate FILE=test_predictions.jsonl
 	$(PYTHON) simset/tools/validate.py --submission $(FILE)
 
 deploy: ## Deploy to Google Cloud Run: make deploy GCP_PROJECT=my-project (see docs/deploy.md)
-	GCP_PROJECT=$(GCP_PROJECT) deploy/gcp.sh
+	GCP_PROJECT=$(GCP_PROJECT) WARM=$(WARM) deploy/gcp.sh

@@ -93,6 +93,21 @@ Per journey after the fix: breach notice 100%, small-business incident 100%, sus
 
 Files: [`results/dev_twins_108_evaluator.txt`](../results/dev_twins_108_evaluator.txt), before: [`results/dev_twins_108_before_evaluator.txt`](../results/dev_twins_108_before_evaluator.txt).
 
+### Estimated full-set score today (588 cases, replayed)
+
+The full 588-case run above was measured before today's fixes. Rerunning it costs about 45,000 ElevenLabs credits, so this is an **estimate** built from answers we already have: the 108 "it depends" cases use their real new answers, the other 480 use the earlier answers, and the two new checker rules (proportionate handoffs, password changes are high risk; see `docs/decisions.md`) are applied on top. Scored with the organisers' evaluator.
+
+| | Measured before today | + new "it depends" answers | **+ new checker rules (estimate)** |
+|---|---|---|---|
+| Safe-action pass | 82.5 % | 91.2 % | **92.9 %** (95% CI 90.8–94.9) |
+| Escalation recall | 91.7 % | 99.2 % | **99.2 %** |
+| Handoffs the reference didn't want | 86 | 90 | **42** |
+| False alarms on benign / unsafe statements | 6.1 % / 0 % | 6.1 % / 0 % | **6.1 % / 0 %** |
+| Correctness / uncertainty and escalation | 84.9 / 75.7 | 90.2 / 88.5 | **91.6 / 92.1** |
+| Weighted proxy | 87.2 | 92.0 | **93.4** (95% CI 92.5–94.1) |
+
+**Scams in another language.** In 58 dev cases the scam text is Finnish but the user writes English or Swedish. Those passed 63.8% in the measured run; with today's answers they pass 86.2% (50 of 58), because most failures were "it depends" cases. Of the 8 left, 4 were password-leak notices rated low risk, which the new password rule now raises to high.
+
 ### Multi-turn, 30 conversations with the simulated user
 
 This is the mode the demo uses: the assistant can ask questions and ask permission before answering. We ran the organisers' `sim/run_conversation.py` with our bot (`backend/scripts/sim_bot.py`) on 6 dev cases per journey, scored with the same evaluator.
@@ -172,6 +187,7 @@ To do by the team. Read three answers aloud to someone outside the team and writ
 - **If the user says no:** the assistant still gives its best advice without that data, and never uses it. The checker removes any gated signal the user didn't grant (covered by tests).
 - **Single-turn reporting:** `consent_requested_for` lists exactly the gated signals the answer relied on, never a blanket request.
 - **Retention:** chat sessions, including any screenshots, are deleted after 24 hours (MongoDB TTL index). The handoff summary contains only what the user wrote and chose.
+- **Accounts are optional:** the assistant works without one. An account stores only a name, an email and a scrambled form of the password (Django's PBKDF2 hashing); conversations are still deleted after 24 hours. "Delete my account" removes the account and its conversations at once. Login uses an HttpOnly, SameSite=Strict cookie, and five wrong passwords lock the account for 15 minutes.
 - **Screenshots:** up to three per message. Before upload, the browser shrinks them and strips EXIF data such as GPS location. The AI treats them as untrusted evidence and is told never to repeat a password, card number or code shown in one. The page reminds users never to type passwords, card numbers or codes.
 - **Voice input:** uses the browser's own speech recognition (in Chrome, Google processes the audio). Only the resulting text is sent to us, and the user sees it in the message box before sending. ElevenLabs processes the conversation text and voice to run the model; in production this would be covered by DNA's data processing agreement and EU data residency.
 - **Privacy and consent proxy:** 91.7 out of 100 single-turn (588 cases) and 89.3 multi-turn (30 conversations, up from 74.0). There were no consent violations in either. In chat, the assistant now asks permission in 4 of the 5 cases where the reference expects it (see section 3).

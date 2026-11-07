@@ -12,6 +12,7 @@ REAL_CREDENTIALS = (
     "ANTHROPIC_API_KEY",
     "ANTHROPIC_AUTH_TOKEN",
     "BRAIN_PROVIDER",
+    "VOICE_ENABLED",
 )
 
 
@@ -19,3 +20,10 @@ REAL_CREDENTIALS = (
 def no_real_credentials(monkeypatch):
     for name in REAL_CREDENTIALS:
         monkeypatch.delenv(name, raising=False)
+
+
+@pytest.fixture(autouse=True)
+def fresh_usage_limits():
+    from api import limits
+
+    limits._memory.clear()

@@ -3,6 +3,8 @@
 # as two services in one project. Secrets go to Secret Manager, never into images.
 #
 #   GCP_PROJECT=my-project deploy/gcp.sh
+#   GCP_PROJECT=my-project WARM=1 deploy/gcp.sh   # keep one copy of each service running
+#                                                 # (no slow first answer; under €1 a day)
 #
 # Needs: gcloud signed in (gcloud auth login) with billing or free-trial credit on the
 # project, and backend/.env.production filled in (see deploy/production.env.example).
@@ -15,6 +17,7 @@ REPO="ogpeeps"
 BACKEND="ogpeeps-backend"
 FRONTEND="ogpeeps-frontend"
 ENV_FILE="backend/.env.production"
+MIN_INSTANCES=$([ "${WARM:-0}" = "1" ] && echo 1 || echo 0)
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
@@ -84,17 +87,19 @@ build() { # build IMAGE DOCKERFILE CONTEXT [BACKEND_URL]
 }
 
 step "Backend: build and deploy"
+ENV_VARS="DJANGO_ALLOWED_HOSTS=.run.app,MONGODB_DB=$(value MONGODB_DB | grep . || echo ogpeeps)"
+[ -n "$(value AGENT_DEMO_USER)" ] && ENV_VARS+=",AGENT_DEMO_USER=$(value AGENT_DEMO_USER)"
 build "$IMAGES/$BACKEND" backend/Dockerfile .
 gcloud run deploy "$BACKEND" --image "$IMAGES/$BACKEND" --region "$REGION" \
   --allow-unauthenticated --memory 512Mi --cpu 1 --max-instances 3 --timeout 300 \
-  --set-env-vars "DJANGO_ALLOWED_HOSTS=.run.app,MONGODB_DB=$(value MONGODB_DB | grep . || echo ogpeeps)" \
-  --set-secrets "$SECRETS"
+  --min-instances "$MIN_INSTANCES" \
+  --set-env-vars "$ENV_VARS" --set-secrets "$SECRETS"
 BACKEND_URL="$(gcloud run services describe "$BACKEND" --region "$REGION" --format 'value(status.url)')"
 
 step "Frontend: build (proxying /api to $BACKEND_URL) and deploy"
 build "$IMAGES/$FRONTEND" frontend/Dockerfile frontend "$BACKEND_URL"
 gcloud run deploy "$FRONTEND" --image "$IMAGES/$FRONTEND" --region "$REGION" \
-  --allow-unauthenticated --memory 512Mi --cpu 1 --max-instances 3
+  --allow-unauthenticated --memory 512Mi --cpu 1 --max-instances 3 --min-instances "$MIN_INSTANCES"
 
 step "Done"
 echo "Site:    $(gcloud run services describe "$FRONTEND" --region "$REGION" --format 'value(status.url)')"

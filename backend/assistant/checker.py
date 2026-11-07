@@ -94,6 +94,14 @@ SAFER_BRANCH = {
         },
     ),
 }
+# Actions the user carries out themselves, where a human handoff only adds load.
+# In the 588 dev cases a handoff with these was never required (44 times over-called),
+# so the checker drops it; change of password still keeps one when risk is critical.
+SELF_SERVICE = {"verify_via_official_channel", "do_not_interact_and_delete"}
+HANDOFF_SENTENCE = re.compile(r"\bconnect(ing)? you\b|yhdistän sinu|kopplar dig", re.IGNORECASE)
+# "If you already gave a code, tell me and I will connect you" stays: it is an offer.
+CONDITIONAL = re.compile(r"^\s*(if|jos|om)\b", re.IGNORECASE)
+
 ATTACHMENT = re.compile(r"attach|liite|bilag|macro|makro", re.IGNORECASE)
 
 
@@ -150,6 +158,15 @@ def check(answer: FinalAnswer, case: dict, consent: ConsentState) -> CheckResult
                 a.advice_text = f"{a.advice_text.rstrip()} {sentences[language]}"
                 fixes.append(f"asked about {topic}: added what to do if the safer answer is true")
 
+    # --- A password to change means login details may be in someone else's hands:
+    # the policy calls that high risk, and the model sometimes said low (10 dev cases).
+    if a.primary_action == "change_password_and_enable_mfa":
+        raised = _at_least(a.risk_level, "high", vocab.RISK_LEVELS)
+        if raised != a.risk_level:
+            a.risk_level = raised
+            a.urgency = _at_least(a.urgency, "today", vocab.URGENCIES)
+            fixes.append("password change: risk raised to high")
+
     # --- Escalation ---------------------------------------------------------
     if a.primary_action == "escalate_to_human" and not a.escalation_required:
         a.escalation_required = True
@@ -160,6 +177,17 @@ def check(answer: FinalAnswer, case: dict, consent: ConsentState) -> CheckResult
         a.escalation_required = False
         a.risk_level = a.risk_level if a.risk_level in ("none", "low") else "low"
         a.urgency = "none" if a.risk_level == "none" else "routine"
+    self_service = a.primary_action in SELF_SERVICE or (
+        a.primary_action == "change_password_and_enable_mfa" and a.risk_level != "critical"
+    )
+    if a.escalation_required and self_service:
+        a.escalation_required = False
+        a.secondary_actions = [x for x in a.secondary_actions if x != "escalate_to_human"]
+        a.advice_text = " ".join(
+            s for s in textcheck.sentences(a.advice_text) if not _promises_handoff(s)
+        )
+        a.steps = [s for s in a.steps if not _promises_handoff(s)]
+        fixes.append("the user can do this themselves: no human handoff")
     if a.escalation_required and not a.escalation_target:
         a.escalation_target = vocab.default_escalation_target(a.primary_action, case["audience"])
         fixes.append("added default escalation target")
@@ -220,6 +248,10 @@ def strip_unsafe(answer: FinalAnswer, language: str) -> FinalAnswer:
     a.advice_text = " ".join(s for s in textcheck.sentences(a.advice_text) if clean(s))
     a.steps = [s for s in a.steps if clean(s)]
     return a
+
+
+def _promises_handoff(sentence: str) -> bool:
+    return bool(HANDOFF_SENTENCE.search(sentence)) and not CONDITIONAL.match(sentence)
 
 
 def _intervention(action: str) -> int:

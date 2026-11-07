@@ -14,6 +14,35 @@ The brief asks for "documented decisions", so add an entry whenever the team set
 
 ---
 
+## 2026-11-07: Two checker rules for proportionate answers
+
+**Decision:** The safety checker now (1) drops the human handoff when the action is something the user does themselves (check through the official channel, don't interact and delete, or change a password when the risk is below critical), removing "I am connecting you now" sentences but keeping conditional offers ("If you already gave a code, tell me and I will connect you"); and (2) raises a password change to at least high risk and "today", because login details may be in someone else's hands.
+**Why:** In the 588 dev answers these handoffs were never required (44 times over-called), and every "change your password" answer we rated low risk was high in the reference. Replaying the saved answers through the rules: extra handoffs 90 → 42, pass 91.2% → 92.9% and weighted proxy 92.0 → 93.4 on the latest answers, with escalation recall, false alarms and unsafe statements unchanged.
+**Alternatives considered:** A rule for "contact your bank" too (13 of 49 handoffs there were needed, so no simple rule is safe; left to the model), and prompt changes only (can't be measured without spending credits).
+
+## 2026-11-07: Usage limits that fall back to the safe answer
+
+**Decision:** AI answers are limited per visitor (30 an hour) and for the whole service (1,500 a day). A chat past a limit gets the safe generic answer with a handoff instead of an error; "Try to trick it" and voice say "busy" instead.
+**Why:** The demo link is public and every AI answer costs credits. Falling back to the safe answer keeps the assistant's promise that nobody is left without advice.
+**Alternatives considered:** Refusing with an error (leaves a scared user stuck), CAPTCHAs (friction, accessibility), sign-in required (see the accounts decision).
+
+## 2026-11-07: A free mock brain for building
+
+**Decision:** `BRAIN_PROVIDER=mock` answers with the organisers' keyword rules, and `VOICE_ENABLED=false` switches ElevenLabs voice off. The team's local setups use both while building; the deployed demo keeps the real model.
+**Why:** Clicking through the app was spending ElevenLabs credits we need for evaluation and judging.
+**Alternatives considered:** Recorded answers per test case (only covers the dataset's messages, not what people type).
+
+## 2026-11-07: Microphone through ElevenLabs instead of the browser
+
+**Decision:** When voice is on, the browser records and our backend transcribes with ElevenLabs; otherwise it falls back to the browser's speech recognition.
+**Why:** In Chrome the browser's recognition sends the audio to Google, and Firefox has none. Our own path keeps the audio with our processor and works everywhere.
+
+## 2026-11-07: Optional customer accounts with email and password
+
+**Decision:** Customers can sign up and log in with an email and password, but nothing requires it. Accounts live in MongoDB (`users`), passwords are hashed with Django's default hasher and checked against Django's password rules, and login sets a signed, HttpOnly, SameSite=Strict cookie. Signed-in customers get an account page with their recent checks and handoff status, and can delete their account and its conversations at any time. Five wrong passwords lock an account for 15 minutes.
+**Why:** Someone who has just been scammed should get help immediately, not meet a sign-up wall, and judges should be able to try the demo with no friction. An account adds follow-up value (handoff status) while storing as little as possible, which fits the privacy criterion. In production the operator's own customer login would take its place.
+**Alternatives considered:** Required accounts (friction for scared users), Google sign-in (needs an OAuth consent screen and sends login data to another company), and a third-party auth service (more setup, more data processors).
+
 ## 2026-11-07: Host the demo on Google Cloud Run in Finland
 
 **Decision:** Two Cloud Run services (Django API and Next.js site) in europe-north1, images built by Cloud Build, keys in Secret Manager, sessions in a free MongoDB Atlas cluster. One script, `make deploy`, does it all (see `docs/deploy.md`).

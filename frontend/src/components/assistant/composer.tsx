@@ -180,7 +180,11 @@ export function Composer({
           </Button>
         </div>
       </div>
-      <VoiceStatus listening={speech.listening} error={speech.error} />
+      <VoiceStatus
+        listening={speech.listening}
+        transcribing={speech.transcribing}
+        error={speech.error}
+      />
       {error && (
         <p
           id={`${id}-error`}

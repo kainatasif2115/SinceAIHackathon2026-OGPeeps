@@ -1,17 +1,19 @@
 import logging
 import os
 import secrets
+from datetime import UTC, datetime
 
 from django.http import HttpResponse
 from ninja import File, Form, NinjaAPI, Schema, Status
 from ninja.errors import HttpError
 from ninja.files import UploadedFile
 
-from api import agent_auth as agent_auth_mod
 from api import (
+    accounts,
     campaigns,
     cases,
     db,
+    limits,
     presenter,
     redteam,
     results,
@@ -20,16 +22,22 @@ from api import (
     twins,
     voice,
 )
+from api import agent_auth as agent_auth_mod
+from api.accounts import customer_auth
 from api.agent_auth import agent_auth
 from api.schemas import (
+    AccountOut,
     AgentLoginIn,
     AgentOut,
     ConsentIn,
+    ConversationOut,
     HandoffOut,
+    LoginIn,
     RedTeamIn,
     ReplyIn,
     ScenarioOut,
     SessionOut,
+    SignUpIn,
     SpeakIn,
     StartIn,
     TicketOut,
@@ -79,6 +87,8 @@ def health(request):
 
 
 def _brain_configured() -> bool:
+    if brain.provider() == "mock":
+        return True
     if brain.provider() == "elevenlabs":
         return bool(os.environ.get("ELEVENLABS_API_KEY") and os.environ.get("ELEVENLABS_AGENT_ID"))
     return bool(os.environ.get("ANTHROPIC_API_KEY"))
@@ -96,10 +106,13 @@ def start_session(request, body: StartIn):
     conv = Conversation(case=case)
     conv.add_images([image.model_dump() for image in body.images], turn=0)
     session_id = sessions.new_id()
+    doc = {"scenario_id": body.scenario_id, "started_at": datetime.now(UTC)}
+    if user := accounts.current_user(request):
+        doc["user_id"] = user["_id"]  # so it shows on the account page
     # Only the typed message is fingerprinted (screenshots are not), and the note
     # is informational: it never changes the assistant's advice.
     campaign = campaigns.check_and_record(body.message, body.language, body.audience)
-    return {**_advance(session_id, conv, {"scenario_id": body.scenario_id}), "campaign": campaign}
+    return {**_advance(request, session_id, conv, doc), "campaign": campaign}
 
 
 @api.post("/sessions/{session_id}/reply", response=SessionOut)
@@ -109,7 +122,7 @@ def reply(request, session_id: str, body: ReplyIn):
     sessions.add_link_check(conv.case, body.text)
     text = body.text.strip() or SCREENSHOT_ONLY[conv.case["language"]]
     conv.record_answer(text, [image.model_dump() for image in body.images])
-    return _advance(session_id, conv, doc)
+    return _advance(request, session_id, conv, doc)
 
 
 @api.post("/sessions/{session_id}/consent", response=SessionOut)
@@ -117,7 +130,7 @@ def consent(request, session_id: str, body: ConsentIn):
     conv, doc = _load(session_id)
     pending = _require_pending(doc, "consent_request")
     conv.record_consent(pending["fields"], body.granted)
-    return _advance(session_id, conv, doc)
+    return _advance(request, session_id, conv, doc)
 
 
 @api.post("/sessions/{session_id}/handoff", response=HandoffOut)
@@ -139,6 +152,88 @@ def delete_session(request, session_id: str):
     return Status(204, None)
 
 
+# Optional customer accounts (api/accounts.py). The assistant works without one.
+
+
+def _sign_in(request, response: HttpResponse, user: dict) -> dict:
+    response.set_cookie(
+        accounts.COOKIE,
+        accounts.issue_token(user),
+        max_age=accounts.MAX_AGE,
+        httponly=True,
+        samesite="Strict",
+        secure=request.is_secure(),
+    )
+    return accounts.public(user)
+
+
+@api.post("/account/signup", response=AccountOut)
+def account_signup(request, response: HttpResponse, body: SignUpIn):
+    try:
+        user = accounts.create(body.email, body.name, body.password)
+    except accounts.SignUpError as err:
+        raise HttpError(400, str(err)) from err
+    return _sign_in(request, response, user)
+
+
+@api.post("/account/login", response=AccountOut)
+def account_login(request, response: HttpResponse, body: LoginIn):
+    try:
+        user = accounts.authenticate(body.email, body.password)
+    except accounts.LockedOut as err:
+        raise HttpError(429, "Too many wrong passwords. Try again in 15 minutes.") from err
+    if not user:
+        raise HttpError(401, "Wrong email or password.")
+    return _sign_in(request, response, user)
+
+
+@api.post("/account/logout", response={204: None})
+def account_logout(request, response: HttpResponse):
+    response.delete_cookie(accounts.COOKIE, samesite="Strict")
+    return Status(204, None)
+
+
+@api.get("/account/me", response=AccountOut, auth=customer_auth)
+def account_me(request):
+    return accounts.public(request.auth)
+
+
+@api.get("/account/conversations", response=list[ConversationOut], auth=customer_auth)
+def account_conversations(request):
+    docs = sessions.for_user(request.auth["_id"])
+    status = tickets.statuses([d["handoff_reference"] for d in docs if d.get("handoff_reference")])
+    out = []
+    for d in docs:
+        case = d["conversation"]["case"]
+        final = d.get("final")
+        reference = d.get("handoff_reference")
+        out.append(
+            {
+                "session_id": d["_id"],
+                "title": sessions.excerpt(case["opening_message"]),
+                "language": case["language"],
+                "started_at": d.get("started_at") or d["updated_at"],
+                "expires_at": d["expires_at"],
+                "state": "answered" if final else "in_progress",
+                "risk_level": final["risk_level"] if final else None,
+                "action_label": presenter.answer(final, "en")["action_label"] if final else None,
+                "handoff_reference": reference,
+                "handoff_status": status.get(reference) if reference else None,
+            }
+        )
+    return out
+
+
+@api.delete("/account", response={204: None}, auth=customer_auth)
+def account_delete(request, response: HttpResponse):
+    """Deletes the account and its conversations now. Handoff tickets keep their own
+    copy for the support agent and expire after 24 hours like everything else."""
+    sessions.delete_for_user(request.auth["_id"])
+    accounts.delete(request.auth["_id"])
+    response.delete_cookie(accounts.COOKIE, samesite="Strict")
+    return Status(204, None)
+
+
 # Support-agent console. The prototype has one demo staff account (api/agent_auth.py);
 # in production this sits behind DNA's staff single sign-on.
 
@@ -147,6 +242,8 @@ def delete_session(request, session_id: str):
 def red_team(request, body: RedTeamIn):
     """ "Try to trick it": runs an attack through the real pipeline and reports what
     the safety checker caught. Public, like the chat itself."""
+    if not limits.allow(request):
+        raise HttpError(429, "Too many tries for now. Please come back in an hour.")
     return redteam.attack(body.message, body.language, body.audience)
 
 
@@ -236,6 +333,8 @@ def transcribe(request, audio: File[UploadedFile], language: Form[str] = ""):
     """Microphone recording -> text, so people can speak instead of type."""
     if not voice.is_configured():
         raise HttpError(503, "Voice input is not available right now.")
+    if not limits.allow(request):
+        raise HttpError(429, "Voice input is busy. Please try again later.")
     if audio.size > MAX_AUDIO_BYTES:
         raise HttpError(413, "Recording is too long.")
     try:
@@ -251,6 +350,8 @@ def speak(request, body: SpeakIn):
     """Text -> speech (MP3), for "read it aloud"."""
     if not voice.is_configured():
         raise HttpError(503, "Reading aloud is not available right now.")
+    if not limits.allow(request):
+        raise HttpError(429, "Reading aloud is busy. Please try again later.")
     try:
         audio = voice.speak(body.text, body.language)
     except Exception as err:
@@ -274,16 +375,19 @@ def _require_pending(doc: dict, kind: str) -> dict:
 
 
 def _extra(doc: dict) -> dict:
-    keep = ("scenario_id", "pending", "final", "handoff_reference")
+    keep = ("scenario_id", "pending", "final", "handoff_reference", "user_id", "started_at")
     return {k: doc[k] for k in keep if k in doc}
 
 
-def _advance(session_id: str, conv: Conversation, doc: dict) -> dict:
+def _advance(request, session_id: str, conv: Conversation, doc: dict) -> dict:
     try:
+        if not limits.allow(request):
+            raise BrainUnavailable("usage limit reached")
         raw = conv.next_turn()
     except BrainUnavailable as err:
         # The assistant must never leave someone without advice: give the safe generic
-        # answer with a human handoff, and log why.
+        # answer with a human handoff, and log why. This also covers the usage limits
+        # (api/limits.py), so running out of budget costs no AI credits.
         log.warning("Brain unavailable for session %s: %s", session_id, err)
         answer = engine.fallback_answer(conv.case)
         raw = {
