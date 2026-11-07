@@ -8,7 +8,7 @@ A prototype assistant that helps consumers and small businesses who have run int
 
 **What it does:**
 - A DNA-style homepage (prototype) with the assistant in a slide-out chat panel. It's also available on its own at `/assistant`.
-- Users describe what happened by typing, **speaking** (voice input in Finnish, Swedish or English), or attaching up to three **screenshots** of the message.
+- Users describe what happened by typing, **speaking** (voice input in Finnish, Swedish or English), or attaching up to three **screenshots** of the message. Any answer can be **read aloud** with an ElevenLabs voice.
 - The assistant asks at most a couple of questions, asks permission before looking at personal data, and gives one clear next step with steps, sources and a human handoff when needed.
 - In Finnish, English or Swedish, for consumers and small businesses.
 

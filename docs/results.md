@@ -21,7 +21,7 @@ It proposes a question, a consent request or a final answer. A deterministic che
 - recognisable steps;
 - the "riskier branch" rule for card, payment and app questions.
 
-Users can type, speak (voice input through the browser's speech recognition, in Finnish, Swedish or English) or attach up to three screenshots of the message. Screenshots go to the model through ElevenLabs as untrusted evidence. The backend also has ElevenLabs speech-to-text and text-to-speech endpoints, ready for a "read the advice aloud" button.
+Users can type, speak (voice input through the browser's speech recognition, in Finnish, Swedish or English) or attach up to three screenshots of the message. Screenshots go to the model through ElevenLabs as untrusted evidence. Every assistant message has **Copy** and **Read aloud**; read-aloud uses ElevenLabs text-to-speech in the user's language.
 
 The same brain powers the batch predictions, the simulated-user bot, and the Django + Ninja chat API behind the Next.js demo. Details: [`architecture.md`](architecture.md).
 

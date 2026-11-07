@@ -116,6 +116,10 @@ Chat-app style: **one rounded card** (16px) holds the text area and a toolbar un
 - The button is hidden in browsers without speech recognition (e.g. Firefox).
 - Errors (permission denied, nothing heard) show a plain message under the box.
 
+### Copy and read aloud
+
+Every assistant message, including questions and the answer card, has two small icon buttons underneath: **Copy** (with a check mark when done) and **Read aloud**. Read aloud uses the backend's ElevenLabs voice in the conversation's language; if that isn't available, it falls back to the browser's built-in speech. While playing, the button becomes **Stop**.
+
 ### Screenshots
 
 - Up to three per message, by picking, pasting or dropping.

@@ -15,7 +15,7 @@ A deterministic **safety checker** then corrects or blocks the answer before any
 - a **bot** for the organisers' simulated user;
 - a **Django + Ninja chat API** behind the **Next.js frontend**: a DNA-style homepage (prototype) with the assistant in a slide-out chat panel, plus the assistant on its own at `/assistant`.
 
-Users can type, **speak** (voice input) or attach up to three **screenshots** of the message that worries them. Conversations, including screenshots, are stored in **MongoDB** and deleted automatically after 24 hours.
+Users can type, **speak** (voice input), attach up to three **screenshots**, and have any answer **read aloud** (ElevenLabs voice) of the message that worries them. Conversations, including screenshots, are stored in **MongoDB** and deleted automatically after 24 hours.
 
 ```
 user ─▶ Next.js page ─/api─▶ Django + Ninja API ─▶ engine ─▶ brain ─▶ ElevenLabs agent ─▶ Claude Sonnet
@@ -39,7 +39,7 @@ sim:    simset/sim/run_conversation.py ⇄ scripts/sim_bot.py ─▶ engine.Conv
 | API | `backend/api/` | Django + Django Ninja. `POST /api/sessions`, `/reply`, `/consent`, `/handoff`, `GET /api/scenarios`, `/health`. Interactive docs at `/api/docs`. |
 | Policy prompt | `backend/assistant/prompt.py` | How to decide (risk levels, benign look-alikes, decisive questions, escalation targets, consent, special cases) and how to write the answer. It also includes the organisers' vocabularies and all guidance passages. About 13k tokens, cached. |
 | Brain | `backend/assistant/brain.py` | One model call per step. By default Claude Sonnet 5.5 runs through an ElevenLabs agent in text-only mode (`elevenlabs_llm.py`): the agent holds the policy prompt, and we parse its JSON reply with Pydantic, retrying once if it's invalid. Screenshots are uploaded to the conversation and sent as one multimodal message. Alternatively the Anthropic API with structured outputs. |
-| Voice API | `backend/api/voice.py` | ElevenLabs speech-to-text (`POST /api/voice/transcribe`, multipart `audio` + `language`) and text-to-speech (`POST /api/voice/speak`, JSON `{text, language}` → MP3), tested in Finnish. The key stays on the backend. Not used by the UI yet: the microphone uses the browser's own recognition (above). Switching it to this endpoint would add Firefox support and better Finnish accuracy, and "read the advice aloud" could use the second endpoint. |
+| Voice API | `backend/api/voice.py` | ElevenLabs text-to-speech (`POST /api/voice/speak`, JSON `{text, language}` → MP3) powers **"Read aloud"** under every assistant message and on the answer card, with the browser's own voice as a fallback. ElevenLabs speech-to-text (`POST /api/voice/transcribe`) is ready too; the microphone currently uses the browser's recognition. Both are tested in Finnish, and the key stays on the backend. |
 | Checker | `backend/assistant/checker.py` | Deterministic rules applied to every answer (see below). |
 | Engine | `backend/assistant/engine.py` | Single-turn answers and multi-turn conversations. Retries once if the answer contains unsafe wording. Gives a safe fallback answer if Claude is unavailable. |
 | Step phrasings | `backend/scripts/build_step_phrases.py` → `assistant/data/step_phrases.json` | Short Finnish and English example sentences for each of the 38 steps, mined from the dev reference answers. They help the advice use wording the evaluator recognises. |
