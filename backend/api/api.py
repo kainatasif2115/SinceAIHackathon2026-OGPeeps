@@ -8,13 +8,25 @@ from ninja.errors import HttpError
 from ninja.files import UploadedFile
 
 from api import agent_auth as agent_auth_mod
-from api import campaigns, cases, db, presenter, results, sessions, tickets, twins, voice
+from api import (
+    campaigns,
+    cases,
+    db,
+    presenter,
+    redteam,
+    results,
+    sessions,
+    tickets,
+    twins,
+    voice,
+)
 from api.agent_auth import agent_auth
 from api.schemas import (
     AgentLoginIn,
     AgentOut,
     ConsentIn,
     HandoffOut,
+    RedTeamIn,
     ReplyIn,
     ScenarioOut,
     SessionOut,
@@ -129,6 +141,13 @@ def delete_session(request, session_id: str):
 
 # Support-agent console. The prototype has one demo staff account (api/agent_auth.py);
 # in production this sits behind DNA's staff single sign-on.
+
+
+@api.post("/redteam")
+def red_team(request, body: RedTeamIn):
+    """ "Try to trick it": runs an attack through the real pipeline and reports what
+    the safety checker caught. Public, like the chat itself."""
+    return redteam.attack(body.message, body.language, body.audience)
 
 
 @api.post("/agent/login", response=AgentOut)

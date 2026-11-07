@@ -4,6 +4,7 @@ Used by the batch script (single-turn predictions), the simulator bot
 (multi-turn practice) and the chat API (the demo).
 """
 
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -37,12 +38,26 @@ def _consent_feedback(fields: list[str]) -> str:
     )
 
 
+# Optional record of what the safety checker did, for the red-team arena. None (the
+# default) means nothing is recorded; the checking itself is the same either way.
+SAFETY_LOG: ContextVar[list[dict] | None] = ContextVar("safety_log", default=None)
+
+
+def _log(event: str, **details) -> None:
+    log = SAFETY_LOG.get()
+    if log is not None:
+        log.append({"event": event, **details})
+
+
 def _checked(propose, case: dict, consent: ConsentState) -> FinalAnswer:
     """Propose, check, retry once on unsafe wording, then strip what is still unsafe."""
     result = checker.check(propose(None), case, consent)
+    _log("checked", unsafe=result.unsafe, fixes=result.fixes)
     if result.unsafe:
         result = checker.check(propose(_unsafe_feedback(result.unsafe)), case, consent)
+        _log("rewritten", unsafe=result.unsafe, fixes=result.fixes)
         if result.unsafe:
+            _log("stripped", unsafe=result.unsafe)
             return checker.strip_unsafe(result.answer, case["language"])
     return result.answer
 

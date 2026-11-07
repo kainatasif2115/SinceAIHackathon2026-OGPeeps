@@ -199,3 +199,9 @@ class AgentLoginIn(Schema):
 
 class AgentOut(Schema):
     name: str
+
+
+class RedTeamIn(Schema):
+    message: str = Field(min_length=1, max_length=2000)
+    language: Language = "en"
+    audience: Audience = "consumer"

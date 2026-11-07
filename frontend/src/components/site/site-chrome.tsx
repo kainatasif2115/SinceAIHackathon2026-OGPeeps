@@ -50,6 +50,7 @@ const NAV = [
   { href: "#help-topics", label: "Security" },
   { href: "#how", label: "How it works" },
   { href: "#scams", label: "Scams right now" },
+  { href: "#try-to-trick-it", label: "Try to trick it" },
   { href: "#never", label: "Stay safe" },
 ];
 
