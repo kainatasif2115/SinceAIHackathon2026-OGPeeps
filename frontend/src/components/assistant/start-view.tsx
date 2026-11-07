@@ -1,13 +1,17 @@
 "use client";
 
-import { LockKeyhole, X } from "lucide-react";
+import { ArrowRight, LockKeyhole, X } from "lucide-react";
 import type { Audience, Language, Scenario } from "@/lib/api";
 import type { ImageAttachment } from "@/lib/media";
 import { Composer } from "./composer";
 import { useT } from "./i18n-context";
 import { ScenarioList, type ScenariosState } from "./scenario-list";
 
+/** A help topic picked on the homepage, with example messages to start from. */
+export type TopicSuggestions = { title: string; examples: string[] };
+
 type Props = {
+  topic?: TopicSuggestions | null;
   /** "Talk instead" button for hands-free mode, if available. */
   talkButton?: React.ReactNode;
   draft: string;
@@ -22,6 +26,7 @@ type Props = {
 };
 
 export function StartView({
+  topic,
   talkButton,
   draft,
   onDraftChange,
@@ -60,6 +65,31 @@ export function StartView({
               <span className="sr-only sm:not-sr-only">{t.clearExample}</span>
             </button>
           </p>
+        )}
+
+        {topic && (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-semibold">
+              {topic.title}: start with one of these, or write your own
+            </p>
+            <ul className="flex flex-col gap-2">
+              {topic.examples.map((example) => (
+                <li key={example}>
+                  <button
+                    type="button"
+                    onClick={() => onSubmit(example, [])}
+                    className="group border-border hover:border-brand hover:bg-brand-soft/40 flex w-full items-center gap-3 rounded-2xl rounded-br-md border px-4 py-3 text-left text-sm transition-colors duration-150"
+                  >
+                    <span className="flex-1">{example}</span>
+                    <ArrowRight
+                      aria-hidden
+                      className="text-muted-foreground group-hover:text-brand size-4 shrink-0 transition-[color,transform] duration-150 group-hover:translate-x-0.5"
+                    />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
         <Composer

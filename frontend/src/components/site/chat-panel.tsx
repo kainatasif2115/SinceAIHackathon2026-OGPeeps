@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type Ref } from "react";
 import { MessageCircle } from "lucide-react";
 import type { Audience } from "@/lib/api";
 import { Assistant, type InitialRequest } from "@/components/assistant/assistant";
+import type { TopicSuggestions } from "@/components/assistant/start-view";
 import { cn } from "@/lib/utils";
 
 type PanelProps = {
@@ -12,6 +13,7 @@ type PanelProps = {
   assistantKey: number;
   initial: InitialRequest | null;
   startInVoice: boolean;
+  topic: TopicSuggestions | null;
   audience: Audience;
 };
 
@@ -27,6 +29,7 @@ export function ChatPanel({
   assistantKey,
   initial,
   startInVoice,
+  topic,
   audience,
 }: PanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -86,6 +89,7 @@ export function ChatPanel({
             variant="panel"
             initial={initial}
             startInVoice={startInVoice}
+            topic={topic}
             defaultAudience={audience}
             expanded={expanded}
             onToggleExpanded={() => setExpanded((value) => !value)}

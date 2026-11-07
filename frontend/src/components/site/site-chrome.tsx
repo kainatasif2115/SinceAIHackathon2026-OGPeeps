@@ -49,7 +49,6 @@ export function TopStrip({
 const NAV = [
   { href: "#help-topics", label: "Get help" },
   { href: "#how", label: "How it works" },
-  { href: "#scams", label: "Scams now" },
   { href: "#try-to-trick-it", label: "Try to fool it" },
   { href: "#never", label: "Stay safe" },
 ];

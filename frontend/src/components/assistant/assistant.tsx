@@ -35,7 +35,7 @@ import { ShareAdvice } from "./share-advice";
 import { AssistantTurn, QuestionMessage, UserMessage } from "./messages";
 import type { ScenariosState } from "./scenario-list";
 import { ServiceStatus } from "./service-status";
-import { StartView } from "./start-view";
+import { StartView, type TopicSuggestions } from "./start-view";
 import { ThinkingStatus } from "./thinking-status";
 
 type Entry =
@@ -121,6 +121,8 @@ type Props = {
   defaultAudience?: Audience;
   /** Opens straight into hands-free talking (the homepage's "Talk instead"). */
   startInVoice?: boolean;
+  /** Example messages for a help topic picked on the homepage. */
+  topic?: TopicSuggestions | null;
   onClose?: () => void;
   /** Drawer is covering the viewport. Ignored on the full-screen page. */
   expanded?: boolean;
@@ -132,6 +134,7 @@ export function Assistant({
   initial = null,
   defaultAudience = "consumer",
   startInVoice = false,
+  topic = null,
   onClose,
   expanded = false,
   onToggleExpanded,
@@ -372,6 +375,7 @@ export function Assistant({
     <>
       {!inConversation ? (
         <StartView
+          topic={topic}
           talkButton={talkButton}
           draft={draft}
           onDraftChange={handleDraftChange}

@@ -5,13 +5,14 @@ import { getScenarios, type Audience, type Scenario } from "@/lib/api";
 import type { InitialRequest } from "@/components/assistant/assistant";
 import type { ImageAttachment } from "@/lib/media";
 import type { ScenariosState } from "@/components/assistant/scenario-list";
+import type { TopicSuggestions } from "@/components/assistant/start-view";
 import { ChatLauncher, ChatPanel } from "./chat-panel";
 import { Anatomy } from "./anatomy";
 import { Hero } from "./hero";
 import { ScrollProgress } from "./motion";
 import { Proof } from "./proof";
 import { RedTeam } from "./red-team";
-import { BeforeAfter, HelpTopics, ScamsNow, TrustBand } from "./sections";
+import { BeforeAfter, HelpTopics, TrustBand } from "./sections";
 import { PanicToPlan } from "./panic-to-plan";
 import { RealOrScam, ScrollStatement } from "./scroll-stories";
 import { SiteFooter, SiteHeader, TopStrip } from "./site-chrome";
@@ -30,6 +31,7 @@ export function DnaHome() {
     key: number;
     initial: InitialRequest | null;
     voice?: boolean;
+    topic?: TopicSuggestions;
   }>({
     key: 0,
     initial: null,
@@ -62,6 +64,12 @@ export function DnaHome() {
   /** "Talk instead": a fresh conversation that opens straight into hands-free mode. */
   function talk() {
     setRequest((prev) => ({ key: prev.key + 1, initial: null, voice: true }));
+    setPanelOpen(true);
+  }
+
+  /** A help topic: a fresh conversation that offers example messages for it. */
+  function openTopic(topic: TopicSuggestions) {
+    setRequest((prev) => ({ key: prev.key + 1, initial: null, topic }));
     setPanelOpen(true);
   }
 
@@ -103,10 +111,9 @@ export function DnaHome() {
         <BeforeAfter />
         <Anatomy />
         <RealOrScam />
-        <HelpTopics audience={audience} onOpen={openPanel} />
+        <HelpTopics audience={audience} onOpen={openTopic} />
         <PanicToPlan />
         <Proof />
-        <ScamsNow audience={audience} scenarios={scenarios} onPick={askScenario} />
         <RedTeam />
         <TrustBand onOpen={openPanel} />
       </main>
@@ -120,6 +127,7 @@ export function DnaHome() {
         assistantKey={request.key}
         initial={request.initial}
         startInVoice={request.voice ?? false}
+        topic={request.topic ?? null}
         audience={audience}
       />
     </div>
