@@ -59,9 +59,16 @@ const finalTurnSchema = z.object({
   answer: answerSchema,
 });
 
+/** One assistant turn: a question, a permission card or the final answer. */
+export const turnSchema = z.discriminatedUnion("type", [
+  questionTurnSchema,
+  consentTurnSchema,
+  finalTurnSchema,
+]);
+
 const sessionSchema = z.object({
   session_id: z.string(),
-  turn: z.discriminatedUnion("type", [questionTurnSchema, consentTurnSchema, finalTurnSchema]),
+  turn: turnSchema,
   turns_used: z.number(),
   max_turns: z.number(),
   /** "You're not the only one": set when enough others asked about something similar. */

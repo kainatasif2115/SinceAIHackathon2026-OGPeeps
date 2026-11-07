@@ -31,6 +31,7 @@ from api.schemas import (
     AgentLoginIn,
     AgentOut,
     ConsentIn,
+    ConversationDetailOut,
     ConversationOut,
     HandoffOut,
     InviteIn,
@@ -208,6 +209,41 @@ def account_me(request):
 @api.get("/account/conversations", response=list[ConversationOut], auth=customer_auth)
 def account_conversations(request):
     return _summaries(sessions.for_user(request.auth["_id"]))
+
+
+@api.get("/account/conversations/{session_id}", response=ConversationDetailOut, auth=customer_auth)
+def account_conversation(request, session_id: str):
+    """One of your own conversations, to reopen it from the history. Finished ones are
+    shown as they ended; one waiting for your answer can be continued."""
+    loaded = sessions.load(session_id)
+    if not loaded or loaded[1].get("user_id") != request.auth["_id"]:
+        raise HttpError(404, "Conversation not found or expired.")
+    conv, doc = loaded
+    language = conv.case["language"]
+    messages = [{"role": "user", "text": conv.case["opening_message"]}]
+    for i, entry in enumerate(conv.history):
+        if entry["role"] == "user":
+            messages.append({"role": "user", "text": entry["text"]})
+        elif entry["role"] == "assistant":
+            choice = None
+            if entry["type"] == "consent_request":
+                after = conv.history[i + 1] if i + 1 < len(conv.history) else None
+                choice = after["granted"] if after and after["role"] == "consent" else None
+            messages.append(
+                {"role": "assistant", "turn": presenter.turn(entry, language), "choice": choice}
+            )
+    if doc.get("final"):
+        final = {"type": "final", "answer": doc["final"]}
+        messages.append({"role": "assistant", "turn": presenter.turn(final, language)})
+    return {
+        "session_id": session_id,
+        "language": language,
+        "audience": conv.case["audience"],
+        "turns_used": conv.turns_used,
+        "max_turns": conv.max_turns,
+        "updated_at": doc["updated_at"],
+        "messages": messages,
+    }
 
 
 @api.delete("/account", response={204: None}, auth=customer_auth)

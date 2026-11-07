@@ -13,11 +13,17 @@ import { useRouter } from "next/navigation";
 import { getAccount, logOut, type Account } from "@/lib/account-api";
 
 type AccountState =
-  { status: "loading" } | { status: "error" } | { status: "ready"; account: Account };
+  | { status: "loading" }
+  | { status: "error" }
+  | { status: "ready"; account: Account; signedOut: boolean };
 
 type AccountContextValue = {
   account: Account;
+  /** The session ended while the dashboard was open (logout elsewhere, expiry). */
+  signedOut: boolean;
   reload: () => void;
+  /** Re-checks the session, e.g. after the service answered "not signed in". */
+  checkSession: () => void;
   signOut: () => Promise<void>;
 };
 
@@ -49,13 +55,44 @@ export function AccountProvider({
   const reload = useCallback(() => {
     getAccount()
       .then((account) =>
-        account ? setState({ status: "ready", account }) : router.replace("/login"),
+        account
+          ? setState({ status: "ready", account, signedOut: false })
+          : router.replace("/login"),
       )
       .catch(() => setState({ status: "error" }));
   }, [router]);
 
   useLayoutEffect(() => () => setState({ status: "loading" }), []);
   useEffect(reload, [reload]);
+
+  // While the dashboard is open the session can end (logout in another tab, expiry) or
+  // change to someone else. Don't pull the page away mid-chat: flag it, so the dashboard
+  // can say new chats aren't saved. A different person means a fresh page.
+  const checkSession = useCallback(() => {
+    getAccount()
+      .then((now) =>
+        setState((prev) => {
+          if (prev.status !== "ready") return prev;
+          if (!now) return { ...prev, signedOut: true };
+          if (now.email !== prev.account.email) {
+            window.location.reload();
+            return prev;
+          }
+          return { status: "ready", account: now, signedOut: false };
+        }),
+      )
+      .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    const onVisible = () => document.visibilityState === "visible" && checkSession();
+    window.addEventListener("focus", checkSession);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", checkSession);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [checkSession]);
 
   const signOut = useCallback(async () => {
     await logOut().catch(() => undefined);
@@ -64,6 +101,16 @@ export function AccountProvider({
 
   if (state.status !== "ready") return fallback(state.status);
   return (
-    <AccountContext value={{ account: state.account, reload, signOut }}>{children}</AccountContext>
+    <AccountContext
+      value={{
+        account: state.account,
+        signedOut: state.signedOut,
+        reload,
+        checkSession,
+        signOut,
+      }}
+    >
+      {children}
+    </AccountContext>
   );
 }

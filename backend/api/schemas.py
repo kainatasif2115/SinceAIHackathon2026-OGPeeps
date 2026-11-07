@@ -268,3 +268,21 @@ class ConversationOut(Schema):
 
 class TeamConversationOut(ConversationOut):
     author: str
+
+
+class ConversationMessage(Schema):
+    role: Literal["user", "assistant"]
+    text: str | None = None
+    turn: QuestionTurn | ConsentTurn | FinalTurn | None = None
+    # For a permission card: what the user chose (None while still waiting).
+    choice: bool | None = None
+
+
+class ConversationDetailOut(Schema):
+    session_id: str
+    language: Language
+    audience: Audience
+    turns_used: int
+    max_turns: int
+    updated_at: datetime
+    messages: list[ConversationMessage]

@@ -3,7 +3,7 @@ from django.test import Client
 
 from api import accounts, sessions
 from assistant import brain
-from tests.fakes import Script, done, final
+from tests.fakes import Script, ask, ask_consent, done, final
 
 PASSWORD = "kettu-ilves-2026"
 
@@ -134,3 +134,62 @@ def test_deleting_the_account_removes_it_and_its_conversations(client, monkeypat
     assert sessions.load(chat["session_id"]) is None
     assert sessions.load(anonymous["session_id"]) is not None
     assert login(Client()).status_code == 401
+
+
+def test_a_past_conversation_can_be_reopened_in_order(client, monkeypatch):
+    signup(client)
+    script = Script(ask("Did you open the link?", ["link_details"]), done(final()))
+    monkeypatch.setattr(brain, "decide_multi_turn", script)
+    chat = client.post(
+        "/api/sessions",
+        {"audience": "consumer", "language": "en", "message": "Parcel fee text"},
+        content_type="application/json",
+    ).json()
+    client.post(
+        f"/api/sessions/{chat['session_id']}/reply",
+        {"text": "No, I didn't."},
+        content_type="application/json",
+    )
+
+    detail = client.get(f"/api/account/conversations/{chat['session_id']}").json()
+
+    assert [
+        (m["role"], (m["turn"] or {}).get("type") or m["text"]) for m in detail["messages"]
+    ] == [
+        ("user", "Parcel fee text"),
+        ("assistant", "question"),
+        ("user", "No, I didn't."),
+        ("assistant", "final"),
+    ]
+    assert detail["language"] == "en"
+
+
+def test_a_permission_choice_is_remembered(client, monkeypatch):
+    signup(client)
+    gated = sessions._demo_customer("consumer")["consent"]["requires_consent"][0]
+    monkeypatch.setattr(brain, "decide_multi_turn", Script(ask_consent([gated]), done(final())))
+    chat = client.post(
+        "/api/sessions",
+        {"audience": "consumer", "language": "en", "message": "My eSIM moved"},
+        content_type="application/json",
+    ).json()
+    client.post(
+        f"/api/sessions/{chat['session_id']}/consent",
+        {"granted": False},
+        content_type="application/json",
+    )
+
+    detail = client.get(f"/api/account/conversations/{chat['session_id']}").json()
+
+    card = next(m for m in detail["messages"] if (m["turn"] or {}).get("type") == "consent_request")
+    assert card["choice"] is False
+
+
+def test_nobody_else_can_open_your_conversation(client, monkeypatch):
+    signup(client)
+    chat = start_chat(client, monkeypatch)
+    stranger = Client()
+    signup(stranger, email="eero@example.fi")
+
+    assert stranger.get(f"/api/account/conversations/{chat['session_id']}").status_code == 404
+    assert Client().get(f"/api/account/conversations/{chat['session_id']}").status_code == 401

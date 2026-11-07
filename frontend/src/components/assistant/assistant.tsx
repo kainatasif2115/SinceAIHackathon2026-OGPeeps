@@ -17,6 +17,7 @@ import {
   type Scenario,
   type Session,
 } from "@/lib/api";
+import type { ConversationDetail } from "@/lib/account-api";
 import { getDictionary, type Dictionary } from "@/lib/i18n";
 import type { ImageAttachment } from "@/lib/media";
 import { parseYesNo } from "@/lib/voice";
@@ -59,6 +60,19 @@ function userEntry(text: string, images: ImageAttachment[]): Entry {
 
 const toInput = (images: ImageAttachment[]): ImageInput[] =>
   images.map(({ media_type, data }) => ({ media_type, data }));
+
+/** Rebuilds a conversation reopened from the account's history. */
+function entriesFromHistory(resume: ConversationDetail): Entry[] {
+  return resume.messages.flatMap((m): Entry[] => {
+    if (m.role === "user") return [{ id: nextId(), kind: "user", text: m.text ?? "", images: [] }];
+    const turn = m.turn;
+    if (!turn) return [];
+    if (turn.type === "question") return [{ id: nextId(), kind: "question", turn }];
+    if (turn.type === "consent_request")
+      return [{ id: nextId(), kind: "consent", turn, choice: m.choice }];
+    return [{ id: nextId(), kind: "final", answer: turn.answer }];
+  });
+}
 
 function entryFromSession(session: Session): Entry {
   const { turn } = session;
@@ -126,6 +140,10 @@ type Props = {
   /** An example case whose opening message starts in the box, ready to edit and send. */
   prefill?: Scenario | null;
   onClose?: () => void;
+  /** Reopens a conversation from the account's history instead of starting a new one. */
+  resume?: ConversationDetail | null;
+  /** Called after each reply from the service, e.g. to refresh a history list. */
+  onActivity?: (sessionId: string) => void;
   /** Drawer is covering the viewport. Ignored on the full-screen page. */
   expanded?: boolean;
   onToggleExpanded?: () => void;
@@ -139,14 +157,16 @@ export function Assistant({
   topic = null,
   prefill = null,
   onClose,
+  resume = null,
+  onActivity,
   expanded = false,
   onToggleExpanded,
 }: Props) {
   const [language, setLanguage] = useState<Language>(
-    initial?.language ?? prefill?.language ?? "en",
+    resume?.language ?? initial?.language ?? prefill?.language ?? "en",
   );
   const [audience, setAudience] = useState<Audience>(
-    initial?.audience ?? prefill?.audience ?? defaultAudience,
+    resume?.audience ?? initial?.audience ?? prefill?.audience ?? defaultAudience,
   );
   const t = getDictionary(language);
 
@@ -156,15 +176,25 @@ export function Assistant({
   const [replyDraft, setReplyDraft] = useState("");
 
   const [entries, setEntries] = useState<Entry[]>(() =>
-    initial ? [userEntry(initial.text, initial.images ?? [])] : [],
+    resume
+      ? entriesFromHistory(resume)
+      : initial
+        ? [userEntry(initial.text, initial.images ?? [])]
+        : [],
   );
-  const [session, setSession] = useState<SessionMeta | null>(null);
+  const [session, setSession] = useState<SessionMeta | null>(
+    resume
+      ? { id: resume.session_id, turnsUsed: resume.turns_used, maxTurns: resume.max_turns }
+      : null,
+  );
   const [loading, setLoading] = useState(initial !== null);
   // Guards the initial request against StrictMode running mount effects twice.
   const initialSent = useRef(false);
   const [failure, setFailure] = useState<Failure | null>(null);
   // When the last reply arrived: the service deletes a chat 24 h after its last activity.
-  const [lastTurnAt, setLastTurnAt] = useState<number | null>(null);
+  const [lastTurnAt, setLastTurnAt] = useState<number | null>(() =>
+    resume ? Date.parse(resume.updated_at) : null,
+  );
   const [deleted, setDeleted] = useState(false);
   // Campaign radar note from the first reply, if enough others asked about the same thing.
   const [campaign, setCampaign] = useState<{ others: number } | null>(null);
@@ -223,6 +253,7 @@ export function Assistant({
       setEntries((prev) => [...prev, entry]);
       if (result.campaign) setCampaign({ others: result.campaign.others });
       setLastTurnAt(currentTime());
+      onActivity?.(result.session_id);
       setAnnounce(announcement(entry, t));
     } catch (error) {
       if (gen !== generation.current) return;

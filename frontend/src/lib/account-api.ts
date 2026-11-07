@@ -4,7 +4,7 @@
  * an HttpOnly cookie set by the backend, so nothing here touches tokens.
  */
 import { z } from "zod";
-import { ApiError } from "./api";
+import { ApiError, turnSchema } from "./api";
 
 const accountSchema = z.object({
   email: z.string(),
@@ -40,7 +40,25 @@ const teamSchema = z.object({
 
 const teamConversationSchema = conversationSchema.extend({ author: z.string() });
 
+const conversationDetailSchema = z.object({
+  session_id: z.string(),
+  language: z.enum(["fi", "en", "sv"]),
+  audience: z.enum(["consumer", "small_business"]),
+  turns_used: z.number(),
+  max_turns: z.number(),
+  updated_at: z.string(),
+  messages: z.array(
+    z.object({
+      role: z.enum(["user", "assistant"]),
+      text: z.string().nullable(),
+      turn: turnSchema.nullable(),
+      choice: z.boolean().nullable(),
+    }),
+  ),
+});
+
 export type Account = z.infer<typeof accountSchema>;
+export type ConversationDetail = z.infer<typeof conversationDetailSchema>;
 export type AccountKind = Account["kind"];
 export type AccountConversation = z.infer<typeof conversationSchema>;
 export type Team = z.infer<typeof teamSchema>;
@@ -108,6 +126,14 @@ export async function getAccount(): Promise<Account | null> {
 
 export async function listConversations(): Promise<AccountConversation[]> {
   return json(await call("/api/account/conversations"), z.array(conversationSchema));
+}
+
+/** One of your conversations, to reopen it from the history. */
+export async function getConversation(sessionId: string): Promise<ConversationDetail> {
+  return json(
+    await call(`/api/account/conversations/${encodeURIComponent(sessionId)}`),
+    conversationDetailSchema,
+  );
 }
 
 export async function deleteAccount(): Promise<void> {

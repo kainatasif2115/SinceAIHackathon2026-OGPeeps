@@ -1,36 +1,33 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Building2,
-  History,
-  LoaderCircle,
-  LogOut,
-  MessageCircle,
-  Settings,
-  UserRound,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { History, LoaderCircle, Menu, MessageCircle, Settings, Users, X } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AccountProvider, useAccount } from "./account-context";
+import { ChatProvider } from "./chat-context";
 import { ChatSection } from "./chat-section";
+import { HistorySidebar } from "./history-sidebar";
+import { ProfileMenu } from "./profile-menu";
 
-type Section = { href: string; label: string; icon: LucideIcon; businessOnly?: boolean };
+type Tab = { href: string; label: string; icon: LucideIcon; businessOnly?: boolean };
 
-const SECTIONS: Section[] = [
+const TABS: Tab[] = [
   { href: "/dashboard", label: "Chat", icon: MessageCircle },
   { href: "/dashboard/checks", label: "Your checks", icon: History },
   { href: "/dashboard/team", label: "Team", icon: Users, businessOnly: true },
   { href: "/dashboard/account", label: "Account", icon: Settings },
 ];
 
-/** The signed-in app: a sidebar (a top bar on phones) and the chosen section. */
+/**
+ * The signed-in app, laid out like a chat app: a header with the sections and the
+ * profile menu, the chat history on the left (a drawer on phones), the section on the right.
+ */
 export function DashboardShell({ children }: { children: ReactNode }) {
   return (
-    <div className="theme-dna flex min-h-dvh flex-1 flex-col bg-[#fdf6fa] md:h-dvh md:flex-row">
+    <div className="theme-dna flex h-dvh flex-col overflow-hidden bg-[#fdf6fa]">
       <AccountProvider
         fallback={(state) => (
           <div className="flex flex-1 items-center justify-center">
@@ -44,13 +41,156 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           </div>
         )}
       >
-        <Sidebar />
-        <main id="main" className="flex min-h-0 min-w-0 flex-1 flex-col md:overflow-y-auto">
+        <ChatProvider>
+          <Layout>{children}</Layout>
+        </ChatProvider>
+      </AccountProvider>
+    </div>
+  );
+}
+
+function Layout({ children }: { children: ReactNode }) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Close the history drawer with Escape and whenever the section changes.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setDrawerOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [drawerOpen]);
+  const [drawerPath, setDrawerPath] = useState(pathname);
+  if (drawerPath !== pathname) {
+    setDrawerPath(pathname);
+    setDrawerOpen(false);
+  }
+
+  const { signedOut } = useAccount();
+
+  return (
+    <>
+      <Header drawerOpen={drawerOpen} onToggleDrawer={() => setDrawerOpen((v) => !v)} />
+      {signedOut && (
+        <div
+          role="alert"
+          className="border-risk-medium-line bg-risk-medium text-risk-medium-fg flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-b px-4 py-2 text-sm"
+        >
+          <span>You&apos;ve been signed out, so new chats aren&apos;t saved to your history.</span>
+          <Link href="/login" className="font-semibold underline underline-offset-4">
+            Log in again
+          </Link>
+        </div>
+      )}
+      <div className="relative flex min-h-0 flex-1">
+        <aside
+          aria-label="Chat history"
+          className="border-border hidden w-72 shrink-0 border-r bg-white md:block"
+        >
+          <HistorySidebar />
+        </aside>
+
+        {drawerOpen && (
+          <div className="absolute inset-0 z-30 flex md:hidden">
+            <aside
+              id="history-drawer"
+              aria-label="Chat history"
+              className="border-border h-full w-[min(20rem,85vw)] border-r bg-white"
+            >
+              <HistorySidebar onPick={() => setDrawerOpen(false)} />
+            </aside>
+            <button
+              type="button"
+              aria-label="Close chat history"
+              onClick={() => setDrawerOpen(false)}
+              className="flex-1 bg-black/30"
+            />
+          </div>
+        )}
+
+        <main id="main" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
           <PersistentChat />
           {children}
         </main>
-      </AccountProvider>
-    </div>
+      </div>
+    </>
+  );
+}
+
+function Header({
+  drawerOpen,
+  onToggleDrawer,
+}: {
+  drawerOpen: boolean;
+  onToggleDrawer: () => void;
+}) {
+  const { account } = useAccount();
+  const pathname = usePathname();
+  const tabs = TABS.filter((t) => !t.businessOnly || account.company);
+
+  return (
+    <header className="border-border shrink-0 border-b bg-white">
+      <div className="flex h-16 items-center gap-2 px-3 md:gap-6 md:px-5">
+        <button
+          type="button"
+          onClick={onToggleDrawer}
+          aria-expanded={drawerOpen}
+          aria-controls="history-drawer"
+          className="hover:bg-muted flex size-10 shrink-0 items-center justify-center rounded-full transition-colors duration-150 md:hidden"
+        >
+          {drawerOpen ? (
+            <X aria-hidden className="size-5" />
+          ) : (
+            <Menu aria-hidden className="size-5" />
+          )}
+          <span className="sr-only">{drawerOpen ? "Close chat history" : "Open chat history"}</span>
+        </button>
+        <Link href="/" className="flex shrink-0 items-center gap-2 rounded-sm">
+          <span className="font-heading text-brand text-2xl leading-none font-bold tracking-tight">
+            DNA
+          </span>
+          <span className="font-heading hidden text-sm font-semibold whitespace-nowrap lg:inline">
+            - Security Assistant
+          </span>
+        </Link>
+
+        <nav aria-label="Sections" className="hidden min-w-0 md:block">
+          <TabList tabs={tabs} pathname={pathname} />
+        </nav>
+
+        <div className="ml-auto">
+          <ProfileMenu />
+        </div>
+      </div>
+      <nav aria-label="Sections" className="overflow-x-auto px-2 pb-2 md:hidden">
+        <TabList tabs={tabs} pathname={pathname} />
+      </nav>
+    </header>
+  );
+}
+
+function TabList({ tabs, pathname }: { tabs: Tab[]; pathname: string }) {
+  return (
+    <ul className="flex gap-1">
+      {tabs.map((tab) => {
+        const active = pathname === tab.href;
+        return (
+          <li key={tab.href} className="shrink-0">
+            <Link
+              href={tab.href}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold whitespace-nowrap transition-colors duration-150",
+                active ? "bg-brand-soft text-accent-foreground" : "hover:bg-muted",
+              )}
+            >
+              <tab.icon aria-hidden className="size-4" />
+              {tab.label}
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -65,85 +205,5 @@ function PersistentChat() {
     <div hidden={!onChat} className="flex min-h-0 flex-1 flex-col">
       <ChatSection />
     </div>
-  );
-}
-
-function Sidebar() {
-  const { account, signOut } = useAccount();
-  const pathname = usePathname();
-  const sections = SECTIONS.filter((s) => !s.businessOnly || account.company);
-
-  return (
-    <aside className="border-border flex shrink-0 flex-col border-b bg-white md:w-64 md:border-r md:border-b-0">
-      <div className="flex items-center justify-between gap-3 px-4 pt-4 md:block md:px-5 md:pt-6">
-        <Link href="/" className="flex items-center gap-2 rounded-sm">
-          <span className="font-heading text-brand text-2xl leading-none font-bold tracking-tight">
-            DNA
-          </span>
-          <span className="font-heading text-sm font-semibold">- Security Assistant</span>
-        </Link>
-        <button
-          type="button"
-          onClick={() => void signOut()}
-          className="hover:bg-muted inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-semibold transition-colors duration-150 md:hidden"
-        >
-          <LogOut aria-hidden className="size-4" />
-          Log out
-        </button>
-      </div>
-
-      <div className="hidden px-5 pt-6 md:block">
-        <p className="truncate font-semibold">{account.name}</p>
-        <p className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-xs">
-          {account.company ? (
-            <>
-              <Building2 aria-hidden className="size-3.5 shrink-0" />
-              <span className="truncate">
-                {account.company} · {account.role === "owner" ? "owner" : "member"}
-              </span>
-            </>
-          ) : (
-            <>
-              <UserRound aria-hidden className="size-3.5 shrink-0" />
-              Private account
-            </>
-          )}
-        </p>
-      </div>
-
-      <nav aria-label="Your account" className="px-2 py-3 md:px-3 md:py-5">
-        <ul className="flex gap-1 overflow-x-auto md:flex-col">
-          {sections.map((section) => {
-            const active = pathname === section.href;
-            return (
-              <li key={section.href} className="shrink-0">
-                <Link
-                  href={section.href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "flex h-10 items-center gap-2.5 rounded-xl px-3 text-sm font-semibold whitespace-nowrap transition-colors duration-150",
-                    active ? "bg-brand-soft text-accent-foreground" : "hover:bg-muted",
-                  )}
-                >
-                  <section.icon aria-hidden className="size-4.5" />
-                  {section.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      <div className="mt-auto hidden px-3 pb-5 md:block">
-        <button
-          type="button"
-          onClick={() => void signOut()}
-          className="hover:bg-muted flex h-10 w-full items-center gap-2.5 rounded-xl px-3 text-sm font-semibold transition-colors duration-150"
-        >
-          <LogOut aria-hidden className="size-4.5" />
-          Log out
-        </button>
-      </div>
-    </aside>
   );
 }

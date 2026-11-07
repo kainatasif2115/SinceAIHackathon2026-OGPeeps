@@ -131,10 +131,12 @@ Every assistant message, including questions and the answer card, has two small 
 
 ### Dashboard (`/dashboard`, signed in)
 
-- Where login and sign-up land. A white **sidebar** (logo back to the homepage, name and account type, sections, **Log out** at the bottom) and the chosen section on the soft-pink canvas. On phones the sidebar becomes a top bar with the logo, Log out and a swipeable row of sections.
-- Sections: **Chat** (the assistant, same component as the homepage panel), **Your checks** (history and handoff status; for an owner also the team's checks), **Team** (business accounts only) and **Account** (profile, invite, log out, delete).
-- Business accounts get a **Business / Private** switch above the chat with a line saying who will see the check. Private accounts don't see it.
-- The chat lives in the dashboard frame and is only hidden in other sections, so a conversation survives moving around. The current section has `aria-current="page"`.
+Laid out like a chat app (ChatGPT, Claude):
+- **Header:** the DNA logo (back to the homepage), the sections as tabs (**Chat**, **Your checks**, **Team** for business accounts, **Account**), and a **profile button** with your initials at the right. It opens a menu with your name, email and account type, **Account settings** and **Log out**; Escape or a click outside closes it and focus returns to the button.
+- **Left sidebar: chat history.** **+ New chat**, then your chats from the last 24 hours, newest first, each with its risk icon and "not finished" if the assistant is waiting for you. Clicking one reopens it: a finished chat shows how it ended, an unfinished one can be continued. A note says chats are deleted 24 hours after the last message.
+- **Phones:** the sidebar becomes a drawer behind a ☰ button; the tabs scroll sideways under the header.
+- Business accounts get a **Business / Private** switch above a new chat, saying who will see the check.
+- The chat lives in the dashboard frame and is only hidden in other sections, so a conversation survives moving around. The page itself never scrolls; the history and the section scroll on their own.
 - `/account` redirects to `/dashboard/account`.
 
 ### Account pages (`/signup`, `/login`, `/account`)
