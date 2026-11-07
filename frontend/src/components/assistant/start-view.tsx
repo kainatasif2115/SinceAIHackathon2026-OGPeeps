@@ -70,14 +70,24 @@ export function StartView({
         {topic && (
           <div className="flex flex-col gap-2">
             <p className="text-sm font-semibold">
-              {topic.title}: start with one of these, or write your own
+              {topic.title}: pick one to edit, or write your own
             </p>
             <ul className="flex flex-col gap-2">
               {topic.examples.map((example) => (
                 <li key={example}>
                   <button
                     type="button"
-                    onClick={() => onSubmit(example, [])}
+                    onClick={(event) => {
+                      // Fill the box so the user can edit it before sending.
+                      onDraftChange(example);
+                      const textarea = event.currentTarget
+                        .closest("section")
+                        ?.querySelector("textarea");
+                      requestAnimationFrame(() => {
+                        textarea?.focus();
+                        textarea?.setSelectionRange(example.length, example.length);
+                      });
+                    }}
                     className="group border-border hover:border-brand hover:bg-brand-soft/40 flex w-full items-center gap-3 rounded-2xl rounded-br-md border px-4 py-3 text-left text-sm transition-colors duration-150"
                   >
                     <span className="flex-1">{example}</span>
