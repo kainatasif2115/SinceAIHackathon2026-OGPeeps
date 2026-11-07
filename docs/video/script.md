@@ -89,20 +89,20 @@ Speed up every wait for the AI; never speed up the answer card.
 
 ### Scene 4: All five journeys (20 s)
 
-**Show:** the public `/journeys` page. It has one tab per journey, each a saved conversation from our final run with the organisers' simulated customer. Click through the tabs, about 3 seconds each, scrolling down to the answer card each time:
+**Show:** the public `/journeys` page. It has one tab per journey, each a saved conversation from our final run with the organisers' simulated customer. Click through the tabs, about 3 seconds each, scrolling to the final answer each time:
 
-| Tab | What to land on |
-|---|---|
-| Suspicious message | the **High** answer: don't open the link, check in the bank's own app |
-| Clicked link | the **Critical** answer and the handoff |
-| Suspicious call | the question about the code, then **Critical** |
-| Breach notice | the **Critical** answer: lock the number |
-| Small business | the **High** answer: don't pay the new account |
+| Tab | Case | What it shows |
+|---|---|---|
+| Suspicious message | `DSA-D-0053` | An email says the bank ID is expiring and claims it's "verified safe". Answer: don't log in through the link; the "safe" line is part of the scam. |
+| Clicked link | `DSA-D-0079` | A voicemail app installed from a text link. Answer: flight mode now, no banking or logins on that phone. |
+| Suspicious call | `DSA-D-0028` | The code read out to a fake operator. Answer: stop the eSIM transfer, lock the number, and an operator agent takes over. |
+| Breach notice | `DSA-D-0093` | No signal and an eSIM activated on a new device. Answer: an operator agent locks the number; don't wait for the signal. |
+| Small business | `DSA-D-0032` | Five subscriptions nobody ordered, delivered to another city. Answer: contact business support now to stop the delivery. |
 
 Zoom on the passed tick on each tab.
 
 **Say:**
-> Same flow for all five journeys in the challenge. A fake bank text: high, check in your bank's app. A dodgy app already installed: critical. A stolen number: critical. And for businesses, a fake supplier invoice: don't pay. All five passed, and only the serious ones go to a person.
+> Same flow for all five journeys in the challenge. A fake bank email that swears it's safe: don't log in. A dodgy app already installed: flight mode, now. A number being stolen: lock it, don't wait. And for a business, an order nobody placed: stop the delivery. All five passed the organisers' evaluator.
 
 **Caption:** `All 5 journeys · all passed` (tick **Five journeys, both audiences**)
 
