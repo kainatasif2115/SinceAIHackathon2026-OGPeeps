@@ -4,12 +4,8 @@ import type { Severity, TicketStatus } from "@/lib/agent-api";
 type StatusStyle = {
   label: string;
   icon: typeof Inbox;
-  /** Coloured bar across the top of the column. */
-  bar: string;
-  /** Icon colour in the column header. */
-  tone: string;
-  /** Count bubble in the column header. */
-  badge: string;
+  /** Soft coloured pill for the column header: background, text and outline. */
+  pill: string;
   /** Small dot, e.g. next to the status select. */
   dot: string;
 };
@@ -19,33 +15,25 @@ export const STATUS_META: Record<TicketStatus, StatusStyle> = {
   backlog: {
     label: "Backlog",
     icon: Inbox,
-    bar: "border-t-slate-400",
-    tone: "text-slate-500",
-    badge: "bg-slate-100 text-slate-700",
+    pill: "bg-slate-100 text-slate-700 ring-slate-200",
     dot: "bg-slate-400",
   },
   in_progress: {
     label: "In progress",
     icon: CircleDashed,
-    bar: "border-t-sky-500",
-    tone: "text-sky-600",
-    badge: "bg-sky-100 text-sky-800",
+    pill: "bg-sky-50 text-sky-700 ring-sky-200",
     dot: "bg-sky-500",
   },
   blocked: {
     label: "Blocked",
     icon: Ban,
-    bar: "border-t-rose-500",
-    tone: "text-rose-600",
-    badge: "bg-rose-100 text-rose-800",
+    pill: "bg-rose-50 text-rose-700 ring-rose-200",
     dot: "bg-rose-500",
   },
   done: {
     label: "Done",
     icon: CircleCheck,
-    bar: "border-t-emerald-500",
-    tone: "text-emerald-600",
-    badge: "bg-emerald-100 text-emerald-800",
+    pill: "bg-emerald-50 text-emerald-700 ring-emerald-200",
     dot: "bg-emerald-500",
   },
 };

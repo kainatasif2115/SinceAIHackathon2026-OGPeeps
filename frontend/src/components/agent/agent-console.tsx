@@ -339,25 +339,21 @@ export function AgentConsole({
                     setDropTarget(null);
                   }}
                   className={cn(
-                    "flex min-h-[60vh] flex-col gap-3 rounded-2xl border border-t-4 border-[#f3e4ec] bg-[#fdf6fa] p-3 transition-colors duration-150",
-                    meta.bar,
+                    "flex min-h-[60vh] flex-col gap-3 rounded-2xl border border-[#f3e4ec] bg-[#fdf6fa] p-3 transition-colors duration-150",
                     dropTarget === status && "bg-brand-soft outline-brand outline-2 outline-dashed",
                   )}
                 >
-                  <h2
-                    id={`col-${status}`}
-                    className="flex items-center justify-between px-1 text-sm font-semibold"
-                  >
-                    <span className="flex items-center gap-2">
-                      <meta.icon aria-hidden className={cn("size-4", meta.tone)} />
-                      {meta.label}
-                    </span>
+                  <h2 id={`col-${status}`} className="flex items-center gap-2 px-1 pt-0.5">
                     <span
                       className={cn(
-                        "rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
-                        meta.badge,
+                        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-semibold ring-1 ring-inset",
+                        meta.pill,
                       )}
                     >
+                      <meta.icon aria-hidden className="size-4" />
+                      {meta.label}
+                    </span>
+                    <span className="text-muted-foreground text-sm font-semibold tabular-nums">
                       {column.length}
                     </span>
                   </h2>
