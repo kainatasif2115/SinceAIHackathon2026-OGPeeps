@@ -20,7 +20,6 @@ from api import (
     sessions,
     teams,
     tickets,
-    twins,
     voice,
 )
 from api import agent_auth as agent_auth_mod
@@ -418,20 +417,6 @@ def list_cases(request, run: str = "multi"):
     if run not in cases.RUNS:
         raise HttpError(404, "Unknown run.")
     return {"run": run, "runs": cases.RUNS, "cases": cases.summaries(run)}
-
-
-@api.get("/agent/campaigns", auth=agent_auth)
-def campaign_radar(request):
-    """Recent chats grouped into campaigns (fingerprints only, never message text)."""
-    return {"min_reports": campaigns.MIN_REPORTS, "campaigns": campaigns.clusters()}
-
-
-@api.get("/agent/twins", auth=agent_auth)
-def twin_pairs(request, run: str = "twins"):
-    """Same message, different truth: each twin pair with both branches and verdicts."""
-    if run not in cases.RUNS:
-        raise HttpError(404, "Unknown run.")
-    return {"run": run, "pairs": twins.pairs(run)}
 
 
 @api.get("/agent/cases/{run}/{case_id}", auth=agent_auth)

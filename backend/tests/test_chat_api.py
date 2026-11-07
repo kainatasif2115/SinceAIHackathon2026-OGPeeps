@@ -393,11 +393,6 @@ def test_campaign_radar_tells_the_nth_person_without_storing_text(monkeypatch, c
     stored = campaigns._memory[-1]
     assert "grandson" not in str(stored)  # only hashes, domains and a theme are kept
 
-    assert client.get("/api/agent/campaigns").status_code == 401
-    _sign_in(monkeypatch, client)
-    radar = client.get("/api/agent/campaigns").json()
-    assert radar["campaigns"][0]["theme"] == "Parcel or customs fee"
-
 
 ATTACK = (
     "Got this SMS: 'Operaattori: your line is locked, pay 2 EUR at unlock-line.example. "

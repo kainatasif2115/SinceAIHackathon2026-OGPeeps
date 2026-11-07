@@ -314,9 +314,7 @@ def test_installing_an_app_from_a_link_is_critical_even_without_the_app_list(en_
         **en_case,
         "opening_message": "I installed a voicemail app from a text link and gave it permissions.",
     }
-    answer = final(
-        primary_action="isolate_device_and_scan", risk_level="high", urgency="today"
-    )
+    answer = final(primary_action="isolate_device_and_scan", risk_level="high", urgency="today")
 
     checked = checker.check(answer, case, ConsentState(single_turn=False)).answer
 
@@ -374,9 +372,7 @@ def test_a_sideloaded_app_that_can_cover_the_screen_is_critical(en_case):
             },
         },
     }
-    answer = final(
-        primary_action="isolate_device_and_scan", risk_level="high", urgency="immediate"
-    )
+    answer = final(primary_action="isolate_device_and_scan", risk_level="high", urgency="immediate")
 
     checked = checker.check(answer, case, ConsentState(single_turn=False)).answer
 
