@@ -225,6 +225,14 @@ class SignUpIn(Schema):
     company: str = Field(default="", max_length=100)
 
 
+class DemoLoginIn(Schema):
+    kind: Literal["individual", "organization"]
+
+
+class DemoStatusOut(Schema):
+    enabled: bool
+
+
 class LoginIn(Schema):
     email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=1, max_length=200)
@@ -238,6 +246,7 @@ class AccountOut(Schema):
     company: str | None = None
     role: Literal["owner", "member"] | None = None
     pending_invite: str | None = None
+    demo: bool = False
 
 
 class TeamMember(Schema):

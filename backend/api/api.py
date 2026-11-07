@@ -13,6 +13,7 @@ from api import (
     campaigns,
     cases,
     db,
+    demo,
     limits,
     presenter,
     redteam,
@@ -32,6 +33,8 @@ from api.schemas import (
     ConsentIn,
     ConversationDetailOut,
     ConversationOut,
+    DemoLoginIn,
+    DemoStatusOut,
     HandoffOut,
     InviteIn,
     LoginIn,
@@ -192,6 +195,22 @@ def account_login(request, response: HttpResponse, body: LoginIn):
     if not user:
         raise HttpError(401, "Wrong email or password.")
     return _sign_in(request, response, user)
+
+
+@api.get("/account/demo", response=DemoStatusOut)
+def demo_status(request):
+    return {"enabled": demo.enabled()}
+
+
+@api.post("/account/demo", response=AccountOut)
+def demo_login(request, response: HttpResponse, body: DemoLoginIn):
+    """Sign in as a freshly rebuilt demo account (see api/demo.py)."""
+    if not demo.enabled():
+        raise HttpError(404, "Not available.")
+    # Rebuilding takes a few database writes, so a visitor can't hammer it.
+    if not limits.allow_demo(request):
+        raise HttpError(429, "Please wait a moment before trying again.")
+    return _sign_in(request, response, demo.start(body.kind))
 
 
 @api.post("/account/logout", response={204: None})

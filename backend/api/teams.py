@@ -54,6 +54,7 @@ def profile(user: dict) -> dict:
         "company": team["name"] if team else None,
         "role": user.get("role") if team else None,
         "pending_invite": pending["name"] if pending else None,
+        "demo": bool(user.get("demo")),
     }
 
 

@@ -50,3 +50,7 @@ The script (`deploy/gcp.sh`) enables the needed APIs, creates the image registry
   `gcloud run services update ogpeeps-backend --region europe-north1 --min-instances 1`
 - **Data location.** The services run in Finland. Pick an EU region for the Atlas cluster too. ElevenLabs processes the conversation text; in production this would be covered by DNA's data processing agreement.
 - **Backend address.** The backend is public so the frontend can reach it, but it only serves the API and holds no keys in responses.
+
+## Demo accounts for reviewers
+
+With `DEMO_LOGIN_ENABLED=1` in `backend/.env.production`, the login page offers **Explore as an individual** and **Explore as part of an organization**. Each click rebuilds that demo account from scratch (chats, handoffs in each state, and for the company a team, a colleague and a pending invite) and signs the visitor in, so nobody has to go through sign-up. The content comes from our saved evaluation run, so it never calls the AI. Remove the setting and redeploy to turn it off.

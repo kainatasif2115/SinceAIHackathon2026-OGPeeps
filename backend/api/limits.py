@@ -44,6 +44,16 @@ def allow(request) -> bool:
     return mine <= per_hour() and everyone <= per_day()
 
 
+DEMO_PER_HOUR = 60
+
+
+def allow_demo(request) -> bool:
+    """Counts one demo-account rebuild for this visitor (it costs database writes, not AI)."""
+    now = datetime.now(UTC)
+    key = f"demo:{visitor(request)}:{now.strftime('%Y%m%d%H')}"
+    return _count(key, now + timedelta(hours=1)) <= DEMO_PER_HOUR
+
+
 def _count(key: str, expires_at: datetime) -> int:
     if db.is_configured():
         coll = db.get_db()["rate_limits"]
