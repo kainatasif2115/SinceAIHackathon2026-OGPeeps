@@ -44,7 +44,7 @@ The script (`deploy/gcp.sh`) enables the needed APIs, creates the image registry
 ## Notes
 
 - **Keep it warm for judging.** `make deploy GCP_PROJECT=... WARM=1` keeps one copy of each service running, so nobody waits for a cold start (under €1 a day). Deploy again without `WARM=1` afterwards to go back to free.
-- **Credit protection.** The backend counts AI answers per visitor (30 an hour) and for the whole service (1,500 a day), in MongoDB. Past a limit, a chat gets the safe generic answer instead of an AI one, so nobody is left without advice and no credits are spent. Change the limits with `RATE_LIMIT_PER_HOUR` and `DAILY_AI_LIMIT` on the backend service.
+- **Credit protection.** The backend counts AI answers per visitor (30 an hour) and for the whole service (1,500 a day), in MongoDB. Set `RATE_LIMIT_PER_HOUR` or `DAILY_AI_LIMIT` in `backend/.env.production` to change them on the next deploy; for judging we use 300 an hour, since judges may share one venue IP. Past a limit, a chat gets the safe generic answer instead of an AI one, so nobody is left without advice and no credits are spent. Change the limits with `RATE_LIMIT_PER_HOUR` and `DAILY_AI_LIMIT` on the backend service.
 
 - **Cold starts.** With no traffic, Cloud Run stops the services; the first request afterwards takes a few seconds. Before a live demo, open the site once, or keep one instance warm (small cost):
   `gcloud run services update ogpeeps-backend --region europe-north1 --min-instances 1`

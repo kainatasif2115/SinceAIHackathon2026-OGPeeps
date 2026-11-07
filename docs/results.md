@@ -176,25 +176,29 @@ Full output: [`results/dev_multi_30_evaluator.txt`](../results/dev_multi_30_eval
 
 ## 4. False alarms
 
-**8 of 132 benign cases (6.1%)** were treated as more serious than they are. The baseline flagged 28%. They cluster in three scenario types:
+Final run: **9 of 132 benign cases (6.8%)** were treated as more serious than they are (6.1% before the fixes; the organisers' rules baseline flags 28%). They fall into four groups:
 
 | Scenario | Cases | What we did | Why it's a false alarm |
 |---|---|---|---|
-| Supplier changed bank details, **already verified by phone** | DSA-D-0232, 0291, 0299, 0505 | "Verify through an official channel", risk high, handoff | The user had already done the verification; nothing more is needed |
-| Legitimate admin order on the business account | DSA-D-0043, 0082 | "Verify through an official channel", risk low | The order was genuine; a check was harmless but unnecessary |
-| A genuine link the user opened | DSA-D-0179, 0413 | "Delete it" / "verify", risk low | The link was the real service's |
+| Supplier changed bank details, **already verified by phone** | DSA-D-0232, 0291, 0299, 0505 | "Verify through an official channel", risk high | The user had already done the verification, so there was nothing left to check. |
+| A genuine shop link the user opened after ordering | DSA-D-0179, 0413, 0432 | "Verify" or "delete it", risk low; in 0432 "contact your bank", risk high | The link was the real shop's. In 0432 the assistant asked whether card details were typed; in single-turn mode no answer comes, so our checker's riskier-branch rule took the worse case. The advice text itself stayed conditional ("if you typed nothing, nothing else is needed"). |
+| A login approval prompt the user started themselves | DSA-D-0022 | "Verify", risk low | The prompt matched the login they were making on a new computer. |
+| A genuine admin order on the business account | DSA-D-0484 | "Verify", risk low | The order was placed by the company's own admin. |
 
-None of them gives unsafe advice. They ask for one more check than needed. The verified-payee pattern is the one to fix: when the user says they already confirmed the change through a known number, that is the evidence the policy asks for.
+None of them gives unsafe advice; eight ask for one more check than needed. Two patterns are worth fixing: when the user says they already confirmed a payee change through a known number, the answer should say nothing more is needed; and the riskier-branch rule should not fire when the case evidence (a clean link, a purchase the user just made) already points to the harmless branch.
 
-**Over-escalation (86 extra handoffs on risky cases).** For example:
-- when card details were typed into a scam page, we send the person to the bank **and** hand off to our own specialist, where the reference sends them to the bank only;
-- several password and small-business cases.
-
-The data is mixed: 18 of 49 consumer "contact your bank" cases do need a handoff. So we didn't add a blanket rule.
+**Over-escalation.** The evaluator counts **54** handoffs the reference doesn't ask for (86 before the fixes, after the proportionate-handoff rules). Most are cases where we send the person to the bank **and** hand off to a specialist, or where a small-business answer hands off before the user has said money has gone. The data is mixed: 18 of 49 consumer "contact your bank" cases do need a handoff, so we didn't add a blanket rule.
 
 ## 5. Failure and escalation examples
 
-**Failure: a parcel link was opened; card details unknown (DSA-D-0060, Finnish).**
+**Failure in the final run: a supplier asks to be paid to a new account (DSA-D-0319, English, small business).**
+- **User:** "Our regular supplier emailed that their bank account has changed. The address is the same as always. Can I pay to the new account?"
+- **Assistant:** `contact_bank_and_block_cards`, risk high, handoff to business security support, and the question "Has the money already been sent?". The advice text itself is right: don't pay to the new account, call the supplier on a number you already have, a familiar sender address proves nothing, record who verified it.
+- **Why it fails:** the reference expects "verify through an official channel" with no handoff. The user asked *whether* to pay, so nothing has been sent; asking about it was unnecessary, and our checker's riskier-branch rule then treated the unknown answer as "already paid", which raised the headline to "contact your bank" and added the handoff.
+- **What we'd change:** treat a decisive fact as answered when the user's own words settle it ("Can I pay…?" means not paid yet), so the riskier-branch rule doesn't fire. The same pattern explains several of the 39 over-reactions in the final run.
+
+**Fixed since the first run: a parcel link was opened; card details unknown (DSA-D-0060, Finnish).** In the first full run this was our main failure example; it now passes. Before the fix:
+
 - **User:** "Avasin pakettiviestin linkin ja sivu näytti Lähetysvirran sivulta. Nyt epäilen että se oli huijaus." ("I opened the link in a parcel message and the page looked like Lähetysvirta's. Now I suspect it was a scam.")
 - **Assistant:** `do_not_interact_and_delete`, risk medium, no question listed. The advice says not to use the link again, that opening it without typing anything rarely causes harm, and "if you wrote something on the page, tell me and I'll advise more".
 - **Why it fails:**
@@ -202,6 +206,7 @@ The data is mixed: 18 of 49 consumer "contact your bank" cases do need a handoff
   - Ours only hinted at the question in the text, so the checker's riskier-branch rule couldn't trigger.
   - The reassurance that opening a link "rarely causes harm" comes too early when the key fact is unknown.
 - **What we'd change:** Detect when the user says they opened a payment link without saying what they entered, and require the card question in that case. In chat mode (the demo), the assistant asks first.
+- **Now:** the deciding-question checklist makes the assistant ask "Kirjoititko sivulle korttisi tiedot?" ("Did you type your card details on the page?"), and the riskier-branch rule then gives the step that is safe if the answer is yes: contact the bank, risk high. Pass.
 
 **Escalation done right: operator-impersonation call, code read out (DSA-D-0003, English).**
 - **User:** "Someone called from 'my operator' offering a free SIM upgrade. I got a code by text and he asked me to read it out. Was that really you?"
@@ -246,7 +251,14 @@ Pilot metrics are proposed there. All of it is a hypothesis, not a result.
 
 ## 9. Where we disagree with the ground truth
 
-None so far.
+**DSA-D-0560: a password reset email the user didn't request.** The email says "You asked to change your password. Change it here within 30 minutes" with a link, and "if you didn't ask, ignore this". The user didn't request it. The reference expects "verify through an official channel" and also accepts "no action needed" or "change your password", but not ours: "don't use the link, delete it, and open the service yourself to check recent activity".
+
+We think "don't use the link and delete it" should be accepted here:
+- it is strictly safer than "no action needed", which the reference accepts;
+- it contains the reference's required steps: don't open the link, and check through the service itself;
+- for the similar fake breach notice that pushes a login link with a deadline (DSA-D-0014 and its twins), the reference does accept "don't interact and delete".
+
+We kept our answer rather than tuning towards the label.
 
 ## 10. Files
 
