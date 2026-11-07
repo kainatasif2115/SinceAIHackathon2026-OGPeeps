@@ -221,6 +221,14 @@ def load(session_id: str) -> tuple[Conversation, dict] | None:
     return _restore(doc["conversation"]), doc
 
 
+def delete(session_id: str) -> bool:
+    """Removes a conversation now instead of waiting for the 24-hour expiry."""
+    if db.is_configured():
+        return _collection().delete_one({"_id": session_id}).deleted_count > 0
+    with _lock:
+        return _memory.pop(session_id, None) is not None
+
+
 def new_id() -> str:
     return secrets.token_urlsafe(12)
 

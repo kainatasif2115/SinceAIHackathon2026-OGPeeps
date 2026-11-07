@@ -8,6 +8,8 @@ import { useT } from "./i18n-context";
 import { ScenarioList, type ScenariosState } from "./scenario-list";
 
 type Props = {
+  /** "Talk instead" button for hands-free mode, if available. */
+  talkButton?: React.ReactNode;
   draft: string;
   onDraftChange: (value: string) => void;
   selectedScenario: Scenario | null;
@@ -20,6 +22,7 @@ type Props = {
 };
 
 export function StartView({
+  talkButton,
   draft,
   onDraftChange,
   selectedScenario,
@@ -39,6 +42,7 @@ export function StartView({
             {t.startHeading}
           </h1>
           <p className="text-muted-foreground max-w-prose">{t.startIntro}</p>
+          {talkButton && <div className="pt-1">{talkButton}</div>}
         </div>
 
         {selectedScenario && (

@@ -7,7 +7,7 @@ import type { ImageAttachment } from "@/lib/media";
 import type { ScenariosState } from "@/components/assistant/scenario-list";
 import { ChatLauncher, ChatPanel } from "./chat-panel";
 import { Hero } from "./hero";
-import { HelpTopics, HowItWorks, ScamsNow, TrustBand } from "./sections";
+import { BeforeAfter, HelpTopics, HowItWorks, ScamsNow, TrustBand } from "./sections";
 import { SiteFooter, SiteHeader, TopStrip } from "./site-chrome";
 
 /**
@@ -20,7 +20,11 @@ export function DnaHome() {
   const [scenarios, setScenarios] = useState<ScenariosState>({ status: "loading" });
   const [panelOpen, setPanelOpen] = useState(false);
   // Each new request remounts the assistant (via key) so it starts fresh.
-  const [request, setRequest] = useState<{ key: number; initial: InitialRequest | null }>({
+  const [request, setRequest] = useState<{
+    key: number;
+    initial: InitialRequest | null;
+    voice?: boolean;
+  }>({
     key: 0,
     initial: null,
   });
@@ -46,6 +50,12 @@ export function DnaHome() {
       key: prev.key + 1,
       initial: { text, audience, language: "en", scenario: null, images },
     }));
+    setPanelOpen(true);
+  }
+
+  /** "Talk instead": a fresh conversation that opens straight into hands-free mode. */
+  function talk() {
+    setRequest((prev) => ({ key: prev.key + 1, initial: null, voice: true }));
     setPanelOpen(true);
   }
 
@@ -75,7 +85,14 @@ export function DnaHome() {
       <SiteHeader onOpenAssistant={openPanel} />
 
       <main id="main" className="flex-1">
-        <Hero audience={audience} scenarios={scenarios} onAsk={ask} onPickScenario={askScenario} />
+        <Hero
+          audience={audience}
+          scenarios={scenarios}
+          onAsk={ask}
+          onTalk={talk}
+          onPickScenario={askScenario}
+        />
+        <BeforeAfter />
         <HelpTopics audience={audience} onOpen={openPanel} />
         <HowItWorks />
         <ScamsNow audience={audience} scenarios={scenarios} onPick={askScenario} />
@@ -90,6 +107,7 @@ export function DnaHome() {
         onClose={closePanel}
         assistantKey={request.key}
         initial={request.initial}
+        startInVoice={request.voice ?? false}
         audience={audience}
       />
     </div>

@@ -3,6 +3,8 @@
 import {
   ArrowRight,
   Briefcase,
+  CircleCheck,
+  CircleHelp,
   CreditCard,
   Hash,
   Headset,
@@ -10,7 +12,9 @@ import {
   Link,
   MessageSquareWarning,
   PhoneCall,
+  ShieldCheck,
   Smartphone,
+  TriangleExclamationPoint,
   UserLock,
   type LucideIcon,
 } from "lucide-react";
@@ -264,5 +268,85 @@ function SectionHeading({
       </h2>
       {intro && <p className="text-muted-foreground text-lg">{intro}</p>}
     </div>
+  );
+}
+
+/** The pitch in two cards: a typical vague warning next to what the assistant says. */
+export function BeforeAfter() {
+  return (
+    <section aria-labelledby="before-after-heading" className="bg-white">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-16 sm:px-6">
+        <SectionHeading
+          id="before-after-heading"
+          eyebrow="Why this is different"
+          title="A warning tells you something is wrong. We tell you what to do."
+        />
+        <div className="grid gap-4 md:grid-cols-2">
+          <figure className="border-border flex flex-col gap-4 rounded-2xl border bg-[#f4f4f6] p-6">
+            <figcaption className="text-muted-foreground text-sm font-semibold">
+              A typical warning today
+            </figcaption>
+            <div className="flex items-start gap-3 rounded-xl border border-black/5 bg-white p-4">
+              <TriangleExclamationPoint
+                aria-hidden
+                className="mt-0.5 size-5 shrink-0 text-[#b26a00]"
+              />
+              <div className="flex flex-col gap-1">
+                <p className="font-semibold">This message may be suspicious.</p>
+                <p className="text-muted-foreground text-sm">Be careful with links.</p>
+              </div>
+            </div>
+            <ul className="text-muted-foreground flex flex-col gap-2 text-sm">
+              {[
+                "Is it actually a scam, or not?",
+                "What should I do now?",
+                "I already clicked. Is it too late?",
+              ].map((doubt) => (
+                <li key={doubt} className="flex items-center gap-2">
+                  <CircleHelp aria-hidden className="size-4 shrink-0" />
+                  {doubt}
+                </li>
+              ))}
+            </ul>
+          </figure>
+
+          <figure className="border-brand flex flex-col gap-4 rounded-2xl border-2 bg-white p-6 shadow-[0_12px_32px_rgb(218_0_112/0.12)]">
+            <figcaption className="text-brand flex items-center gap-2 text-sm font-semibold">
+              <ShieldCheck aria-hidden className="size-4" />
+              With the security assistant
+            </figcaption>
+            <div className="overflow-hidden rounded-xl border border-black/5">
+              <p className="bg-risk-medium text-risk-medium-fg flex items-center gap-2 px-4 py-2 text-sm font-semibold">
+                <TriangleExclamationPoint aria-hidden className="size-4" />
+                Medium risk · When you have time
+              </p>
+              <div className="flex flex-col gap-2 p-4">
+                <p className="font-heading text-lg font-semibold">Don’t pay. Delete the message.</p>
+                <p className="text-sm">
+                  <span className="font-semibold">Why:</span> customs never asks for a fee through a
+                  text link. The small amount makes paying feel easier than checking.
+                </p>
+                <p className="text-sm">
+                  <span className="font-semibold">Already clicked?</span> If you typed card details,
+                  block the card in your bank’s app now. Clicking alone is low risk.
+                </p>
+              </div>
+            </div>
+            <ul className="flex flex-col gap-2 text-sm">
+              {[
+                "One clear next step, and why",
+                "What to do if you already acted",
+                "A person takes over when it’s serious",
+              ].map((gain) => (
+                <li key={gain} className="flex items-center gap-2">
+                  <CircleCheck aria-hidden className="text-risk-safe-fg size-4 shrink-0" />
+                  {gain}
+                </li>
+              ))}
+            </ul>
+          </figure>
+        </div>
+      </div>
+    </section>
   );
 }

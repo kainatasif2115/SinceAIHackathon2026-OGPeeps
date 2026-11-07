@@ -632,6 +632,11 @@ export async function mockHandoff(id: string): Promise<Handoff> {
   return { reference, summary };
 }
 
+export async function mockDelete(id: string): Promise<void> {
+  await wait(300);
+  sessions.delete(id);
+}
+
 export async function mockHealth(): Promise<Health> {
   return {
     status: "mock",

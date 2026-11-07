@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { ArrowRight, LockKeyhole, ShieldCheck, TriangleExclamationPoint } from "lucide-react";
+import {
+  ArrowRight,
+  LockKeyhole,
+  PhoneCall,
+  ShieldCheck,
+  TriangleExclamationPoint,
+} from "lucide-react";
 import type { Audience, Scenario } from "@/lib/api";
 import type { ScenariosState } from "@/components/assistant/scenario-list";
 import { MAX_MESSAGE_LENGTH } from "@/components/assistant/composer";
@@ -21,6 +27,8 @@ type Props = {
   audience: Audience;
   scenarios: ScenariosState;
   onAsk: (text: string, images: ImageAttachment[]) => void;
+  /** Opens the assistant in hands-free talking mode. */
+  onTalk: () => void;
   onPickScenario: (scenario: Scenario) => void;
 };
 
@@ -39,7 +47,7 @@ const HEADLINE: Record<Audience, { title: string; intro: string; placeholder: st
   },
 };
 
-export function Hero({ audience, scenarios, onAsk, onPickScenario }: Props) {
+export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Props) {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const copy = HEADLINE[audience];
@@ -168,6 +176,15 @@ export function Hero({ audience, scenarios, onAsk, onPickScenario }: Props) {
               </button>
             </div>
           </form>
+
+          <button
+            type="button"
+            onClick={onTalk}
+            className="inline-flex h-11 items-center gap-2 self-start rounded-full border-2 border-white/70 px-5 text-sm font-semibold transition-colors duration-150 hover:bg-white/15"
+          >
+            <PhoneCall aria-hidden className="size-4" />
+            Rather talk? Have a hands-free conversation
+          </button>
 
           {examples.length > 0 && (
             <div className="flex flex-col gap-2">

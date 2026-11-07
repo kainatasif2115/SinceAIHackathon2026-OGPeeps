@@ -1,7 +1,7 @@
 import pytest
 from django.test import Client
 
-from api import sessions
+from api import agent_auth, sessions, tickets
 from assistant import brain
 from assistant.brain import BrainUnavailable
 from tests.fakes import Script, ask, ask_consent, done, final
@@ -192,3 +192,127 @@ def test_brain_gets_screenshots_as_image_blocks():
     assert content[2]["source"] == {"type": "base64", "media_type": "image/png", "data": PIXEL}
     assert content[-1] == {"type": "text", "text": "case text"}
     assert brain.with_images("case text", []) == "case text"
+
+
+def _handoff_case(monkeypatch, client):
+    monkeypatch.setattr(
+        brain,
+        "decide_multi_turn",
+        Script(
+            ask("Did you read the code out?", ["code_shared"]),
+            done(
+                final(
+                    risk_level="critical",
+                    urgency="immediate",
+                    primary_action="contact_operator_support",
+                    escalation_required=True,
+                    escalation_target="operator_support_agent",
+                )
+            ),
+        ),
+    )
+    sid = post(
+        client,
+        "/api/sessions",
+        {"audience": "consumer", "language": "en", "message": "A caller asked for my code."},
+    ).json()["session_id"]
+    post(client, f"/api/sessions/{sid}/reply", {"text": "Yes, I read it out."})
+    return post(client, f"/api/sessions/{sid}/handoff").json()["reference"]
+
+
+def _sign_in(monkeypatch, client):
+    monkeypatch.setenv("AGENT_DEMO_USER", "demo.agent")
+    monkeypatch.setenv("AGENT_DEMO_PASSWORD", "test-only-password")
+    res = post(
+        client, "/api/agent/login", {"username": "demo.agent", "password": "test-only-password"}
+    )
+    assert res.status_code == 200
+
+
+def test_handoff_creates_a_ticket_on_the_agent_board(monkeypatch, client):
+    tickets._memory.clear()
+    _sign_in(monkeypatch, client)
+    reference = _handoff_case(monkeypatch, client)
+
+    board = client.get("/api/agent/tickets").json()
+    ticket = next(t for t in board if t["reference"] == reference)
+
+    assert ticket["status"] == "backlog"
+    assert ticket["severity"] == "critical"
+    assert ticket["team"] == "operator_support_agent"
+    assert ticket["demo"] is False
+    assert [line["role"] for line in ticket["transcript"]] == ["customer", "assistant", "customer"]
+    assert ticket["advice"]["action_label"]
+    # Demo tickets fill the board alongside the real one.
+    assert any(t["demo"] for t in board)
+
+
+def test_agent_can_move_a_ticket(monkeypatch, client):
+    tickets._memory.clear()
+    _sign_in(monkeypatch, client)
+    reference = _handoff_case(monkeypatch, client)
+
+    moved = client.patch(
+        f"/api/agent/tickets/{reference}",
+        {"status": "in_progress"},
+        content_type="application/json",
+    )
+
+    assert moved.status_code == 200
+    assert moved.json()["status"] == "in_progress"
+    bad = client.patch(
+        f"/api/agent/tickets/{reference}", {"status": "lost"}, content_type="application/json"
+    )
+    assert bad.status_code == 422
+    missing = client.patch(
+        "/api/agent/tickets/NOPE", {"status": "done"}, content_type="application/json"
+    )
+    assert missing.status_code == 404
+
+
+def test_delete_now_removes_the_conversation(monkeypatch, client):
+    monkeypatch.setattr(brain, "decide_multi_turn", Script(done(final())))
+    sid = post(
+        client,
+        "/api/sessions",
+        {"audience": "consumer", "language": "en", "message": "A text about a parcel."},
+    ).json()["session_id"]
+
+    assert client.delete(f"/api/sessions/{sid}").status_code == 204
+    assert sessions.load(sid) is None
+    assert client.delete(f"/api/sessions/{sid}").status_code == 404
+    assert post(client, f"/api/sessions/{sid}/handoff").status_code == 404
+
+
+def test_agent_console_needs_the_demo_login(monkeypatch, client):
+    monkeypatch.setattr(agent_auth.time, "sleep", lambda _: None)
+    monkeypatch.setenv("AGENT_DEMO_USER", "demo.agent")
+    monkeypatch.setenv("AGENT_DEMO_PASSWORD", "test-only-password")
+
+    assert client.get("/api/agent/tickets").status_code == 401
+    assert client.get("/api/agent/me").status_code == 401
+    wrong = {"username": "demo.agent", "password": "nope"}
+    assert post(client, "/api/agent/login", wrong).status_code == 401
+
+    good = {"username": "Demo.Agent", "password": "test-only-password"}
+    login = post(client, "/api/agent/login", good)
+    assert login.status_code == 200
+    cookie = login.cookies["agent_session"]
+    assert cookie["httponly"] and cookie["samesite"] == "Strict"
+    assert client.get("/api/agent/me").json() == {"name": "Demo Agent"}
+    assert client.get("/api/agent/tickets").status_code == 200
+
+    assert post(client, "/api/agent/logout").status_code == 204
+    assert client.get("/api/agent/tickets").status_code == 401
+
+
+def test_agent_login_is_off_without_a_configured_password(monkeypatch, client):
+    monkeypatch.delenv("AGENT_DEMO_PASSWORD", raising=False)
+    res = post(client, "/api/agent/login", {"username": "demo.agent", "password": "x"})
+    assert res.status_code == 503
+
+
+def test_forged_or_tampered_session_cookie_is_rejected(monkeypatch, client):
+    monkeypatch.setenv("AGENT_DEMO_PASSWORD", "test-only-password")
+    client.cookies["agent_session"] = "not-a-signed-value"
+    assert client.get("/api/agent/tickets").status_code == 401

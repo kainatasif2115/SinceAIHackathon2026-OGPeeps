@@ -72,7 +72,7 @@ export function SiteHeader({ onOpenAssistant }: { onOpenAssistant: () => void })
               <li key={item.href}>
                 <a
                   href={item.href}
-                  className="hover:bg-muted rounded-full px-3.5 py-2 text-sm font-semibold transition-colors duration-150"
+                  className="hover:bg-muted rounded-full px-3.5 py-2 text-sm font-semibold whitespace-nowrap transition-colors duration-150"
                 >
                   {item.label}
                 </a>
