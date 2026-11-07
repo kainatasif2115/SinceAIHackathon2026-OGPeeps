@@ -440,7 +440,6 @@ function TicketCard({
   onDragEnd: () => void;
 }) {
   const severity = SEVERITY_META[ticket.severity];
-  const glowing = ticket.severity === "critical" && ticket.status !== "done";
   return (
     <button
       type="button"
@@ -454,13 +453,11 @@ function TicketCard({
       onClick={onOpen}
       className={cn(
         "flex w-full cursor-grab flex-col gap-2.5 rounded-xl border bg-white p-3.5 text-left shadow-sm transition-[box-shadow,opacity,border-color] duration-150 hover:shadow-md active:cursor-grabbing",
-        fresh && "ring-brand/30 ring-4",
-        // Open critical tickets get a moving gradient border instead of the plain edge.
-        glowing
-          ? "critical-glow"
-          : [fresh ? "border-brand" : "border-transparent", "border-l-4", severity.edge],
+        fresh ? "border-brand ring-brand/30 ring-4" : "border-transparent",
         // Finished work steps back so open tickets stand out.
         ticket.status === "done" && "opacity-70 shadow-none hover:opacity-100",
+        "border-l-4",
+        severity.edge,
         dragging && "opacity-40",
       )}
     >
