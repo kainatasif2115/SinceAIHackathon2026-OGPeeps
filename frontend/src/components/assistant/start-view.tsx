@@ -2,6 +2,7 @@
 
 import { LockKeyhole, X } from "lucide-react";
 import type { Audience, Language, Scenario } from "@/lib/api";
+import type { ImageAttachment } from "@/lib/media";
 import { Composer } from "./composer";
 import { useT } from "./i18n-context";
 import { ScenarioList, type ScenariosState } from "./scenario-list";
@@ -11,7 +12,7 @@ type Props = {
   onDraftChange: (value: string) => void;
   selectedScenario: Scenario | null;
   onClearScenario: () => void;
-  onSubmit: (text: string) => void;
+  onSubmit: (text: string, images: ImageAttachment[]) => void;
   scenarios: ScenariosState;
   audience: Audience;
   language: Language;
@@ -62,6 +63,7 @@ export function StartView({
           onChange={onDraftChange}
           onSubmit={onSubmit}
           busy={false}
+          language={language}
           labelledBy="start-heading"
           placeholder={t.startPlaceholder}
           rows={4}

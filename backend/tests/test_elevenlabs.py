@@ -95,3 +95,18 @@ def test_voice_without_key_is_503(monkeypatch):
     response = Client().post("/api/voice/speak", {"text": "hello"}, "application/json")
 
     assert response.status_code == 503
+
+
+def test_screenshots_are_mentioned_not_dropped_on_the_elevenlabs_route(monkeypatch):
+    from tests.fakes import done
+
+    monkeypatch.setenv("BRAIN_PROVIDER", "elevenlabs")
+    script = Script(done(final()))
+    monkeypatch.setattr(elevenlabs_llm, "complete", script)
+    image = {"media_type": "image/png", "data": "aGk=", "turn": 0}
+
+    brain.decide_multi_turn({"case_id": "X", "language": "fi"}, [], 3, images=[image])
+
+    content, language = script.calls[0][0][1], script.calls[0][0][2]
+    assert "attached 1 screenshot(s)" in content
+    assert language == "fi"

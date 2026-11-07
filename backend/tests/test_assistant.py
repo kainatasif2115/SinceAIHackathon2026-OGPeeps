@@ -185,3 +185,12 @@ def test_riskier_branch_never_downgrades_or_applies_in_multi_turn(en_case):
     )
     multi = checker.check(asked_first, en_case, ConsentState(single_turn=False)).answer
     assert multi.primary_action == "do_not_interact_and_delete"
+
+
+def test_missing_api_key_is_brain_unavailable(monkeypatch):
+    monkeypatch.setenv("BRAIN_PROVIDER", "anthropic")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
+
+    with pytest.raises(brain.BrainUnavailable):
+        brain.answer_single_turn({"case_id": "X", "language": "en"})

@@ -24,6 +24,13 @@ from assistant.engine import Conversation
 
 log = logging.getLogger(__name__)
 
+# What the user "said" when they sent only a screenshot.
+SCREENSHOT_ONLY = {
+    "fi": "(Lähetin vain kuvakaappauksen.)",
+    "sv": "(Jag skickade bara en skärmbild.)",
+    "en": "(I sent only a screenshot.)",
+}
+
 # No cookie-based auth, so Ninja does not apply CSRF checks. In production the operator's
 # app would authenticate the already-identified user here.
 api = NinjaAPI(title="DNA Digital Security Assistant", version="0.2.0")
@@ -66,8 +73,10 @@ def list_scenarios(request):
 
 @api.post("/sessions", response=SessionOut)
 def start_session(request, body: StartIn):
-    case = sessions.build_case(body.audience, body.language, body.message, body.scenario_id)
+    message = body.message.strip() or SCREENSHOT_ONLY[body.language]
+    case = sessions.build_case(body.audience, body.language, message, body.scenario_id)
     conv = Conversation(case=case)
+    conv.add_images([image.model_dump() for image in body.images], turn=0)
     session_id = sessions.new_id()
     return _advance(session_id, conv, {"scenario_id": body.scenario_id})
 
@@ -76,7 +85,8 @@ def start_session(request, body: StartIn):
 def reply(request, session_id: str, body: ReplyIn):
     conv, doc = _load(session_id)
     _require_pending(doc, "question")
-    conv.record_answer(body.text)
+    text = body.text.strip() or SCREENSHOT_ONLY[conv.case["language"]]
+    conv.record_answer(text, [image.model_dump() for image in body.images])
     return _advance(session_id, conv, doc)
 
 

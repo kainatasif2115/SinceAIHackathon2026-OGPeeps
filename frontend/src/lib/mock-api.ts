@@ -422,6 +422,12 @@ function ceoFinal(lang: Language, paid: boolean): Answer {
 
 // ---------- Default: suspicious message with a link ----------
 
+const screenshotQuestion: Copy = {
+  en: "Thanks for the screenshot. It asks you to act quickly through a link, which is a common trick. Did you open the link or type anything on the page it showed?",
+  fi: "Kiitos kuvakaappauksesta. Siinä pyydetään toimimaan nopeasti linkin kautta, mikä on yleinen huijauskeino. Avasitko linkin tai kirjoititko jotain sivulle, joka aukesi?",
+  sv: "Tack för skärmbilden. Den ber dig agera snabbt via en länk, vilket är ett vanligt knep. Öppnade du länken eller skrev du något på sidan som visades?",
+};
+
 const defaultQuestion: Copy = {
   en: "Did you open the link, or type anything on the page it showed?",
   fi: "Avasitko linkin tai kirjoititko jotain sivulle, joka aukesi?",
@@ -570,7 +576,7 @@ export async function mockStart(input: StartInput): Promise<Session> {
     default:
       return out(id, s, {
         type: "question",
-        text: pick(defaultQuestion, lang),
+        text: pick(input.images?.length ? screenshotQuestion : defaultQuestion, lang),
         topics: ["credentials_entered"],
       });
   }

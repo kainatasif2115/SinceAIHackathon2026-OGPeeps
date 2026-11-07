@@ -5,14 +5,30 @@ import { useT } from "./i18n-context";
 
 const ENTER = "animate-in fade-in slide-in-from-bottom-1 duration-200 ease-out";
 
-export function UserMessage({ text }: { text: string }) {
+export function UserMessage({ text, images = [] }: { text: string; images?: string[] }) {
   const t = useT();
   return (
-    <div className={`flex justify-end ${ENTER}`}>
-      <p className="bg-secondary text-secondary-foreground max-w-[85%] rounded-lg px-4 py-3 break-words whitespace-pre-wrap">
-        <span className="sr-only">{t.you}: </span>
-        {text}
-      </p>
+    <div className={`flex flex-col items-end gap-2 ${ENTER}`}>
+      {images.length > 0 && (
+        <ul className="flex max-w-[85%] flex-wrap justify-end gap-2">
+          {images.map((src, index) => (
+            <li key={src.slice(-32) + index}>
+              {/* eslint-disable-next-line @next/next/no-img-element -- local data: URL */}
+              <img
+                src={src}
+                alt={t.screenshotAlt(index + 1)}
+                className="border-border max-h-48 max-w-48 rounded-lg border object-cover"
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+      {text && (
+        <p className="bg-secondary text-secondary-foreground max-w-[85%] rounded-lg px-4 py-3 break-words whitespace-pre-wrap">
+          <span className="sr-only">{t.you}: </span>
+          {text}
+        </p>
+      )}
     </div>
   );
 }

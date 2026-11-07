@@ -95,6 +95,8 @@ class Conversation:
     refused: set[str] = field(default_factory=set)
     turns_used: int = 0
     revealed: dict[str, Any] = field(default_factory=dict)
+    # Screenshots from the user: {"media_type", "data" (base64), "turn" (0 = opening message)}.
+    images: list[dict] = field(default_factory=list)
 
     def view(self) -> dict:
         """What the brain may see right now."""
@@ -107,8 +109,22 @@ class Conversation:
             cur[leaf] = value
         return c
 
-    def record_answer(self, text: str) -> None:
-        self.history.append({"role": "user", "text": text})
+    def add_images(self, images: list[dict], turn: int) -> None:
+        self.images.extend({**image, "turn": turn} for image in images)
+
+    def record_answer(self, text: str, images: list[dict] | None = None) -> None:
+        entry: dict[str, Any] = {"role": "user", "text": text}
+        if images:
+            self.add_images(images, turn=self.turns_used)
+            entry["screenshots_attached"] = len(images)
+        self.history.append(entry)
+
+    def _decide(self, view: dict, turns_left: int, feedback: str | None = None):
+        if self.images:
+            return brain.decide_multi_turn(
+                view, self.history, turns_left, feedback, images=self.images
+            )
+        return brain.decide_multi_turn(view, self.history, turns_left, feedback)
 
     def record_consent(self, fields: list[str], granted: bool, values: dict | None = None) -> None:
         (self.granted if granted else self.refused).update(fields)
@@ -121,7 +137,7 @@ class Conversation:
         turns_left = self.max_turns - self.turns_used
         view = self.view()
         consent = ConsentState(granted=self.granted, refused=self.refused, single_turn=False)
-        decision = brain.decide_multi_turn(view, self.history, turns_left)
+        decision = self._decide(view, turns_left)
 
         if turns_left > 0 and decision.next == "question" and decision.question:
             q = decision.question
@@ -142,17 +158,14 @@ class Conversation:
             def propose(feedback):
                 if feedback is None:
                     return first
-                again = brain.decide_multi_turn(view, self.history, 0, feedback)
+                again = self._decide(view, 0, feedback)
                 return again.answer or first
 
             answer = _checked(propose, view, consent)
         else:
             # The brain asked for something it may not ask (no turns left, invalid fields).
             answer = _checked(
-                lambda feedback: (
-                    brain.decide_multi_turn(view, self.history, 0, feedback).answer
-                    or fallback_answer(view)
-                ),
+                lambda feedback: self._decide(view, 0, feedback).answer or fallback_answer(view),
                 view,
                 consent,
             )

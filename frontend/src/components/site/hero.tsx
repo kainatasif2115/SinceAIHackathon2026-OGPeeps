@@ -5,11 +5,22 @@ import { ArrowRight, LockKeyhole, ShieldCheck, TriangleExclamationPoint } from "
 import type { Audience, Scenario } from "@/lib/api";
 import type { ScenariosState } from "@/components/assistant/scenario-list";
 import { MAX_MESSAGE_LENGTH } from "@/components/assistant/composer";
+import {
+  AttachButton,
+  AttachmentTray,
+  MicButton,
+  VoiceStatus,
+  useImageAttachments,
+  useImageDrop,
+} from "@/components/assistant/input-tools";
+import { useSpeechInput } from "@/components/assistant/use-speech-input";
+import type { ImageAttachment } from "@/lib/media";
+import { cn } from "@/lib/utils";
 
 type Props = {
   audience: Audience;
   scenarios: ScenariosState;
-  onAsk: (text: string) => void;
+  onAsk: (text: string, images: ImageAttachment[]) => void;
   onPickScenario: (scenario: Scenario) => void;
 };
 
@@ -32,11 +43,18 @@ export function Hero({ audience, scenarios, onAsk, onPickScenario }: Props) {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const copy = HEADLINE[audience];
+  const attachments = useImageAttachments();
+  const drop = useImageDrop((files) => void attachments.add(files));
+  const speech = useSpeechInput("en", text, (value) => {
+    setText(value);
+    setError(null);
+  });
 
   function submit(event: FormEvent) {
     event.preventDefault();
+    speech.stop();
     const value = text.trim();
-    if (!value) {
+    if (!value && attachments.images.length === 0) {
       setError("Write a few words about what happened.");
       return;
     }
@@ -45,8 +63,9 @@ export function Hero({ audience, scenarios, onAsk, onPickScenario }: Props) {
       return;
     }
     setError(null);
-    onAsk(value);
+    onAsk(value, attachments.images);
     setText("");
+    attachments.clear();
   }
 
   const examples =
@@ -77,8 +96,17 @@ export function Hero({ audience, scenarios, onAsk, onPickScenario }: Props) {
           <form
             onSubmit={submit}
             noValidate
-            className="text-foreground flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-[0_12px_40px_rgb(0_0_0/0.18)] sm:p-5"
+            className={cn(
+              "text-foreground relative flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-[0_12px_40px_rgb(0_0_0/0.18)] sm:p-5",
+              drop.dragging && "outline-4 outline-offset-4 outline-white outline-dashed",
+            )}
+            {...drop.handlers}
           >
+            {drop.dragging && (
+              <p className="text-brand pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/95 font-semibold">
+                Drop the screenshot here
+              </p>
+            )}
             <label htmlFor="hero-message" className="font-heading text-base font-semibold">
               What happened?
             </label>
@@ -96,7 +124,7 @@ export function Hero({ audience, scenarios, onAsk, onPickScenario }: Props) {
                 }
               }}
               rows={2}
-              placeholder={copy.placeholder}
+              placeholder={`${copy.placeholder} You can also paste a screenshot.`}
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? "hero-error hero-privacy" : "hero-privacy"}
               className="border-input placeholder:text-muted-foreground focus-visible:border-brand min-h-20 w-full resize-none rounded-xl border px-3.5 py-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklch,var(--brand),transparent_75%)]"
@@ -106,17 +134,34 @@ export function Hero({ audience, scenarios, onAsk, onPickScenario }: Props) {
                 {error}
               </p>
             )}
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <AttachmentTray
+              images={attachments.images}
+              onRemove={attachments.remove}
+              error={attachments.error}
+            />
+            <VoiceStatus listening={speech.listening} error={speech.error} />
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+              <div className="-ml-2 flex items-center">
+                <AttachButton
+                  onFiles={(files) => void attachments.add(files)}
+                  disabled={attachments.full}
+                />
+                <MicButton
+                  supported={speech.supported}
+                  listening={speech.listening}
+                  onToggle={speech.toggle}
+                />
+              </div>
               <p
                 id="hero-privacy"
-                className="text-muted-foreground flex items-center gap-1.5 text-xs"
+                className="text-muted-foreground mr-auto flex items-center gap-1.5 text-xs"
               >
                 <LockKeyhole aria-hidden className="size-3.5 shrink-0" />
                 Never type passwords, card numbers or codes.
               </p>
               <button
                 type="submit"
-                className="bg-brand text-brand-foreground hover:bg-brand/90 ml-auto inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors duration-150"
+                className="bg-brand text-brand-foreground hover:bg-brand/90 inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors duration-150"
               >
                 Check it
                 <ArrowRight aria-hidden className="size-4" />

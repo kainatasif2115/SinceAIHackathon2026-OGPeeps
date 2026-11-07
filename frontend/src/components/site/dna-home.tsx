@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getScenarios, type Audience, type Scenario } from "@/lib/api";
 import type { InitialRequest } from "@/components/assistant/assistant";
+import type { ImageAttachment } from "@/lib/media";
 import type { ScenariosState } from "@/components/assistant/scenario-list";
 import { ChatLauncher, ChatPanel } from "./chat-panel";
 import { Hero } from "./hero";
@@ -40,10 +41,10 @@ export function DnaHome() {
     launcherRef.current?.focus();
   }
 
-  function ask(text: string) {
+  function ask(text: string, images: ImageAttachment[]) {
     setRequest((prev) => ({
       key: prev.key + 1,
-      initial: { text, audience, language: "en", scenario: null },
+      initial: { text, audience, language: "en", scenario: null, images },
     }));
     setPanelOpen(true);
   }
