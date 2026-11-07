@@ -9,6 +9,7 @@ const en = {
   productName: "Security assistant",
   skipToContent: "Skip to content",
   prototypeNote: "Prototype – synthetic data, not real DNA advice.",
+  closePanel: "Close security assistant",
   audienceLegend: "Who is this for?",
   audience: { consumer: "Consumer", small_business: "Small business" } satisfies Record<
     Audience,
@@ -116,6 +117,7 @@ const fi: Dictionary = {
   productName: "Tietoturva-avustaja",
   skipToContent: "Siirry sisältöön",
   prototypeNote: "Prototyyppi – keksittyä dataa, ei oikeaa DNA:n neuvontaa.",
+  closePanel: "Sulje turva-avustaja",
   audienceLegend: "Kenelle?",
   audience: { consumer: "Kuluttaja", small_business: "Pienyritys" },
   audienceLocked: "Aloita alusta vaihtaaksesi tämän.",
@@ -219,6 +221,7 @@ const sv: Dictionary = {
   productName: "Säkerhetsassistent",
   skipToContent: "Hoppa till innehållet",
   prototypeNote: "Prototyp – syntetiska data, inte riktiga råd från DNA.",
+  closePanel: "Stäng säkerhetsassistenten",
   audienceLegend: "För vem?",
   audience: { consumer: "Privatperson", small_business: "Litet företag" },
   audienceLocked: "Börja om för att ändra detta.",

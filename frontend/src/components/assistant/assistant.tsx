@@ -22,6 +22,7 @@ import { AppHeader } from "./app-header";
 import { Composer } from "./composer";
 import { ConsentCard } from "./consent-card";
 import { ErrorNotice } from "./error-notice";
+import { PanelHeader } from "./panel-header";
 import { I18nContext } from "./i18n-context";
 import { AssistantTurn, QuestionMessage, UserMessage } from "./messages";
 import type { ScenariosState } from "./scenario-list";
@@ -67,19 +68,45 @@ function announcement(entry: Entry, t: Dictionary): string {
   }
 }
 
-export function Assistant() {
-  const [language, setLanguage] = useState<Language>("en");
-  const [audience, setAudience] = useState<Audience>("consumer");
+/** A conversation the host page asks to open with (e.g. from the homepage hero). */
+export type InitialRequest = {
+  text: string;
+  audience: Audience;
+  language: Language;
+  scenario: Scenario | null;
+};
+
+type Props = {
+  /** "page" is the standalone app; "panel" sits in the homepage's slide-out drawer. */
+  variant?: "page" | "panel";
+  /** Starts the conversation on mount. Remount (change `key`) to start a new one. */
+  initial?: InitialRequest | null;
+  defaultAudience?: Audience;
+  onClose?: () => void;
+};
+
+export function Assistant({
+  variant = "page",
+  initial = null,
+  defaultAudience = "consumer",
+  onClose,
+}: Props) {
+  const [language, setLanguage] = useState<Language>(initial?.language ?? "en");
+  const [audience, setAudience] = useState<Audience>(initial?.audience ?? defaultAudience);
   const t = getDictionary(language);
 
   const [scenarios, setScenarios] = useState<ScenariosState>({ status: "loading" });
   const [draft, setDraft] = useState("");
-  const [scenario, setScenario] = useState<Scenario | null>(null);
+  const [scenario, setScenario] = useState<Scenario | null>(initial?.scenario ?? null);
   const [replyDraft, setReplyDraft] = useState("");
 
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const [entries, setEntries] = useState<Entry[]>(() =>
+    initial ? [{ id: nextId(), kind: "user", text: initial.text }] : [],
+  );
   const [session, setSession] = useState<SessionMeta | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(initial !== null);
+  // Guards the initial request against StrictMode running mount effects twice.
+  const initialSent = useRef(false);
   const [failure, setFailure] = useState<Failure | null>(null);
   const [announce, setAnnounce] = useState("");
   // Bumped on "Start over" so late responses from an abandoned session are ignored.
@@ -146,6 +173,20 @@ export function Assistant() {
     void run(() => startSession(input));
   }
 
+  useEffect(() => {
+    if (!initial || initialSent.current) return;
+    initialSent.current = true;
+    const input = {
+      audience: initial.audience,
+      language: initial.language,
+      message: initial.text,
+      scenario_id: initial.scenario?.id,
+    };
+    void run(() => startSession(input));
+    // Runs once per mount; the host remounts with a new key for a new request.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function handleReply(text: string) {
     if (!session || loading) return;
     const id = session.id;
@@ -200,112 +241,139 @@ export function Assistant() {
   const lastAssistant = entries.findLast((e) => e.kind !== "user");
   const awaitingAnswer = lastAssistant?.kind === "question" && !failure;
 
+  const content = (
+    <>
+      {!inConversation ? (
+        <StartView
+          draft={draft}
+          onDraftChange={handleDraftChange}
+          selectedScenario={scenario}
+          onClearScenario={() => {
+            setScenario(null);
+            setDraft("");
+          }}
+          onSubmit={handleStart}
+          scenarios={scenarios}
+          audience={audience}
+          language={language}
+          onPickScenario={handlePickScenario}
+        />
+      ) : (
+        <div className="flex flex-col gap-6">
+          <div className="border-border flex items-center justify-between gap-3 border-b pb-3">
+            <h1 id="start-heading" tabIndex={-1} className="text-base outline-none">
+              {t.startHeading}
+            </h1>
+            <div className="flex items-center gap-3">
+              {session && (
+                <span className="text-muted-foreground text-xs tabular-nums">
+                  {t.turnCounter(session.turnsUsed, session.maxTurns)}
+                </span>
+              )}
+              <Button variant="ghost" size="sm" onClick={startOver}>
+                <RotateCcw aria-hidden className="size-3.5" />
+                {t.startOver}
+              </Button>
+            </div>
+          </div>
+
+          <ol aria-label={t.startHeading} className="flex flex-col gap-6">
+            {entries.map((entry) => (
+              <li key={entry.id}>
+                {entry.kind === "user" ? (
+                  <UserMessage text={entry.text} />
+                ) : (
+                  <AssistantTurn id={entry.id}>
+                    {entry.kind === "question" && <QuestionMessage turn={entry.turn} />}
+                    {entry.kind === "consent" && (
+                      <ConsentCard
+                        turn={entry.turn}
+                        choice={entry.choice}
+                        busy={loading}
+                        headingId={`${entry.id}-heading`}
+                        onAnswer={(granted) => handleConsent(entry.id, granted)}
+                      />
+                    )}
+                    {entry.kind === "final" && session && (
+                      <AnswerCard
+                        answer={entry.answer}
+                        sessionId={session.id}
+                        headingId={`${entry.id}-heading`}
+                        onStartOver={startOver}
+                      />
+                    )}
+                  </AssistantTurn>
+                )}
+              </li>
+            ))}
+          </ol>
+
+          {loading && <ThinkingStatus />}
+          {failure && (
+            <ErrorNotice error={failure.error} onRetry={failure.retry} onStartOver={startOver} />
+          )}
+
+          {awaitingAnswer && (
+            <Composer
+              value={replyDraft}
+              onChange={setReplyDraft}
+              onSubmit={handleReply}
+              busy={loading}
+              label={t.answerLabel}
+              placeholder={t.answerPlaceholder}
+              rows={2}
+            />
+          )}
+        </div>
+      )}
+      <p aria-live="polite" className="sr-only">
+        {announce}
+      </p>
+    </>
+  );
+
+  const skipLink = (
+    <a
+      href="#main"
+      className="focus:bg-card sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-10 focus:rounded-md focus:px-3 focus:py-2"
+    >
+      {t.skipToContent}
+    </a>
+  );
+
+  const headerProps = {
+    audience,
+    language,
+    onAudienceChange: (value: Audience) => {
+      setAudience(value);
+      setScenario(null);
+    },
+    onLanguageChange: setLanguage,
+    audienceLocked: inConversation,
+  };
+
+  if (variant === "panel") {
+    return (
+      <I18nContext value={t}>
+        <div className="flex h-full flex-col">
+          <PanelHeader {...headerProps} onClose={onClose} />
+          <div className="flex-1 overflow-y-auto overscroll-contain">
+            <div id="assistant-main" className="px-5 pt-6 pb-10">
+              {content}
+            </div>
+          </div>
+        </div>
+      </I18nContext>
+    );
+  }
+
   return (
     <I18nContext value={t}>
-      <a
-        href="#main"
-        className="focus:bg-card sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-10 focus:rounded-md focus:px-3 focus:py-2"
-      >
-        {t.skipToContent}
-      </a>
-      <AppHeader
-        audience={audience}
-        language={language}
-        onAudienceChange={(value) => {
-          setAudience(value);
-          setScenario(null);
-        }}
-        onLanguageChange={setLanguage}
-        audienceLocked={inConversation}
-      />
+      {skipLink}
+      <AppHeader {...headerProps} />
 
       <main id="main" className="mx-auto w-full max-w-2xl flex-1 px-4 pt-8 pb-16 sm:pt-12">
-        {!inConversation ? (
-          <StartView
-            draft={draft}
-            onDraftChange={handleDraftChange}
-            selectedScenario={scenario}
-            onClearScenario={() => {
-              setScenario(null);
-              setDraft("");
-            }}
-            onSubmit={handleStart}
-            scenarios={scenarios}
-            audience={audience}
-            language={language}
-            onPickScenario={handlePickScenario}
-          />
-        ) : (
-          <div className="flex flex-col gap-6">
-            <div className="border-border flex items-center justify-between gap-3 border-b pb-3">
-              <h1 id="start-heading" tabIndex={-1} className="text-base outline-none">
-                {t.startHeading}
-              </h1>
-              <div className="flex items-center gap-3">
-                {session && (
-                  <span className="text-muted-foreground text-xs tabular-nums">
-                    {t.turnCounter(session.turnsUsed, session.maxTurns)}
-                  </span>
-                )}
-                <Button variant="ghost" size="sm" onClick={startOver}>
-                  <RotateCcw aria-hidden className="size-3.5" />
-                  {t.startOver}
-                </Button>
-              </div>
-            </div>
-
-            <ol aria-label={t.startHeading} className="flex flex-col gap-6">
-              {entries.map((entry) => (
-                <li key={entry.id}>
-                  {entry.kind === "user" ? (
-                    <UserMessage text={entry.text} />
-                  ) : (
-                    <AssistantTurn id={entry.id}>
-                      {entry.kind === "question" && <QuestionMessage turn={entry.turn} />}
-                      {entry.kind === "consent" && (
-                        <ConsentCard
-                          turn={entry.turn}
-                          choice={entry.choice}
-                          busy={loading}
-                          headingId={`${entry.id}-heading`}
-                          onAnswer={(granted) => handleConsent(entry.id, granted)}
-                        />
-                      )}
-                      {entry.kind === "final" && session && (
-                        <AnswerCard
-                          answer={entry.answer}
-                          sessionId={session.id}
-                          headingId={`${entry.id}-heading`}
-                          onStartOver={startOver}
-                        />
-                      )}
-                    </AssistantTurn>
-                  )}
-                </li>
-              ))}
-            </ol>
-
-            {loading && <ThinkingStatus />}
-            {failure && (
-              <ErrorNotice error={failure.error} onRetry={failure.retry} onStartOver={startOver} />
-            )}
-
-            {awaitingAnswer && (
-              <Composer
-                value={replyDraft}
-                onChange={setReplyDraft}
-                onSubmit={handleReply}
-                busy={loading}
-                label={t.answerLabel}
-                placeholder={t.answerPlaceholder}
-                rows={2}
-              />
-            )}
-          </div>
-        )}
-        <p aria-live="polite" className="sr-only">
-          {announce}
-        </p>
+        {content}
       </main>
 
       <footer className="border-border border-t">

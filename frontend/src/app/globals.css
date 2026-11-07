@@ -8,7 +8,14 @@
  * separate set of semantic risk colours. Dark mode follows the OS setting.
  */
 
-@custom-variant dark (@media (prefers-color-scheme: dark));
+/* .theme-dna pages are light-only, so dark: utilities skip anything inside them. */
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:not(.theme-dna, .theme-dna *) {
+      @slot;
+    }
+  }
+}
 
 @theme inline {
   --color-background: var(--background);
@@ -51,6 +58,13 @@
   --radius-md: 0.375rem;
   --radius-lg: 0.625rem;
   --radius-xl: 0.875rem;
+
+  /* DNA-style homepage: brand magenta and the near-black ink used on dark bands. */
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: var(--brand-soft);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
 }
 
 /* Type scale: minor third (1.2) on a 17px body. */
@@ -135,6 +149,55 @@
     --risk-critical-fg: oklch(0.84 0.09 25);
     --risk-critical-line: oklch(0.66 0.17 25);
   }
+}
+
+/*
+ * DNA-style homepage theme (prototype, not DNA's own design system).
+ * Light only: magenta #da0070 carries primary actions (white text 5.0:1),
+ * near-black #121212 for text and dark bands, cool greys for surfaces.
+ */
+.theme-dna {
+  color-scheme: light;
+  --brand: oklch(0.56 0.225 358); /* #da0070 */
+  --brand-foreground: oklch(1 0 0);
+  --brand-soft: oklch(0.96 0.025 355); /* #fdeef4 */
+  --ink: oklch(0.18 0 0); /* #121212 */
+  --ink-foreground: oklch(0.97 0 0);
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.18 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: oklch(0.965 0.002 286); /* #f4f4f6 */
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.965 0.002 286);
+  --muted-foreground: oklch(0.45 0.005 286); /* #5c5c63, 6.6:1 on white */
+  --accent: var(--brand-soft);
+  --accent-foreground: oklch(0.42 0.17 358); /* #a1004f */
+  --destructive: oklch(0.5 0.18 27);
+  --border: oklch(0.9 0.003 286);
+  --input: oklch(0.62 0.006 286);
+  --ring: var(--brand);
+
+  --risk-safe-bg: oklch(0.95 0.04 150);
+  --risk-safe-fg: oklch(0.39 0.09 150);
+  --risk-safe-line: oklch(0.62 0.12 150);
+  --risk-medium-bg: oklch(0.955 0.055 90);
+  --risk-medium-fg: oklch(0.42 0.09 75);
+  --risk-medium-line: oklch(0.6 0.13 75);
+  --risk-high-bg: oklch(0.945 0.045 55);
+  --risk-high-fg: oklch(0.45 0.13 45);
+  --risk-high-line: oklch(0.66 0.16 50);
+  --risk-critical-bg: oklch(0.94 0.035 25);
+  --risk-critical-fg: oklch(0.45 0.16 27);
+  --risk-critical-line: oklch(0.58 0.19 27);
+
+  background: var(--background);
+  color: var(--foreground);
 }
 
 @layer base {
