@@ -171,14 +171,23 @@ Built as a build-up: three quick features, then the live call as the dramatic pe
 
 ## Close (0:12)
 
-### Scene 9: How DNA could offer it (12 s)
+### Scene 9: Closing (15 s)
 
-**Show:** the end card `cards/03-end.png`.
+**Show:**
+1. Music cuts out. Black screen. A phone **buzzes** once, the same sound as the opening. The parcel message from the hook card slides in alone: "Your parcel is on hold. Pay the €1.99 customs fee…"
+2. Hold it for a second, in silence.
+3. A soft whoosh: the message shrinks away and the end card `cards/03-end.png` fades in. The music comes back gently.
+4. On the last word, the music stops. Hold the card for 2 seconds, then cut to black.
 
-**Say:**
-> Free for every DNA customer, and a business tier with team sharing and priority handoffs. Before you click, pay or reply: ask DNA.
+**Say:** *(over the buzzing message, calm and slow)*
+> Tomorrow, another message like this will arrive.
+>
+> *(beat)*
+>
+> This time, they'll know exactly what to do.
 
----
+**Say:** *(as the end card appears)*
+> Free for every DNA customer, with a business tier for teams. Before you click, pay or reply: ask DNA.
 
 ## Editing notes
 
