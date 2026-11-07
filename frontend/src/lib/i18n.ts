@@ -75,6 +75,13 @@ const en = {
   urgencyLabel: "When",
   whatToDo: "What to do",
   whyHeading: "Where this advice comes from",
+  readAloud: "Read aloud",
+  copy: "Copy",
+  copied: "Copied",
+  copyFailed: "Couldn’t copy",
+  readAloudStop: "Stop reading",
+  readAloudLoading: "Preparing audio…",
+  readAloudError: "Reading aloud isn’t working right now.",
   sourcesNote:
     "These are the hackathon organisers' synthetic guidance texts, not official DNA or authority advice.",
   confidence: (c: number): string =>
@@ -194,6 +201,13 @@ const fi: Dictionary = {
   urgencyLabel: "Milloin",
   whatToDo: "Mitä tehdä",
   whyHeading: "Mihin neuvo perustuu",
+  readAloud: "Lue ääneen",
+  copy: "Kopioi",
+  copied: "Kopioitu",
+  copyFailed: "Kopiointi ei onnistunut",
+  readAloudStop: "Lopeta lukeminen",
+  readAloudLoading: "Valmistellaan ääntä…",
+  readAloudError: "Ääneen lukeminen ei nyt toimi.",
   sourcesNote:
     "Nämä ovat hackathonin järjestäjien keksittyjä ohjetekstejä, eivät DNA:n tai viranomaisten virallisia ohjeita.",
   confidence: (c) =>
@@ -312,6 +326,13 @@ const sv: Dictionary = {
   urgencyLabel: "När",
   whatToDo: "Gör så här",
   whyHeading: "Varifrån rådet kommer",
+  readAloud: "Läs upp",
+  copy: "Kopiera",
+  copied: "Kopierat",
+  copyFailed: "Kunde inte kopiera",
+  readAloudStop: "Sluta läsa",
+  readAloudLoading: "Förbereder ljud…",
+  readAloudError: "Uppläsning fungerar inte just nu.",
   sourcesNote:
     "Detta är hackathonarrangörernas syntetiska vägledningstexter, inte officiella råd från DNA eller myndigheter.",
   confidence: (c) =>

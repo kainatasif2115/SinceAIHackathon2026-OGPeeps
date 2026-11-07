@@ -191,6 +191,24 @@ export async function requestHandoff(sessionId: string): Promise<Handoff> {
   return request(`/api/sessions/${encodeURIComponent(sessionId)}/handoff`, handoffSchema, {});
 }
 
+/** MP3 of `text` read aloud by the backend (ElevenLabs). Throws ApiError if unavailable. */
+export async function speak(text: string, language: Language): Promise<Blob> {
+  if (isMockMode) throw new ApiError(503, "No voice in mock mode");
+  let res: Response;
+  try {
+    res = await fetch("/api/voice/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, language }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch {
+    throw new ApiError(0, "Network error or timeout");
+  }
+  if (!res.ok) throw new ApiError(res.status, res.statusText);
+  return res.blob();
+}
+
 export async function getHealth(): Promise<Health> {
   if (isMockMode) return (await mock()).mockHealth();
   return request("/api/health", healthSchema);
