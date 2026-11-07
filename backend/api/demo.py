@@ -1,9 +1,11 @@
 """One-click demo accounts, for people who just want to look around.
 
 Two fixed accounts, an individual and a small-business owner with a colleague, are
-rebuilt from scratch every time someone uses the "explore" button on the login page:
-the old copy is deleted and a fresh one is filled with finished chats, handoffs in each
-state (waiting, picked up, resolved) and, for the company, a team and a pending invite.
+refreshed every time someone uses the "explore" button on the login page: the sample
+chats and handoffs are replaced by a fresh set (finished chats, handoffs in each state:
+waiting, picked up, resolved) and, for the company, a team and a pending invite. Chats
+and handoffs made by hand while using a demo account are kept until they expire after
+24 hours like any other, so a button press never deletes someone's work.
 The chats are saved conversations from our own evaluation run on the organisers'
 synthetic cases, so setting this up never calls the AI.
 
@@ -58,42 +60,58 @@ def enabled() -> bool:
 
 
 def start(kind: str) -> dict:
-    """Rebuild the demo account of this kind, and return its signed-in user."""
-    _wipe()
+    """Refresh the sample data of this kind of demo account, and return its signed-in user."""
+    _clear_seeded()
     if kind == "individual":
-        user = _make_user(INDIVIDUAL, "private")
+        user = _account(INDIVIDUAL, "private")
         _seed(user, INDIVIDUAL_CHATS, audience="consumer")
         return accounts.get(user["_id"])
 
-    owner = _make_user(OWNER, "business")
-    team = teams._create(COMPANY, owner["_id"])
-    accounts.update(owner["_id"], team_id=team["_id"], role="owner")
-    colleague = _make_user(COLLEAGUE, "business")
-    accounts.update(colleague["_id"], team_id=team["_id"], role="member")
-    teams.invite(team, PENDING_INVITE)
+    owner = _account(OWNER, "business")
+    team = teams.team_of(owner)
+    if not team:
+        team = teams._create(COMPANY, owner["_id"])
+        accounts.update(owner["_id"], team_id=team["_id"], role="owner")
+    colleague = _account(COLLEAGUE, "business")
+    if colleague.get("team_id") != team["_id"]:
+        accounts.update(colleague["_id"], team_id=team["_id"], role="member")
+    try:
+        teams.invite(team, PENDING_INVITE)
+    except teams.TeamError:
+        pass  # already invited, or already joined
     _seed(accounts.get(owner["_id"]), OWNER_CHATS, audience="small_business")
     _seed(accounts.get(colleague["_id"]), COLLEAGUE_CHATS, audience="small_business")
     return accounts.get(owner["_id"])
 
 
-def _make_user(who: dict, kind: str) -> dict:
+def _account(who: dict, kind: str) -> dict:
+    """The demo account, created the first time and kept after that."""
+    user = accounts._find_by_email(who["email"])
+    if user:
+        return user
     user = accounts.create(who["email"], who["name"], secrets.token_urlsafe(24), kind=kind)
     accounts.update(user["_id"], demo=True)
     return accounts.get(user["_id"])
 
 
-def _wipe() -> None:
-    """Delete both demo accounts, their company, chats and handoffs."""
+def _is_sample(doc: dict) -> bool:
+    """A chat this module seeded. Older copies have no mark, but only seeding stores a
+    dataset case (it has a scenario family) without the scenario id a real chat records."""
+    if doc.get("sample"):
+        return True
+    return doc.get("scenario_id") is None and "scenario_family" in doc["conversation"]["case"]
+
+
+def _clear_seeded() -> None:
+    """Delete the sample chats and their handoffs; anything made by hand stays."""
     for email in EMAILS:
         user = accounts._find_by_email(email)
         if not user:
             continue
-        ids = [d["_id"] for d in sessions.for_user(user["_id"])]
+        ids = [d["_id"] for d in sessions.for_user(user["_id"]) if _is_sample(d)]
         tickets.delete_for_sessions(ids)
-        sessions.delete_for_user(user["_id"])
-        if user.get("role") == "owner" and (team := teams.team_of(user)):
-            teams.dissolve(team)
-        accounts.delete(user["_id"])
+        for session_id in ids:
+            sessions.delete(session_id)
 
 
 def _seed(user: dict, chats: list, audience: str) -> None:
@@ -109,6 +127,7 @@ def _seed(user: dict, chats: list, audience: str) -> None:
             "final": final,
             "user_id": user["_id"],
             "started_at": started,
+            "sample": True,
         }
         if audience == "small_business" and user.get("team_id"):
             extra["team_id"] = user["team_id"]

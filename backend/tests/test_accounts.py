@@ -3,6 +3,7 @@ from django.test import Client
 
 from api import accounts, sessions, teams, tickets
 from assistant import brain
+from assistant.engine import Conversation
 from tests.fakes import Script, ask, ask_consent, done, final
 
 PASSWORD = "kettu-ilves-2026"
@@ -244,17 +245,24 @@ def test_demo_organization_has_a_team_a_colleague_and_an_invite(client, monkeypa
     assert len(shared) == 2 and all(c["author"] == "Mikko Lahtinen" for c in shared)
 
 
-def test_demo_login_starts_from_scratch_every_time(client, monkeypatch):
+def test_demo_login_refreshes_the_samples_but_keeps_work_done_by_hand(client, monkeypatch):
     monkeypatch.setenv("DEMO_LOGIN_ENABLED", "1")
     teams._memory.clear()
     _demo_login(client, "individual")
-    first = client.get("/api/account/conversations").json()
-    client.delete(f"/api/sessions/{first[0]['session_id']}")
+    user_id = accounts._find_by_email("explore.individual@demo.example")["_id"]
+    sample = client.get("/api/account/conversations").json()
+    client.delete(f"/api/sessions/{sample[0]['session_id']}")
+    # A chat started by hand in the demo account, with a handoff.
+    conv = Conversation(case=sessions.build_case("consumer", "en", "A strange text.", None))
+    sessions.save("mine", conv, {"user_id": user_id})
+    tickets.create(tickets.from_conversation("DSA-MINE01", "mine", conv, None))
 
     _demo_login(client, "individual")
     _demo_login(client, "organization")
     _demo_login(client, "individual")
 
     again = client.get("/api/account/conversations").json()
-    assert len(again) == 6  # rebuilt, not added to
+    assert len(again) == 7  # six fresh samples, plus the chat made by hand
+    assert "mine" in [c["session_id"] for c in again]
+    assert "DSA-MINE01" in tickets._memory
     assert client.get("/api/agent/tickets").status_code == 401  # no staff access from a demo

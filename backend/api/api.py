@@ -523,6 +523,7 @@ def _extra(doc: dict) -> dict:
         "user_id",
         "team_id",
         "started_at",
+        "sample",
     )
     return {k: doc[k] for k in keep if k in doc}
 
