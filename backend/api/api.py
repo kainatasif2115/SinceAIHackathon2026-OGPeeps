@@ -85,6 +85,7 @@ def start_session(request, body: StartIn):
 def reply(request, session_id: str, body: ReplyIn):
     conv, doc = _load(session_id)
     _require_pending(doc, "question")
+    sessions.add_link_check(conv.case, body.text)
     text = body.text.strip() or SCREENSHOT_ONLY[conv.case["language"]]
     conv.record_answer(text, [image.model_dump() for image in body.images])
     return _advance(session_id, conv, doc)

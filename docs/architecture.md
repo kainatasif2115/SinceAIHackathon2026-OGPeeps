@@ -43,6 +43,7 @@ sim:    simset/sim/run_conversation.py ⇄ scripts/sim_bot.py ─▶ engine.Conv
 | Checker | `backend/assistant/checker.py` | Deterministic rules applied to every answer (see below). |
 | Engine | `backend/assistant/engine.py` | Single-turn answers and multi-turn conversations. Retries once if the answer contains unsafe wording. Gives a safe fallback answer if Claude is unavailable. |
 | Step phrasings | `backend/scripts/build_step_phrases.py` → `assistant/data/step_phrases.json` | Short Finnish and English example sentences for each of the 38 steps, mined from the dev reference answers. They help the advice use wording the evaluator recognises. |
+| Live risk signals | `backend/api/link_check.py`, `api/sessions.py` | For situations typed live (not the dataset's examples): any link in the message or a later reply gets a **simulated link-reputation check** in the dataset's format, marked `simulated_demo_check`. Official Finnish domains are clean; shorteners are unknown; brand look-alikes, lure words, risky endings, raw IPs and disguised characters are suspicious or malicious; anything else is unknown, never clean. The demo customer's account data behind the permission card is realistic but unremarkable: a paid invoice, logins from a known device, everyday apps. In production, DNA's real systems would supply these signals. |
 | Storage | MongoDB via `pymongo` (`api/sessions.py`) | Session state with a 24-hour TTL index. Falls back to process memory when `MONGODB_URI` is not set. |
 | Data and scoring | `simset/` | The organisers' SimSet v2.0.1, unchanged. |
 

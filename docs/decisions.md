@@ -14,6 +14,11 @@ The brief asks for "documented decisions", so add an entry whenever the team set
 
 ---
 
+## 2026-11-07: Simulated risk signals for situations typed live
+
+**Decision:** When a judge or user types their own situation instead of picking an example, links in it get a simulated, rule-based link-reputation check (same shape as the dataset's, marked as simulated). The demo customer gets realistic, ordinary account data behind the permission card.
+**Why:** Before this, typed situations reached the assistant with no signals at all, so risk-signal fusion and meaningful consent requests only appeared with prepared examples. Tested live: a typed `dna-asiakas-tili.top/vahvista` link was rated malicious, and the advice said "the link check marks the page as a fake that copies the operator's name".
+
 ## 2026-11-07: Ask permission for the one field that settles the question
 
 **Decision:** In chat (multi-turn) mode, the policy now tells the assistant to ask permission early for the one consent-gated field that would confirm or rule out the main suspicion, with examples per situation. It also tells it to report only data that actually changed the advice.
