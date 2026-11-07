@@ -7,7 +7,7 @@ from ninja import File, Form, NinjaAPI, Schema
 from ninja.errors import HttpError
 from ninja.files import UploadedFile
 
-from api import db, presenter, sessions, voice
+from api import db, presenter, sessions, tickets, voice
 from api.schemas import (
     ConsentIn,
     HandoffOut,
@@ -16,6 +16,8 @@ from api.schemas import (
     SessionOut,
     SpeakIn,
     StartIn,
+    TicketOut,
+    TicketUpdateIn,
     TranscriptOut,
 )
 from assistant import brain, engine, simset
@@ -104,7 +106,25 @@ def handoff(request, session_id: str):
     final = doc.get("final")
     reference = doc.get("handoff_reference") or f"DSA-{secrets.token_hex(3).upper()}"
     sessions.save(session_id, conv, {**_extra(doc), "handoff_reference": reference})
+    tickets.create(tickets.from_conversation(reference, session_id, conv, final))
     return {"reference": reference, "summary": presenter.handoff_summary(conv, final)}
+
+
+# Support-agent console. In production this sits behind DNA's staff sign-in; the
+# prototype has no sign-in, so it only ever holds synthetic demo conversations.
+
+
+@api.get("/agent/tickets", response=list[TicketOut])
+def list_tickets(request):
+    return tickets.all_tickets()
+
+
+@api.patch("/agent/tickets/{reference}", response=TicketOut)
+def update_ticket(request, reference: str, body: TicketUpdateIn):
+    ticket = tickets.update_status(reference, body.status)
+    if not ticket:
+        raise HttpError(404, "Ticket not found or expired.")
+    return ticket
 
 
 MAX_AUDIO_BYTES = 10 * 1024 * 1024

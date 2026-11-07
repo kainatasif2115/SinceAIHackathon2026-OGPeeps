@@ -1,7 +1,7 @@
 import pytest
 from django.test import Client
 
-from api import sessions
+from api import sessions, tickets
 from assistant import brain
 from assistant.brain import BrainUnavailable
 from tests.fakes import Script, ask, ask_consent, done, final
@@ -192,3 +192,68 @@ def test_brain_gets_screenshots_as_image_blocks():
     assert content[2]["source"] == {"type": "base64", "media_type": "image/png", "data": PIXEL}
     assert content[-1] == {"type": "text", "text": "case text"}
     assert brain.with_images("case text", []) == "case text"
+
+
+def _handoff_case(monkeypatch, client):
+    monkeypatch.setattr(
+        brain,
+        "decide_multi_turn",
+        Script(
+            ask("Did you read the code out?", ["code_shared"]),
+            done(
+                final(
+                    risk_level="critical",
+                    urgency="immediate",
+                    primary_action="contact_operator_support",
+                    escalation_required=True,
+                    escalation_target="operator_support_agent",
+                )
+            ),
+        ),
+    )
+    sid = post(
+        client,
+        "/api/sessions",
+        {"audience": "consumer", "language": "en", "message": "A caller asked for my code."},
+    ).json()["session_id"]
+    post(client, f"/api/sessions/{sid}/reply", {"text": "Yes, I read it out."})
+    return post(client, f"/api/sessions/{sid}/handoff").json()["reference"]
+
+
+def test_handoff_creates_a_ticket_on_the_agent_board(monkeypatch, client):
+    tickets._memory.clear()
+    reference = _handoff_case(monkeypatch, client)
+
+    board = client.get("/api/agent/tickets").json()
+    ticket = next(t for t in board if t["reference"] == reference)
+
+    assert ticket["status"] == "backlog"
+    assert ticket["severity"] == "critical"
+    assert ticket["team"] == "operator_support_agent"
+    assert ticket["demo"] is False
+    assert [line["role"] for line in ticket["transcript"]] == ["customer", "assistant", "customer"]
+    assert ticket["advice"]["action_label"]
+    # Demo tickets fill the board alongside the real one.
+    assert any(t["demo"] for t in board)
+
+
+def test_agent_can_move_a_ticket(monkeypatch, client):
+    tickets._memory.clear()
+    reference = _handoff_case(monkeypatch, client)
+
+    moved = client.patch(
+        f"/api/agent/tickets/{reference}",
+        {"status": "in_progress"},
+        content_type="application/json",
+    )
+
+    assert moved.status_code == 200
+    assert moved.json()["status"] == "in_progress"
+    bad = client.patch(
+        f"/api/agent/tickets/{reference}", {"status": "lost"}, content_type="application/json"
+    )
+    assert bad.status_code == 422
+    missing = client.patch(
+        "/api/agent/tickets/NOPE", {"status": "done"}, content_type="application/json"
+    )
+    assert missing.status_code == 404

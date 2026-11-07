@@ -2,6 +2,7 @@
 
 import base64
 import binascii
+from datetime import datetime
 from typing import Literal
 
 from ninja import Field, Schema
@@ -133,3 +134,50 @@ class SessionOut(Schema):
 class HandoffOut(Schema):
     reference: str
     summary: str
+
+
+# --- Support-agent console -----------------------------------------------------------
+
+TicketStatus = Literal["backlog", "in_progress", "blocked", "done"]
+Severity = Literal["critical", "high", "medium", "low"]
+
+
+class TranscriptLine(Schema):
+    role: Literal["customer", "assistant"]
+    text: str
+
+
+class TicketConsent(Schema):
+    allowed: list[str]
+    declined: list[str]
+
+
+class TicketAdvice(Schema):
+    action_label: str
+    advice_text: str
+    steps: list[str]
+    confidence: float
+
+
+class TicketOut(Schema):
+    reference: str
+    status: TicketStatus
+    severity: Severity
+    urgency: Urgency
+    team: str
+    team_label: str
+    audience: Audience
+    language: Language
+    title: str
+    transcript: list[TranscriptLine]
+    screenshots: int
+    consent: TicketConsent
+    advice: TicketAdvice | None
+    summary: str
+    demo: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class TicketUpdateIn(Schema):
+    status: TicketStatus
