@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { HandoffPanel } from "./handoff-panel";
 import { useT } from "./i18n-context";
 import { RISK_STYLES } from "./risk";
+import { StepChecklist } from "./step-checklist";
 
 type Props = {
   answer: Answer;
@@ -72,27 +73,11 @@ export function AnswerCard({ answer, sessionId, headingId, onStartOver }: Props)
         )}
 
         {answer.steps.length > 0 && (
-          <section aria-labelledby={`${headingId}-steps`} className="flex flex-col gap-3">
-            <h3 id={`${headingId}-steps`} className="text-base">
-              {t.whatToDo}
-            </h3>
-            <ol role="list" className="flex flex-col gap-3">
-              {answer.steps.map((step, index) => (
-                <li key={index} className="flex gap-3">
-                  <span
-                    aria-hidden
-                    className="bg-accent text-accent-foreground flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-medium tabular-nums"
-                  >
-                    {index + 1}
-                  </span>
-                  <span className="max-w-prose pt-0.5">
-                    <span className="sr-only">{index + 1}. </span>
-                    {step}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </section>
+          <StepChecklist
+            steps={answer.steps}
+            sessionId={sessionId}
+            headingId={`${headingId}-steps`}
+          />
         )}
 
         {/* The AI didn't call for a person, but the customer can still ask for one. */}

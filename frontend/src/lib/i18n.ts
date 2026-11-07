@@ -77,6 +77,8 @@ const en = {
   riskHeading: "Risk",
   urgencyLabel: "When",
   whatToDo: "What to do",
+  stepsDone: (done: number, total: number): string =>
+    done === total ? `All ${total} done` : `${done} of ${total} done`,
   whyHeading: "Where this advice comes from",
   readAloud: "Read aloud",
   campaignNote: (n: number) =>
@@ -262,6 +264,7 @@ const fi: Dictionary = {
   riskHeading: "Riski",
   urgencyLabel: "Milloin",
   whatToDo: "Mitä tehdä",
+  stepsDone: (done, total) => (done === total ? `Kaikki ${total} tehty` : `${done}/${total} tehty`),
   whyHeading: "Mihin neuvo perustuu",
   readAloud: "Lue ääneen",
   campaignNote: (n: number) =>
@@ -446,6 +449,8 @@ const sv: Dictionary = {
   riskHeading: "Risk",
   urgencyLabel: "När",
   whatToDo: "Gör så här",
+  stepsDone: (done, total) =>
+    done === total ? `Alla ${total} klara` : `${done} av ${total} klara`,
   whyHeading: "Varifrån rådet kommer",
   readAloud: "Läs upp",
   campaignNote: (n: number) =>
