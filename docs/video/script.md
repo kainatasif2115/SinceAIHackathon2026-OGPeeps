@@ -79,9 +79,9 @@ Speed up every wait for the AI; never speed up the answer card.
 **Say:**
 > Here's how it works on a real scam. A caller pretending to be your operator offers a free SIM upgrade, and asks for the code you just got by text. The assistant doesn't guess. It asks one question, the only one that changes the answer: did you read it out? Yes. Before it looks at any account data, it asks permission. Then one clear answer: critical. Stop the transfer, lock the number, then call the bank. And a DNA agent takes over, already knowing the whole story.
 
-### Scene 4: The other four journeys (20 s)
+### Scene 4: The other four journeys (35 s)
 
-**Show:** type `/journeys` after the site address and open it, so the URL is visible. It has one tab per journey, each a saved conversation from our final run with the organisers' simulated customer. Click through the other four tabs, about 4 seconds each, scrolling to the final answer each time:
+**Show:** type `/journeys` after the site address and open it, so the URL is visible. It has one tab per journey, each a saved conversation from our final run with the organisers' simulated customer. Click through the other four tabs, about 8 seconds each, scrolling to the final answer each time:
 
 | Tab | Case | What it shows |
 |---|---|---|
@@ -91,7 +91,17 @@ Speed up every wait for the AI; never speed up the answer card.
 | Small business | `DSA-D-0032` | Five subscriptions nobody ordered, delivered to another city. Answer: contact business support now to stop the delivery. |
 
 **Say:**
-> In this video we walked through one journey. The other four are all on our site, at slash journeys. A fake bank email that swears it's safe: don't log in. An app already installed from a link: flight mode, now. No signal and a surprise eSIM: lock the number, don't wait. And for a business, an order nobody placed: stop the delivery. All five passed the organisers' evaluator.
+> In this video we walked through one journey. The other four are on our site, at this link.
+>
+> Suspicious message: an email says your bank ID is expiring, and even claims it's been verified safe. The assistant checks the link, finds a fake bank page, and says: don't log in, the "safe" line is part of the scam.
+>
+> Clicked link: someone installed a voicemail app from a text and gave it permissions. That app can read their codes, so: flight mode now, no banking on that phone, and a specialist takes over.
+>
+> Breach notice: the phone suddenly has no signal, and an eSIM was activated on a new device. Someone may be taking over the number. So: lock it with the operator right away, and don't wait for the signal to come back.
+>
+> Small business: five phone subscriptions nobody ordered, being delivered to another city. Classic fraud using the company's account. So: call business support now and stop the delivery before the SIMs are picked up.
+>
+> All five passed the organisers' evaluator.
 
 ### Scene 5: Proof, and where it fails (21 s)
 
