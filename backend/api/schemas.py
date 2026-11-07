@@ -31,6 +31,15 @@ class ReplyIn(Schema):
     text: str = Field(min_length=1, max_length=2000)
 
 
+class SpeakIn(Schema):
+    text: str = Field(min_length=1, max_length=2500)
+    language: Language | None = None
+
+
+class TranscriptOut(Schema):
+    text: str
+
+
 class ConsentIn(Schema):
     granted: bool
 

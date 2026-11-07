@@ -13,6 +13,34 @@ from assistant.simset import textcheck
 
 MAX_QUESTION_TOPICS = 2
 
+# Single-turn answers cannot wait for the user's reply, so when the answer asks
+# about one of these facts it must already be safe if the riskier answer is true.
+# Only topics whose riskier branch has one clear action are listed; for codes,
+# passwords and "did you order this yourself" the right action depends on context.
+RISKIER_BRANCH = {
+    "card_details_entered": {
+        "action": "contact_bank_and_block_cards",
+        "risk": "high",
+        "urgency": "immediate",
+        "handoff": False,
+        "steps": ["block_card", "contact_bank_now"],
+    },
+    "payment_status": {
+        "action": "contact_bank_and_block_cards",
+        "risk": "high",
+        "urgency": "immediate",
+        "handoff": True,
+        "steps": ["contact_bank_now", "dont_pay_or_transfer"],
+    },
+    "app_installed": {
+        "action": "isolate_device_and_scan",
+        "risk": "high",
+        "urgency": "today",
+        "handoff": True,
+        "steps": ["disconnect_device", "get_device_checked"],
+    },
+}
+
 
 @dataclass
 class ConsentState:
@@ -40,6 +68,19 @@ def check(answer: FinalAnswer, case: dict, consent: ConsentState) -> CheckResult
     a = answer.model_copy(deep=True)
     fixes: list[str] = []
     language = case["language"]
+
+    # --- Riskier branch when a decisive fact is unknown (single-turn) ----------
+    if consent.single_turn:
+        for topic in a.question_topics:
+            rule = RISKIER_BRANCH.get(topic)
+            if rule and _intervention(a.primary_action) < _intervention(rule["action"]):
+                fixes.append(f"asked about {topic}: answered for the riskier branch")
+                a.secondary_actions = [a.primary_action, *a.secondary_actions]
+                a.primary_action = rule["action"]
+                a.risk_level = _at_least(a.risk_level, rule["risk"], vocab.RISK_LEVELS)
+                a.urgency = _at_least(a.urgency, rule["urgency"], vocab.URGENCIES)
+                a.escalation_required = a.escalation_required or rule["handoff"]
+                a.step_ids = [*rule["steps"], *[s for s in a.step_ids if s not in rule["steps"]]]
 
     # --- Escalation ---------------------------------------------------------
     if a.primary_action == "escalate_to_human" and not a.escalation_required:
@@ -111,6 +152,14 @@ def strip_unsafe(answer: FinalAnswer, language: str) -> FinalAnswer:
     a.advice_text = " ".join(s for s in textcheck.sentences(a.advice_text) if clean(s))
     a.steps = [s for s in a.steps if clean(s)]
     return a
+
+
+def _intervention(action: str) -> int:
+    return vocab.actions()[action]["intervention"]
+
+
+def _at_least(value: str, floor: str, order: tuple[str, ...]) -> str:
+    return value if order.index(value) >= order.index(floor) else floor
 
 
 def _lead_with_step(advice: str, steps: list[str], step_ids: set[str]) -> str:

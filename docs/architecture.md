@@ -34,7 +34,8 @@ sim:    simset/sim/run_conversation.py ⇄ scripts/sim_bot.py ─▶ engine.Conv
 | Chat page | `frontend/` | Next.js + shadcn/ui. Question bubbles, a permission card (Allow / Not now at equal weight), and an answer card (risk, action, steps, why, sources, "Talk to a person"). Has a mock mode for working without the backend. |
 | API | `backend/api/` | Django + Django Ninja. `POST /api/sessions`, `/reply`, `/consent`, `/handoff`, `GET /api/scenarios`, `/health`. Interactive docs at `/api/docs`. |
 | Policy prompt | `backend/assistant/prompt.py` | How to decide (risk levels, benign look-alikes, decisive questions, escalation targets, consent, special cases) and how to write the answer. It also includes the organisers' vocabularies and all guidance passages. About 13k tokens, cached. |
-| Brain | `backend/assistant/brain.py` | One Claude call per step with structured output, validated by Pydantic. Uses server-side fallback if the model declines a request. |
+| Brain | `backend/assistant/brain.py` | One model call per step. By default Claude Sonnet 5.5 runs through an ElevenLabs agent in text-only mode (`elevenlabs_llm.py`): the agent holds the policy prompt, and we parse its JSON reply with Pydantic, retrying once if it's invalid. Alternatively the Anthropic API with structured outputs. |
+| Voice | `backend/api/voice.py` | ElevenLabs speech-to-text (`POST /api/voice/transcribe`, multipart `audio` + `language`) and text-to-speech (`POST /api/voice/speak`, JSON `{text, language}` → MP3). The key stays on the backend. The UI buttons are up to the UI owner; a reference implementation is on the local branch `feat/voice-ui`. |
 | Checker | `backend/assistant/checker.py` | Deterministic rules applied to every answer (see below). |
 | Engine | `backend/assistant/engine.py` | Single-turn answers and multi-turn conversations. Retries once if the answer contains unsafe wording. Gives a safe fallback answer if Claude is unavailable. |
 | Step phrasings | `backend/scripts/build_step_phrases.py` → `assistant/data/step_phrases.json` | Short Finnish and English example sentences for each of the 38 steps, mined from the dev reference answers. They help the advice use wording the evaluator recognises. |
@@ -71,4 +72,4 @@ sim:    simset/sim/run_conversation.py ⇄ scripts/sim_bot.py ─▶ engine.Conv
   - account logins.
 - Consent maps to DNA's existing privacy settings (`pre_granted`), plus the in-chat Allow / Not now for anything else.
 - The handoff endpoint would open a ticket or a live chat in DNA's customer-service tool, with the summary attached.
-- Claude runs through the Anthropic API. Model and effort are environment settings (`CLAUDE_MODEL`, `CLAUDE_EFFORT`).
+- The model runs through ElevenLabs (or the Anthropic API). Model and provider are environment settings (`ELEVENLABS_LLM`, `BRAIN_PROVIDER`). Voice works the same way inside DNA's app, and could later extend to phone calls.

@@ -6,7 +6,7 @@ PY := $(VENV)/bin/python
 RUNS := runs
 N ?= 60
 
-.PHONY: help setup db backend frontend test check baseline eval-sample eval-dev eval-multi predict-test validate
+.PHONY: help setup agent db backend frontend test check baseline eval-sample eval-dev eval-multi predict-test validate
 
 help: ## Show available commands
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-13s %s\n", $$1, $$2}'
@@ -20,6 +20,9 @@ setup: ## Install backend and frontend dependencies, create env files
 	@test -f backend/.env || cp backend/.env.example backend/.env
 	@test -f frontend/.env.local || cp frontend/.env.example frontend/.env.local
 	@echo "Done. Add your keys to backend/.env"
+
+agent: ## Create or update the ElevenLabs agent that runs the brain (rerun after prompt changes)
+	$(PY) backend/scripts/create_elevenlabs_agent.py
 
 db: ## Start a local MongoDB in Docker (then MONGODB_URI=mongodb://localhost:27017)
 	docker compose up -d mongo
@@ -52,13 +55,13 @@ eval-dev: ## Answer and score all 588 dev cases (single-turn; uses Claude)
 	$(PY) backend/scripts/predict.py --split dev --out $(RUNS)/dev_single.jsonl
 	$(PYTHON) simset/eval/evaluate.py --cases simset/data/dev/cases.jsonl --submission $(RUNS)/dev_single.jsonl
 
-eval-multi: ## Talk to the organisers' simulated user on N dev cases and score it (uses Claude)
+eval-multi: ## Talk to the organisers' simulated user on N dev cases and score it (uses AI credits)
 	@mkdir -p $(RUNS)
 	$(PYTHON) simset/sim/run_conversation.py --cases simset/data/dev/cases.jsonl --limit $(N) --timeout 180 \
 		--bot "$(PY) backend/scripts/sim_bot.py" --out $(RUNS)/dev_multi_$(N).jsonl
 	$(PYTHON) simset/eval/evaluate.py --cases simset/data/dev/cases.jsonl --submission $(RUNS)/dev_multi_$(N).jsonl
 
-predict-test: ## Answer all 335 test inputs into test_predictions.jsonl and validate it (uses Claude)
+predict-test: ## Answer all 335 test inputs into test_predictions.jsonl and validate it (uses AI credits)
 	$(PY) backend/scripts/predict.py --split test --out test_predictions.jsonl
 	$(PYTHON) simset/tools/validate.py --submission test_predictions.jsonl
 

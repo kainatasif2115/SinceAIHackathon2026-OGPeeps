@@ -157,3 +157,31 @@ def _signal(case: dict, path: str):
     for part in path.split("."):
         cur = cur[part]
     return cur
+
+
+def test_single_turn_answers_for_the_riskier_branch(en_case):
+    answer = final(
+        question_topics=["card_details_entered"],
+        questions_asked=["Did you type your card number on the page?"],
+        advice_text="If you typed your card number, contact your bank now. Otherwise do not "
+        "open the link again and delete the message.",
+    )
+
+    checked = checker.check(answer, en_case, ConsentState()).answer
+
+    assert checked.primary_action == "contact_bank_and_block_cards"
+    assert "do_not_interact_and_delete" in checked.secondary_actions
+    assert checked.risk_level == "high"
+    found = simset.textcheck.find_steps(checked.advice_text + "\n" + "\n".join(checked.steps))
+    assert {"block_card", "contact_bank_now"} & found
+
+
+def test_riskier_branch_never_downgrades_or_applies_in_multi_turn(en_case):
+    stronger = final(primary_action="escalate_to_human", question_topics=["card_details_entered"])
+    asked_first = final(question_topics=["card_details_entered"])
+
+    assert checker.check(stronger, en_case, ConsentState()).answer.primary_action == (
+        "escalate_to_human"
+    )
+    multi = checker.check(asked_first, en_case, ConsentState(single_turn=False)).answer
+    assert multi.primary_action == "do_not_interact_and_delete"

@@ -2,12 +2,23 @@ import logging
 import os
 import secrets
 
-from ninja import NinjaAPI, Schema
+from django.http import HttpResponse
+from ninja import File, Form, NinjaAPI, Schema
 from ninja.errors import HttpError
+from ninja.files import UploadedFile
 
-from api import db, presenter, sessions
-from api.schemas import ConsentIn, HandoffOut, ReplyIn, ScenarioOut, SessionOut, StartIn
-from assistant import engine, simset
+from api import db, presenter, sessions, voice
+from api.schemas import (
+    ConsentIn,
+    HandoffOut,
+    ReplyIn,
+    ScenarioOut,
+    SessionOut,
+    SpeakIn,
+    StartIn,
+    TranscriptOut,
+)
+from assistant import brain, engine, simset
 from assistant.brain import BrainUnavailable
 from assistant.engine import Conversation
 
@@ -23,6 +34,8 @@ class Health(Schema):
     simset_version: str
     guidance_passages: int
     claude_configured: bool
+    brain_provider: str
+    voice_configured: bool
     mongodb_configured: bool
 
 
@@ -32,9 +45,18 @@ def health(request):
         "status": "ok",
         "simset_version": simset.version(),
         "guidance_passages": len(simset.guidance_corpus()),
-        "claude_configured": bool(os.environ.get("ANTHROPIC_API_KEY")),
+        # Whether the brain's model is reachable (directly or through ElevenLabs).
+        "claude_configured": _brain_configured(),
+        "brain_provider": brain.provider(),
+        "voice_configured": voice.is_configured(),
         "mongodb_configured": db.is_configured(),
     }
+
+
+def _brain_configured() -> bool:
+    if brain.provider() == "elevenlabs":
+        return bool(os.environ.get("ELEVENLABS_API_KEY") and os.environ.get("ELEVENLABS_AGENT_ID"))
+    return bool(os.environ.get("ANTHROPIC_API_KEY"))
 
 
 @api.get("/scenarios", response=list[ScenarioOut])
@@ -73,6 +95,37 @@ def handoff(request, session_id: str):
     reference = doc.get("handoff_reference") or f"DSA-{secrets.token_hex(3).upper()}"
     sessions.save(session_id, conv, {**_extra(doc), "handoff_reference": reference})
     return {"reference": reference, "summary": presenter.handoff_summary(conv, final)}
+
+
+MAX_AUDIO_BYTES = 10 * 1024 * 1024
+
+
+@api.post("/voice/transcribe", response=TranscriptOut)
+def transcribe(request, audio: File[UploadedFile], language: Form[str] = ""):
+    """Microphone recording -> text, so people can speak instead of type."""
+    if not voice.is_configured():
+        raise HttpError(503, "Voice input is not available right now.")
+    if audio.size > MAX_AUDIO_BYTES:
+        raise HttpError(413, "Recording is too long.")
+    try:
+        text = voice.transcribe(audio.read(), audio.name or "recording.webm", language or None)
+    except Exception as err:
+        log.warning("Transcription failed: %s", err)
+        raise HttpError(503, "Voice input is not available right now.") from err
+    return {"text": text}
+
+
+@api.post("/voice/speak")
+def speak(request, body: SpeakIn):
+    """Text -> speech (MP3), for "read it aloud"."""
+    if not voice.is_configured():
+        raise HttpError(503, "Reading aloud is not available right now.")
+    try:
+        audio = voice.speak(body.text, body.language)
+    except Exception as err:
+        log.warning("Text to speech failed: %s", err)
+        raise HttpError(503, "Reading aloud is not available right now.") from err
+    return HttpResponse(audio, content_type="audio/mpeg")
 
 
 def _load(session_id: str) -> tuple[Conversation, dict]:

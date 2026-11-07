@@ -15,3 +15,4 @@ testpaths = ["tests"]
 [tool.ruff.lint.per-file-ignores]
 # Prompt prose reads better unwrapped.
 "assistant/prompt.py" = ["E501"]
+"scripts/create_elevenlabs_agent.py" = ["E501"]

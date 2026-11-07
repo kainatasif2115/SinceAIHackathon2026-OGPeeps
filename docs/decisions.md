@@ -14,6 +14,35 @@ The brief asks for "documented decisions", so add an entry whenever the team set
 
 ---
 
+## 2026-11-07: Enforce the riskier branch in code for three decisive questions
+
+**Decision:** In single-turn answers, if the assistant asks whether card details were typed, whether a payment has gone, or whether an app was installed, the checker raises the action to what the riskier answer needs if the model chose something milder: contact the bank and block the card, contact the bank plus a handoff, or disconnect the device plus a handoff. It never lowers an action, and it doesn't apply in chat, where the assistant asks first.
+**Why:** The organisers' rule for these cases is mechanical, and Claude Sonnet often wrote the safe step into the text but chose the milder action. Questions about codes, passwords and "did you order this yourself" are left to the model, because the right action depends on context.
+
+## 2026-11-07: ElevenLabs agent settings
+
+**Decision:**
+- Turn off ElevenLabs' backup model.
+- Set the model's reasoning effort to medium, with the longest start-up wait ElevenLabs allows (15 s).
+- Set each conversation's language to the user's (fi/en/sv).
+- Retry once if ElevenLabs closes a turn without a reply.
+
+**Why:**
+- With the backup on, 3 of 5 test answers silently came from Gemini Flash instead of Claude.
+- Low effort was fast but weaker on "it depends" cases. Medium stayed within the time limit in testing.
+- With the agent's language fixed to English, 29 of 35 Finnish answers came back in English.
+
+
+
+**Decision:** The brain's model (Claude Sonnet 5.5 by default) runs inside an ElevenLabs agent in text-only mode, paid from the hackathon's ElevenLabs credits. Our backend sends each case, parses the agent's JSON reply with Pydantic and still runs every answer through our checker. We also added backend voice endpoints: speech-to-text, so people can speak their problem, and text-to-speech, so they can hear the advice, in Finnish, English and Swedish. The chat UI can call them. The Anthropic API stays available as a second option (`BRAIN_PROVIDER=anthropic`).
+**Why:** Our own Claude key hit its usage limit, and the hackathon provides ElevenLabs credits, which also cover the agent's model. Voice helps older and less confident users (clarity for non-experts) and makes us eligible for the "Best project built with ElevenLabs" prize.
+**Alternatives considered:** Waiting for an organiser key, a local open model (weaker in Finnish), and the organisers' rules baseline (60.5%), which we keep as the last-resort fallback for `test_predictions.jsonl`.
+
+## 2026-11-07: Claude Sonnet instead of Opus
+
+**Decision:** Default the brain to Claude Sonnet 5.5.
+**Why:** Half the price and faster, which matters for credits and live-demo latency. The checker catches the rare mistake. To verify: rerun the 60-case sample with Sonnet and compare with Opus's 91.7%.
+
 ## 2026-11-06: A safe fallback answer when Claude is unavailable
 
 **Decision:** If Claude errors, declines or returns unusable output, the chat gives a fixed safe answer: don't follow the message's instructions, check through an official channel, and a human handoff. The batch script instead leaves the case unanswered so it can be retried.

@@ -1,4 +1,10 @@
-"""Calls Claude with the policy prompt and one case, and returns its structured proposal."""
+"""Calls the model with the policy prompt and one case, and returns its structured proposal.
+
+Two ways to reach the model, chosen by BRAIN_PROVIDER:
+- "elevenlabs": an ElevenLabs agent running Claude (paid from ElevenLabs credits)
+- "anthropic": the Anthropic API directly
+Without BRAIN_PROVIDER, ElevenLabs is used when ELEVENLABS_API_KEY is set.
+"""
 
 import json
 import os
@@ -6,6 +12,7 @@ from functools import cache
 
 import anthropic
 
+from assistant import elevenlabs_llm
 from assistant.models import Decision, FinalAnswer
 from assistant.prompt import system_prompt
 
@@ -34,8 +41,13 @@ def _client() -> anthropic.Anthropic:
     return anthropic.Anthropic(max_retries=4)
 
 
+def provider() -> str:
+    default = "elevenlabs" if os.environ.get("ELEVENLABS_API_KEY") else "anthropic"
+    return os.environ.get("BRAIN_PROVIDER", default)
+
+
 def model() -> str:
-    return os.environ.get("CLAUDE_MODEL", "claude-opus-5-5")
+    return os.environ.get("CLAUDE_MODEL", "claude-sonnet-5-5")
 
 
 def effort() -> str:
@@ -46,7 +58,12 @@ def visible_case(case: dict) -> dict:
     return {k: case[k] for k in VISIBLE_FIELDS if k in case}
 
 
-def _call(output_format, user_content: str):
+def _call(output_format, user_content: str, language: str = "en"):
+    if provider() == "elevenlabs":
+        try:
+            return elevenlabs_llm.complete(output_format, user_content, language)
+        except elevenlabs_llm.ElevenLabsError as err:
+            raise BrainUnavailable(str(err)) from err
     try:
         response = _client().beta.messages.parse(
             model=model(),
@@ -78,7 +95,7 @@ def answer_single_turn(case: dict, feedback: str | None = None) -> FinalAnswer:
     )
     if feedback:
         content += f"\n\n{feedback}"
-    return _call(FinalAnswer, content)
+    return _call(FinalAnswer, content, case.get("language", "en"))
 
 
 def decide_multi_turn(
@@ -105,4 +122,4 @@ def decide_multi_turn(
     )
     if feedback:
         content += f"\n\n{feedback}"
-    return _call(Decision, content)
+    return _call(Decision, content, case.get("language", "en"))

@@ -29,3 +29,6 @@ runs/
 # --- Misc ---
 .DS_Store
 *.pem
+
+# Claude desktop preview config (machine-specific paths)
+.claude/launch.json

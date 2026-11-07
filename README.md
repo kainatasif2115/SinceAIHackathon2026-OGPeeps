@@ -33,7 +33,8 @@ The Next.js app proxies `/api/*` to Django, so the browser only ever talks to on
 |---|---|
 | Frontend | Next.js (App Router) + TypeScript, Tailwind CSS, shadcn/ui |
 | Backend | Python 3.12+, Django, Django Ninja (Pydantic) |
-| AI | Claude API (`anthropic` Python SDK) |
+| AI | Claude Sonnet 5.5, run through an **ElevenLabs agent** (paid from ElevenLabs credits) or the Anthropic API directly |
+| Voice | ElevenLabs speech-to-text (Scribe) and text-to-speech endpoints (`/api/voice/*`), in Finnish, English and Swedish |
 | Database | MongoDB via `pymongo` (Django's internal tables use SQLite) |
 | Evaluation | The organisers' SimSet v2.0.1 in [`simset/`](simset/START_HERE.md): data, simulated user, evaluator |
 
@@ -45,12 +46,27 @@ Requires Python 3.12+ and Node 22+ (`nvm use`).
 make setup
 ```
 
-This creates `backend/.venv`, installs both apps' dependencies and creates `backend/.env` and `frontend/.env.local` from the examples. Then add your keys to `backend/.env`:
+This creates `backend/.venv`, installs both apps' dependencies and creates `backend/.env` and `frontend/.env.local` from the examples.
+
+**Connect the AI (ElevenLabs).**
+1. Claim the free ElevenLabs Creator month from the hackathon: in the ElevenLabs Discord, go to #coupon-codes → Start Redemption → Since AI Hackathon, using your registration email.
+2. In ElevenLabs, open Developers → API Keys → Create. Give it access to Text to Speech, Speech to Text, ElevenAgents (Write) and Voices (Read).
+3. Put the key in `backend/.env` as `ELEVENLABS_API_KEY=...`.
+4. Create the agent that runs the brain. This adds `ELEVENLABS_AGENT_ID` to `backend/.env`:
+
+```bash
+make agent
+```
+
+Rerun `make agent` whenever `backend/assistant/prompt.py` changes, so the agent gets the new prompt.
 
 | Variable | Purpose |
 |---|---|
-| `ANTHROPIC_API_KEY` | Claude API key |
-| `CLAUDE_MODEL` | Model ID (default `claude-opus-5-5`) |
+| `ELEVENLABS_API_KEY` | ElevenLabs key: the AI brain and voice |
+| `ELEVENLABS_AGENT_ID` | Set by `make agent` |
+| `ELEVENLABS_LLM` | Model inside the agent (default `claude-sonnet-5-5`) |
+| `ELEVENLABS_VOICE_ID`, `ELEVENLABS_TTS_MODEL` | Voice for "read aloud" (default: first voice on the account, `eleven_flash_v2_5`) |
+| `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `BRAIN_PROVIDER` | Optional: call Claude directly instead (`BRAIN_PROVIDER=anthropic`) |
 | `MONGODB_URI` | MongoDB connection string: the team's Atlas cluster, or `mongodb://localhost:27017` after `make db`. Leave empty to keep chats in memory. |
 | `MONGODB_DB` | Database name (default `security_assistant`) |
 | `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS` | Django settings (defaults are fine locally) |
@@ -72,6 +88,7 @@ Open http://localhost:3000. The page shows whether it can reach the backend. The
 | Command | What it does |
 |---|---|
 | `make setup` | Install everything and create env files |
+| `make agent` | Create or update the ElevenLabs agent that runs the brain |
 | `make db` | Start a local MongoDB in Docker (`docker-compose.yml`) |
 | `make backend` | Run the Django API on port 8000 |
 | `make frontend` | Run the Next.js app on port 3000 |
@@ -84,7 +101,7 @@ Open http://localhost:3000. The page shows whether it can reach the backend. The
 | `make predict-test` | Answer all 335 test inputs into `test_predictions.jsonl` and validate it (uses Claude) |
 | `make validate FILE=…` | Check a submission file before handing it in |
 
-Commands marked "uses Claude" need `ANTHROPIC_API_KEY` in `backend/.env` and cost money. As a rough guide, one answer costs a few cents. Runs are resumable: rerun the same command to fill in any cases that failed.
+Commands marked "uses AI credits" need the ElevenLabs setup above (or an Anthropic key) and use credits. As a rough guide, one answer costs a few cents' worth. Runs are resumable: rerun the same command to fill in any cases that failed.
 
 ## Project structure
 
