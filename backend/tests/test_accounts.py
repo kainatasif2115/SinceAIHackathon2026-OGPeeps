@@ -266,3 +266,15 @@ def test_demo_login_refreshes_the_samples_but_keeps_work_done_by_hand(client, mo
     assert "mine" in [c["session_id"] for c in again]
     assert "DSA-MINE01" in tickets._memory
     assert client.get("/api/agent/tickets").status_code == 401  # no staff access from a demo
+
+
+def test_delete_now_hides_the_chat_but_keeps_it_until_expiry():
+    conv = Conversation(case=sessions.build_case("consumer", "en", "A strange text.", None))
+    sessions.save("soft", conv, {"user_id": "u-soft"})
+
+    assert sessions.delete("soft") is True
+
+    assert sessions.load("soft") is None  # gone from the chat
+    assert sessions.for_user("u-soft") == []  # and from the history
+    assert sessions._memory["soft"]["deleted_at"] is not None  # stored until it expires
+    assert sessions.delete("soft") is False  # deleting twice reports not found

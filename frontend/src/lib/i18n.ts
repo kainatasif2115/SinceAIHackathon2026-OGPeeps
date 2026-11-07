@@ -115,7 +115,8 @@ const en = {
     "If you were connected to a person, they see the summary you saw, for at most 24 hours.",
   privacyDeleteNow: "Delete now",
   privacyDeleting: "Deleting…",
-  privacyDeleted: "This conversation has been deleted from our service.",
+  privacyDeleted:
+    "Deleted. This conversation no longer appears anywhere, and our service erases it for good within 24 hours.",
   privacyDeleteError: "Couldn’t delete right now. It will still be deleted automatically.",
   shareTrusted: "Send to someone I trust",
   shareTeam: "Alert my team",
@@ -302,7 +303,8 @@ const fi: Dictionary = {
     "Jos yhdistimme sinut ihmiselle, hän näkee saman yhteenvedon kuin sinä, enintään 24 tuntia.",
   privacyDeleteNow: "Poista nyt",
   privacyDeleting: "Poistetaan…",
-  privacyDeleted: "Keskustelu on poistettu palvelustamme.",
+  privacyDeleted:
+    "Poistettu. Keskustelu ei enää näy missään, ja palvelumme hävittää sen lopullisesti 24 tunnin kuluessa.",
   privacyDeleteError: "Poistaminen ei onnistunut nyt. Keskustelu poistetaan silti automaattisesti.",
   shareTrusted: "Lähetä luotetulle ihmiselle",
   shareTeam: "Varoita tiimiäni",
@@ -489,7 +491,8 @@ const sv: Dictionary = {
     "Om du kopplades till en person ser hen samma sammanfattning som du, i högst 24 timmar.",
   privacyDeleteNow: "Radera nu",
   privacyDeleting: "Raderar…",
-  privacyDeleted: "Samtalet har raderats från vår tjänst.",
+  privacyDeleted:
+    "Raderat. Samtalet visas inte längre någonstans, och vår tjänst raderar det helt inom 24 timmar.",
   privacyDeleteError: "Det gick inte att radera nu. Samtalet raderas ändå automatiskt.",
   shareTrusted: "Skicka till någon jag litar på",
   shareTeam: "Varna mitt team",

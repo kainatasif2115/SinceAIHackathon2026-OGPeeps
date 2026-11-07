@@ -154,8 +154,9 @@ def handoff(request, session_id: str):
 
 @api.delete("/sessions/{session_id}", response={204: None})
 def delete_session(request, session_id: str):
-    """ "Delete now" from the privacy card. A handoff ticket, if one was made, keeps
-    its own copy of the summary for the human agent and expires on its own."""
+    """ "Delete now" from the privacy card: a soft delete (see sessions.delete). A handoff
+    ticket, if one was made, keeps its own copy of the summary for the human agent and
+    expires on its own."""
     if not sessions.delete(session_id):
         raise HttpError(404, "Conversation not found or expired.")
     return Status(204, None)

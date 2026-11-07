@@ -238,36 +238,62 @@ def load(session_id: str) -> tuple[Conversation, dict] | None:
     else:
         with _lock:
             doc = copy.deepcopy(_memory.get(session_id))
-    if not doc:
+    if not doc or doc.get("deleted_at"):
         return None
     return _restore(doc["conversation"]), doc
 
 
 def delete(session_id: str) -> bool:
-    """Removes a conversation now instead of waiting for the 24-hour expiry."""
+    """ "Delete now": a soft delete. The conversation disappears from the chat, the history
+    and the team list at once, and the stored copy goes at the normal 24-hour expiry."""
     if db.is_configured():
-        return _collection().delete_one({"_id": session_id}).deleted_count > 0
+        result = _collection().update_one(
+            {"_id": session_id, "deleted_at": None},
+            {"$set": {"deleted_at": datetime.now(UTC)}},
+        )
+        return result.modified_count > 0
     with _lock:
-        return _memory.pop(session_id, None) is not None
+        doc = _memory.get(session_id)
+        if not doc or doc.get("deleted_at"):
+            return False
+        doc["deleted_at"] = datetime.now(UTC)
+        return True
+
+
+def purge(session_id: str) -> None:
+    """Removes a conversation for good (used for the demo accounts' sample chats)."""
+    if db.is_configured():
+        _collection().delete_one({"_id": session_id})
+    else:
+        with _lock:
+            _memory.pop(session_id, None)
 
 
 def for_user(user_id: str) -> list[dict]:
     """A signed-in customer's conversations that have not expired yet, newest first."""
     if db.is_configured():
-        found = list(_collection().find({"user_id": user_id}))
+        found = list(_collection().find({"user_id": user_id, "deleted_at": None}))
     else:
         with _lock:
-            found = [copy.deepcopy(d) for d in _memory.values() if d.get("user_id") == user_id]
+            found = [
+                copy.deepcopy(d)
+                for d in _memory.values()
+                if d.get("user_id") == user_id and not d.get("deleted_at")
+            ]
     return sorted(found, key=lambda d: d.get("started_at") or d["updated_at"], reverse=True)
 
 
 def for_team(team_id: str) -> list[dict]:
     """Checks a company's staff made in business mode, newest first."""
     if db.is_configured():
-        found = list(_collection().find({"team_id": team_id}))
+        found = list(_collection().find({"team_id": team_id, "deleted_at": None}))
     else:
         with _lock:
-            found = [copy.deepcopy(d) for d in _memory.values() if d.get("team_id") == team_id]
+            found = [
+                copy.deepcopy(d)
+                for d in _memory.values()
+                if d.get("team_id") == team_id and not d.get("deleted_at")
+            ]
     return sorted(found, key=lambda d: d.get("started_at") or d["updated_at"], reverse=True)
 
 

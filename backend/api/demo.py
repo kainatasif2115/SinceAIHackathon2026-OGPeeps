@@ -111,7 +111,7 @@ def _clear_seeded() -> None:
         ids = [d["_id"] for d in sessions.for_user(user["_id"]) if _is_sample(d)]
         tickets.delete_for_sessions(ids)
         for session_id in ids:
-            sessions.delete(session_id)
+            sessions.purge(session_id)
 
 
 def _seed(user: dict, chats: list, audience: str) -> None:
