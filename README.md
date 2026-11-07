@@ -125,7 +125,7 @@ Makefile              Common commands
 
 ## Deliverables checklist
 
-- [ ] `test_predictions.jsonl` at the repo root: answers for all 335 test inputs. Blocked by the API usage limit; run `make predict-test` (it validates the file too).
+- [x] `test_predictions.jsonl` at the repo root: answers for all 335 test inputs, validated OK (Claude Sonnet via ElevenLabs). Regenerate with `make predict-test`.
 - [x] Evaluator results on dev cases: a 60-case sample so far, in [`docs/results.md`](docs/results.md) and [`results/`](results/). The full run is `make eval-dev`; multi-turn is `make eval-multi`.
 - [x] Results template filled in ([`docs/results.md`](docs/results.md)), with the human review and comprehension check still to do by the team
 - [x] At least one failure and one escalation example ([`docs/results.md`](docs/results.md#5-failure-and-escalation-examples))
