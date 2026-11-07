@@ -23,7 +23,7 @@ Team OGPeeps · DNA × Since AI Hackathon 2026 · **3 min 30 s maximum.**
 3. **Voice clips in scene 8 need ElevenLabs credits.** If voice fails, drop those two clips.
 4. **Accounts:** one **private** and one **business** customer account on the live site, and the staff demo login for `/agent` in a second tab.
 5. **Browser:** Chrome, 1440×900, bookmarks bar hidden, Grammarly and other extensions off, zoom 100%.
-6. **Record all five journeys** before editing (steps in `docs/five-journeys.md`). Scene 3 uses one in full; scene 4 only needs the final answer card of the other four.
+6. **Scene 3 is recorded live** (steps in `docs/five-journeys.md`); scene 4 uses the saved conversations on the public `/journeys` page, so nothing else needs to be run live.
 7. **Have ready:** a screenshot of a parcel-scam text for scene 8.
 
 ---
@@ -87,21 +87,24 @@ Speed up every wait for the AI; never speed up the answer card.
 - `Critical · one clear next step, with the reason` (tick **One clear next step, and why**)
 - `A person takes over.` (tick **Hands off to a person**)
 
-### Scene 4: The other four journeys (20 s)
+### Scene 4: All five journeys (20 s)
 
-**Show:** a 2×2 grid of the other four final answer cards, each popping in one after another (about 3 seconds each), then the whole grid held for 4 seconds:
+**Show:** the public `/journeys` page. It has one tab per journey, each a saved conversation from our final run with the organisers' simulated customer. Click through the tabs, about 3 seconds each, scrolling down to the answer card each time:
 
-| Journey | Account | Answer card to show |
-|---|---|---|
-| 1 · Suspicious message `DSA-D-0056` | business | **High**: don't open the link, check in the bank's own app |
-| 2 · Clicked link `DSA-D-0105` | private | **Critical**: flight mode now, a specialist takes over |
-| 4 · Breach notice `DSA-D-0337` | private | **Critical**: lock the number, don't wait for the signal |
-| 5 · Small business `DSA-D-0018` | business | **High**: don't pay the new account, call the supplier |
+| Tab | What to land on |
+|---|---|
+| Suspicious message | the **High** answer: don't open the link, check in the bank's own app |
+| Clicked link | the **Critical** answer and the handoff |
+| Suspicious call | the question about the code, then **Critical** |
+| Breach notice | the **Critical** answer: lock the number |
+| Small business | the **High** answer: don't pay the new account |
+
+Zoom on the passed tick on each tab.
 
 **Say:**
-> Same flow for all five journeys in the challenge. A fake bank text: high, check in your bank's app. A dodgy app already installed: critical. A stolen number: critical. And for businesses, a fake supplier invoice: don't pay. Every one answered correctly, and only the serious ones go to a person.
+> Same flow for all five journeys in the challenge. A fake bank text: high, check in your bank's app. A dodgy app already installed: critical. A stolen number: critical. And for businesses, a fake supplier invoice: don't pay. All five passed, and only the serious ones go to a person.
 
-**Caption:** `All 5 journeys · proportionate answers` (tick **Five journeys, both audiences**)
+**Caption:** `All 5 journeys · all passed` (tick **Five journeys, both audiences**)
 
 ### Scene 5: Proof, and where it fails (21 s)
 
