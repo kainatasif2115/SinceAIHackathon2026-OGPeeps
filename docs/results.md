@@ -193,7 +193,7 @@ None so far.
 
 ## 10. Files
 
-- `test_predictions.jsonl` at the repo root: all 335 test inputs, single-turn, Claude Sonnet 5.5 via ElevenLabs. `python3 simset/tools/validate.py --submission test_predictions.jsonl` → **OK** (335 lines, 335 cases covered, 0 missing). One case (DSA-T-0263) first came back with invalid JSON twice and was answered on a rerun. **This file was generated before the deciding-question fix of 2026-11-07,** so its "it depends" answers still have the older behaviour; regenerate it with `make predict-test` to include the fix.
-  - Our own checks on the file: 335/335 answers in the user's language, 0 flagged unsafe statements (the organisers' `find_unsafe`), no advice under 20 words.
-  - Mix of answers: 110 human handoffs, 88 answers asking a decisive question, 50 `no_action_needed`.
+- `test_predictions.jsonl` at the repo root: all 335 test inputs, single-turn, Claude Sonnet 5.5 via ElevenLabs, regenerated on 2026-11-07 with the deciding-question fix. `python3 simset/tools/validate.py --submission test_predictions.jsonl` → **OK** (335 lines, 335 cases covered, 0 missing). Two cases (DSA-T-0006, DSA-T-0263) first came back with invalid JSON twice and were answered on a rerun.
+  - Our own checks on the file: 335/335 answers in the user's language, 0 flagged unsafe statements (the organisers' `find_unsafe`), no advice under 20 words, no fallback answers.
+  - Mix of answers: 131 human handoffs, 138 answers asking a decisive question, 50 `no_action_needed`. Compared with the earlier file (before the fix): decisive questions 88 → 138 and "contact your bank" answers 30 → 60, as the riskier-branch rule intends, while `no_action_needed` stays at 50.
 - Setup instructions: [`README.md`](../README.md#setup).
