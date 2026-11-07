@@ -4,7 +4,7 @@ from pathlib import Path
 from dsakit.simulator import UserSimulator, visible_case
 
 from assistant import brain, simset
-from tests.fakes import ask, done, final
+from tests.fakes import Script, ask, done, final
 
 spec = importlib.util.spec_from_file_location(
     "sim_bot", Path(__file__).resolve().parents[1] / "scripts" / "sim_bot.py"
@@ -19,13 +19,11 @@ def test_bot_talks_to_the_organisers_simulated_user(monkeypatch):
         for c in simset.load_jsonl(simset.DEV_CASES)
         if c["ground_truth"]["must_ask_topics"] == ["code_shared"] and c["language"] == "en"
     )
-    replies = iter(
-        [
-            ask("Did you read the code out to the caller?", ["code_shared"]),
-            done(final(primary_action="contact_operator_support", escalation_required=True)),
-        ]
+    replies = Script(
+        ask("Did you read the code out to the caller?", ["code_shared"]),
+        done(final(primary_action="contact_operator_support", escalation_required=True)),
     )
-    monkeypatch.setattr(brain, "decide_multi_turn", lambda *a, **k: next(replies))
+    monkeypatch.setattr(brain, "decide_multi_turn", replies)
     user = UserSimulator(case)
     state: dict = {}
 

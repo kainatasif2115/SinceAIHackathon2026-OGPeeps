@@ -24,6 +24,19 @@ def _unsafe_feedback(unsafe: list[dict]) -> str:
     )
 
 
+def _consent_feedback(fields: list[str]) -> str:
+    return (
+        "Before you give your final answer: you have not offered to check any account data. "
+        f"These fields are available with the user's permission: {', '.join(fields)}. "
+        "Would exactly one of them confirm or rule out the main suspicion (see the list under "
+        "'Multi-turn mode' in your instructions, e.g. subscription.recent_events after a SIM, "
+        "eSIM or order worry, operator_account.recent_logins after a sign-in alert, "
+        "device.security_findings after remote access)? If yes, reply with next = "
+        '"consent_request" for that one field, saying what you will look at and why. '
+        'If none of them would change the advice, reply with next = "final" and your answer.'
+    )
+
+
 def _checked(propose, case: dict, consent: ConsentState) -> FinalAnswer:
     """Propose, check, retry once on unsafe wording, then strip what is still unsafe."""
     result = checker.check(propose(None), case, consent)
@@ -97,6 +110,8 @@ class Conversation:
     revealed: dict[str, Any] = field(default_factory=dict)
     # Screenshots from the user: {"media_type", "data" (base64), "turn" (0 = opening message)}.
     images: list[dict] = field(default_factory=list)
+    # Set once the brain has been asked whether an account check would help (see next_turn).
+    consent_checked: bool = False
 
     def view(self) -> dict:
         """What the brain may see right now."""
@@ -144,11 +159,26 @@ class Conversation:
             topics = list(dict.fromkeys(q.topics))[: checker.MAX_QUESTION_TOPICS]
             return self._ask({"type": "question", "text": q.text, "topics": topics})
 
+        # The brain tends to answer straight after its question, without offering the account
+        # check that would confirm or rule out the suspicion. Before a risky final answer,
+        # ask it once whether one of the still-hidden fields would change the advice.
+        hidden = self._hidden_fields()
+        if (
+            turns_left > 0
+            and decision.next == "final"
+            and decision.answer
+            and decision.answer.risk_level not in ("none", "low")
+            and hidden
+            and not (self.granted or self.refused or self.consent_checked)
+        ):
+            self.consent_checked = True
+            second = self._decide(view, turns_left, _consent_feedback(hidden))
+            if second.next == "consent_request" and second.consent_request:
+                decision = second
+
         if turns_left > 0 and decision.next == "consent_request" and decision.consent_request:
             req = decision.consent_request
-            gated = set(self.case["consent"]["requires_consent"])
-            asked_before = self.granted | self.refused
-            fields = [f for f in dict.fromkeys(req.fields) if f in gated and f not in asked_before]
+            fields = [f for f in dict.fromkeys(req.fields) if f in self._hidden_fields()]
             if fields:
                 return self._ask({"type": "consent_request", "fields": fields, "text": req.text})
 
@@ -177,6 +207,12 @@ class Conversation:
             h["text"] for h in self.history if h["role"] == "assistant" and h["type"] == "question"
         ]
         return {"type": "final", "answer": sub}
+
+    def _hidden_fields(self) -> list[str]:
+        """Consent-gated fields the user has not been asked about and did not pre-allow."""
+        consent = self.case["consent"]
+        asked = self.granted | self.refused | set(consent["pre_granted"])
+        return [f for f in consent["requires_consent"] if f not in asked]
 
     def _ask(self, turn: dict) -> dict:
         self.turns_used += 1

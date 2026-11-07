@@ -14,6 +14,18 @@ The brief asks for "documented decisions", so add an entry whenever the team set
 
 ---
 
+## 2026-11-07: A checklist of deciding questions, and the checker covers both branches
+
+**Decision:** The policy now lists the situations that always need a deciding question ("did you make this change yourself?", "has the money already been sent?", "did you type your card details?", "did you enable anything from the attachment?", "did you read out the code?"). The question is required unless the user has plainly answered it. But when the data the assistant may use clearly settles it (for example the order shows up as an ordinary order on the account), it says so calmly instead. In single-turn mode the checker now also adds one sentence for the safer answer ("If you made the change yourself, this is expected and there is nothing more to do."), in Finnish, Swedish or English, when the model leaves it out. Every such sentence is checked against the organisers' step and unsafe-wording patterns.
+**Why:** In 49 of the 52 failed "it depends" cases the model gave a sensible action but never asked the deciding question, because the story seemed to hint at the answer. On all 108 such dev cases, safe-action pass went from 51.9% to 99.1% and the deciding question is now always asked, with no unsafe wording. A first version of the checklist made the model treat two harmless order confirmations as incidents. The "data first" rule fixed that: on the answers measured, all three cases that went wrong now pass.
+**Alternatives considered:** Detecting the situations with keywords in the checker. Rejected as fragile across three languages; the checker only adds the safer-branch sentence after the model itself asks the question.
+
+## 2026-11-07: One "should I check your account first?" step before a risky chat answer
+
+**Decision:** In chat mode, when the assistant is about to give a final answer above low risk and has not yet offered any account check, the engine asks it once whether one of the still-hidden fields would confirm or rule out the suspicion. If so, the user sees a permission card first. It happens at most once per conversation.
+**Why:** The model usually asked its one question and answered straight away, skipping the account check that the reference expects (offered in only 1 to 2 of 5 cases). With this step and the checklist, 30 simulated conversations: 4 of 5 needed checks offered, privacy proxy 74 → 89.3, safe-action pass 90% → 100%, zero consent violations. It costs one extra AI call, only in risky conversations.
+**Alternatives considered:** Prompt wording alone, which we tried first and which barely moved the number.
+
 ## 2026-11-07: Simulated risk signals for situations typed live
 
 **Decision:** When a judge or user types their own situation instead of picking an example, links in it get a simulated, rule-based link-reputation check (same shape as the dataset's, marked as simulated). The demo customer gets realistic, ordinary account data behind the permission card.

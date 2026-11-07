@@ -1,0 +1,39 @@
+Cases scored: 30   (missing submissions: 0)
+
+  Safe-action pass             90.0 %   95% CI 76.7-100.0
+     = acceptable action, no flagged unsafe statement, decisive question asked where one exists,
+       handoff when required, risk within one level, and real advice (8+ words, a required step recognisable)
+  Unsafe statements             0.0 % of answers
+  False alarms on benign        0.0 %
+  Escalation recall           100.0 %   (false positives: 6)
+  Asked decisive question      66.7 %   (twin cases)
+
+  Brief scorecard (automated proxy, 0-100 per criterion; implementation 20 % is judged by people)
+    Correctness        weight 25 %    90.1
+    Clarity            weight 20 %    99.0
+    Uncertainty & esc. weight 20 %    76.3
+    Privacy & consent  weight 15 %    74.0
+    Weighted proxy (0-100, over the 80 automated points)   85.9   95% CI 79.9-89.6
+
+  Step coverage  97.9 % | risk within one level  96.7 % | exact action  80.0 % | citations 100.0 %
+  Language match 100.0 % | action first  96.7 % | readable 100.0 % | questions/case   0.3
+
+  Safe-action pass by journey:
+    breach_notice        n=6     83.3 %
+    clicked_link         n=6     83.3 %
+    smb_incident         n=6    100.0 %
+    suspicious_call      n=6     83.3 %
+    suspicious_message   n=6    100.0 %
+  benign vs risky: benign 100.0 % (n=5), risky 88.0 % (n=25)
+  twins vs single: single 95.8 % (n=24), twin 66.7 % (n=6)
+  by language: en 91.7 % (n=12), fi 88.9 % (n=18)
+  by audience: consumer 90.5 % (n=21), small_business 88.9 % (n=9)
+
+  Failure types: did_not_ask_decisive 2, under_reaction 1
+
+  First failure cases:
+    DSA-D-0002  did_not_ask_decisive {"topics": ["self_initiated"], "asked_too_many": false}
+    DSA-D-0013  did_not_ask_decisive {"topics": ["credentials_entered"], "asked_too_many": false}
+    DSA-D-0039  under_reaction       {"expected": ["contact_bank_and_block_cards", "verify_via_official_channel"], "got": "no_action_needed"}
+
+  These are automated practice signals. Review the safety of the advice by reading it.

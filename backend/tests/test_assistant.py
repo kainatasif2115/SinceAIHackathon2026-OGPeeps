@@ -152,6 +152,35 @@ def test_conversation_stops_asking_at_the_turn_limit(monkeypatch, en_case):
     assert calls == [1, 0]
 
 
+def test_risky_final_first_offers_one_account_check(monkeypatch, en_case):
+    gated = en_case["consent"]["requires_consent"][0]
+    script = Script(done(final(risk_level="high")), ask_consent([gated]), done(final()))
+    monkeypatch.setattr(brain, "decide_multi_turn", script)
+    case = {**en_case, "consent": {**en_case["consent"], "pre_granted": []}}
+    conv = engine.Conversation(case=case)
+
+    turn = conv.next_turn()
+    assert turn["type"] == "consent_request"
+    assert gated in script.calls[1][0][3]  # the feedback names the hidden fields
+    conv.record_consent(turn["fields"], False)
+
+    assert conv.next_turn()["type"] == "final"
+    assert len(script.calls) == 3
+
+
+def test_account_check_is_offered_once_and_not_for_low_risk(monkeypatch, en_case):
+    declined = Script(done(final(risk_level="high")), done(final(risk_level="high")))
+    monkeypatch.setattr(brain, "decide_multi_turn", declined)
+    conv = engine.Conversation(case=en_case)
+    assert conv.next_turn()["type"] == "final"
+    assert conv.consent_checked
+
+    harmless = Script(done(final(risk_level="low", primary_action="no_action_needed")))
+    monkeypatch.setattr(brain, "decide_multi_turn", harmless)
+    assert engine.Conversation(case=en_case).next_turn()["type"] == "final"
+    assert len(harmless.calls) == 1
+
+
 def _signal(case: dict, path: str):
     cur = case["signals"]
     for part in path.split("."):
@@ -185,6 +214,41 @@ def test_riskier_branch_never_downgrades_or_applies_in_multi_turn(en_case):
     )
     multi = checker.check(asked_first, en_case, ConsentState(single_turn=False)).answer
     assert multi.primary_action == "do_not_interact_and_delete"
+
+
+@pytest.mark.parametrize("language", ["en", "fi", "sv"])
+def test_single_turn_also_covers_the_safer_branch(en_case, language):
+    case = {**en_case, "language": language}
+    answer = final(
+        primary_action="contact_operator_support",
+        question_topics=["self_initiated"],
+        questions_asked=["Did you make the eSIM change yourself?"],
+        advice_text="Contact your operator now and ask them to lock your number.",
+    )
+
+    checked = checker.check(answer, case, ConsentState()).answer
+
+    assert "explain_benign" in simset.textcheck.find_steps(checked.advice_text)
+    assert not checker.unsafe_statements(checked, language)
+
+
+def test_safer_branch_sentence_is_not_added_twice_or_out_of_context(en_case):
+    covered = final(
+        primary_action="contact_bank_and_block_cards",
+        question_topics=["payment_status"],
+        advice_text="If the money has gone, call your bank now. If nothing has been paid, "
+        "do not pay or transfer anything.",
+    )
+    no_attachment = final(
+        primary_action="isolate_device_and_scan",
+        question_topics=["app_installed"],
+        advice_text="Disconnect the phone from the internet now and get it checked.",
+    )
+    case = {**en_case, "opening_message": "I installed a voicemail app from a text link."}
+
+    for answer in (covered, no_attachment):
+        fixes = checker.check(answer, case, ConsentState()).fixes
+        assert not [f for f in fixes if "safer answer" in f]
 
 
 def test_missing_api_key_is_brain_unavailable(monkeypatch):
