@@ -1,0 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Source+Sans+3:wght@400;600&display=block");
+:root { --brand:#da0070; --ink:#121212; --soft:#fdf6fa; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html,body { width:1920px; height:1080px; overflow:hidden; }
+body { font-family:"Source Sans 3",sans-serif; -webkit-font-smoothing:antialiased; }
+h1,h2,.h { font-family:"Lexend",sans-serif; letter-spacing:-0.02em; }
+.logo { font-family:"Lexend"; font-weight:700; font-size:44px; display:flex; align-items:center; gap:18px; }
+.logo b { color:var(--brand); font-size:56px; }
+.logo i { width:2px; height:40px; background:currentColor; opacity:.3; }
