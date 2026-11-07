@@ -51,7 +51,7 @@ Claude Sonnet 5.5 via ElevenLabs, measured on 7 November on the current code wit
 | Small-business incident | 156 | 84.6 % | 13.9 % | 100.0 % | 6 / 6 * |
 | **All** | **588** | **89.6 %** (95% CI 87.2–92.2) | **6.8 %** | **95.5 %** | **30 / 30** * |
 
-\* **Review of 30 answers (AI-assisted, to be confirmed by a team member).** 30 answers from this run, 6 per journey, in English: 10 harmless cases, 17 risky ones and 3 the evaluator failed. Each was scored on the organisers' form, [`results/human_review_form.csv`](../results/human_review_form.csv), against its criteria, with a note per answer. This first pass was done by our AI coding assistant reading each answer in full against the case and its reference; a person on the team still has to check it before we call it a human review.
+\* **Review of 30 answers (AI-assisted, confirmed by a team member).** 30 answers from this run, 6 per journey, in English: 10 harmless cases, 17 risky ones and 3 the evaluator failed. Each was scored on the organisers' form, [`results/human_review_form.csv`](../results/human_review_form.csv), against its criteria, with a note per answer. The first pass was done by our AI coding assistant reading each answer in full against the case and its reference; a team member then checked every score and note and agreed with them.
 
 | Criterion (0–2) | Average | What lowered it |
 |---|---|---|
