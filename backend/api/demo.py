@@ -12,10 +12,11 @@ away: the only way in is the button, which can only ever reset these accounts.
 """
 
 import os
+import re
 import secrets
 from datetime import UTC, datetime, timedelta
 
-from assistant import simset
+from assistant import simset, vocab
 from assistant.engine import Conversation
 
 from . import accounts, cases, sessions, teams, tickets
@@ -148,7 +149,19 @@ def _conversation(case_id: str, row: dict) -> tuple[Conversation, dict]:
         elif turn.get("role") == "user":
             conv.record_answer(turn["text"])
     drop = ("transcript", "conversation", "notes", "abstained")
-    return conv, {k: v for k, v in row.items() if k not in drop}
+    final = {k: v for k, v in row.items() if k not in drop}
+    # The saved run is the scored answer, with the checker's standard-wording copies of
+    # steps. The live chat hides those when the model already said the same in its own
+    # words (engine.shown_steps); the saved run doesn't say which they were, so a
+    # standard sentence is hidden only if another step shares two or more of its words.
+    standard = {v["en_canonical"] for v in vocab.step_phrases().values() if v.get("en_canonical")}
+    steps = final["steps"]
+    final["shown_steps"] = [
+        step
+        for step in steps
+        if not (step in standard and any(_overlaps(step, o) for o in steps if o != step))
+    ]
+    return conv, final
 
 
 def _handoff(session_id: str, conv: Conversation, final: dict, started, handoff: tuple) -> str:
@@ -168,3 +181,13 @@ def _handoff(session_id: str, conv: Conversation, final: dict, started, handoff:
         ticket.update(resolved_at=at(resolved))
     tickets.create(ticket)
     return reference
+
+
+_FILLER = {"that", "this", "with", "from", "your", "have", "been", "into", "when", "then", "they"}
+
+
+def _overlaps(a: str, b: str) -> bool:
+    def words(text: str) -> set[str]:
+        return {w for w in re.findall(r"[a-z]{4,}", text.lower()) if w not in _FILLER}
+
+    return len(words(a) & words(b)) >= 2
