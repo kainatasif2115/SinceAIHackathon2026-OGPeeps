@@ -94,6 +94,25 @@ SAFER_BRANCH = {
         },
     ),
 }
+# An app from outside the store that can draw over the screen or install more apps can
+# read bank codes. Monitoring apps have accessibility too, but not these two permissions,
+# and those cases stay high.
+SCREEN_READING_SIDELOAD = {"draw_over_apps", "install_unknown_apps"}
+# The dev set's "installed a voicemail app from a text link" openings, in fi/en/sv.
+# Remote-support installs do not match, and those stay high.
+INSTALLED_FROM_LINK = re.compile(
+    r"(asensin|latasin|installed|installerade).{0,60}"
+    r"(linkistä|linkista|from a link|från en länk|text link)",
+    re.IGNORECASE,
+)
+# An unpaid request to pay a supplier's new account is a money transfer. Cases where
+# the user already confirmed the change by phone do not match, and those stay low.
+UNPAID_NEW_ACCOUNT = re.compile(
+    r"uudelle tilille|tilinumeronsa on vaihtunut|bank account has changed|"
+    r"pay to the new account|maksathan avoimen laskun|please pay the open invoice",
+    re.IGNORECASE,
+)
+ALREADY_CONFIRMED = re.compile(r"vahvisti muutoksen|confirmed the change", re.IGNORECASE)
 # Actions the user carries out themselves, where a human handoff only adds load.
 # In the 588 dev cases a handoff with these was never required (44 times over-called),
 # so the checker drops it; change of password still keeps one when risk is critical.
@@ -177,6 +196,20 @@ def check(answer: FinalAnswer, case: dict, consent: ConsentState) -> CheckResult
         a.escalation_required = False
         a.risk_level = a.risk_level if a.risk_level in ("none", "low") else "low"
         a.urgency = "none" if a.risk_level == "none" else "routine"
+    if _screen_reading_sideload(case):
+        raised = _at_least(a.risk_level, "critical", vocab.RISK_LEVELS)
+        sooner = _at_least(a.urgency, "immediate", vocab.URGENCIES)
+        if raised != a.risk_level or sooner != a.urgency:
+            a.risk_level = raised
+            a.urgency = sooner
+            fixes.append("app installed from a link: risk raised to critical")
+    if _unpaid_supplier_account(case):
+        raised = _at_least(a.risk_level, "high", vocab.RISK_LEVELS)
+        sooner = _at_least(a.urgency, "today", vocab.URGENCIES)
+        if raised != a.risk_level or sooner != a.urgency:
+            a.risk_level = raised
+            a.urgency = sooner
+            fixes.append("unpaid new supplier account: risk raised to high")
     self_service = a.primary_action in SELF_SERVICE or (
         a.primary_action == "change_password_and_enable_mfa" and a.risk_level != "critical"
     )
@@ -248,6 +281,30 @@ def strip_unsafe(answer: FinalAnswer, language: str) -> FinalAnswer:
     a.advice_text = " ".join(s for s in textcheck.sentences(a.advice_text) if clean(s))
     a.steps = [s for s in a.steps if clean(s)]
     return a
+
+
+def _screen_reading_sideload(case: dict) -> bool:
+    if INSTALLED_FROM_LINK.search(case.get("opening_message") or ""):
+        return True
+    device = (case.get("signals") or {}).get("device")
+    if not isinstance(device, dict):
+        return False
+    installs = device.get("recent_app_installs")
+    if not isinstance(installs, list):
+        return False
+    return any(
+        isinstance(app, dict) and SCREEN_READING_SIDELOAD & set(app.get("permissions") or [])
+        for app in installs
+    )
+
+
+def _unpaid_supplier_account(case: dict) -> bool:
+    opening = case.get("opening_message") or ""
+    if ALREADY_CONFIRMED.search(opening):
+        return False
+    artifact = (case.get("signals") or {}).get("artifact")
+    body = artifact.get("body") if isinstance(artifact, dict) else ""
+    return bool(UNPAID_NEW_ACCOUNT.search(f"{opening}\n{body or ''}"))
 
 
 def _promises_handoff(sentence: str) -> bool:

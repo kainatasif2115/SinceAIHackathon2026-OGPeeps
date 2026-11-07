@@ -309,6 +309,103 @@ def test_a_conditional_offer_of_a_person_is_kept(en_case):
     assert offer in checked.advice_text
 
 
+def test_installing_an_app_from_a_link_is_critical_even_without_the_app_list(en_case):
+    case = {
+        **en_case,
+        "opening_message": "I installed a voicemail app from a text link and gave it permissions.",
+    }
+    answer = final(
+        primary_action="isolate_device_and_scan", risk_level="high", urgency="today"
+    )
+
+    checked = checker.check(answer, case, ConsentState(single_turn=False)).answer
+
+    assert (checked.risk_level, checked.urgency) == ("critical", "immediate")
+
+
+def test_an_unpaid_new_supplier_account_is_high_risk(en_case):
+    case = {
+        **en_case,
+        "opening_message": (
+            "Toimittaja pyytää maksamaan laskun uudelle tilille. "
+            "Viesti tuli tutusta osoitteesta, joten se on kai kunnossa?"
+        ),
+    }
+    answer = final(
+        primary_action="verify_via_official_channel", risk_level="medium", urgency="today"
+    )
+
+    checked = checker.check(answer, case, ConsentState(single_turn=False)).answer
+
+    assert (checked.risk_level, checked.urgency) == ("high", "today")
+    assert not checked.escalation_required
+
+
+def test_a_supplier_change_already_confirmed_by_phone_stays_low(en_case):
+    case = {
+        **en_case,
+        "opening_message": (
+            "A supplier announced a new bank account. I called their finance manager "
+            "on the number in our contract and she confirmed the change."
+        ),
+    }
+    answer = final(
+        primary_action="verify_via_official_channel", risk_level="medium", urgency="today"
+    )
+
+    checked = checker.check(answer, case, ConsentState(single_turn=False)).answer
+
+    assert checked.risk_level == "medium"
+
+
+def test_a_sideloaded_app_that_can_cover_the_screen_is_critical(en_case):
+    case = {
+        **en_case,
+        "signals": {
+            **en_case["signals"],
+            "device": {
+                "recent_app_installs": [
+                    {
+                        "name": "Ääniviesti",
+                        "source": "unknown_source",
+                        "permissions": ["accessibility_service", "read_sms", "draw_over_apps"],
+                    }
+                ]
+            },
+        },
+    }
+    answer = final(
+        primary_action="isolate_device_and_scan", risk_level="high", urgency="immediate"
+    )
+
+    checked = checker.check(answer, case, ConsentState(single_turn=False)).answer
+
+    assert (checked.risk_level, checked.urgency) == ("critical", "immediate")
+
+
+def test_a_monitoring_app_is_not_raised_to_critical(en_case):
+    case = {
+        **en_case,
+        "signals": {
+            **en_case["signals"],
+            "device": {
+                "recent_app_installs": [
+                    {
+                        "name": "System Service",
+                        "source": "unknown_source",
+                        "permissions": ["location", "read_sms", "accessibility_service"],
+                    }
+                ]
+            },
+        },
+    }
+    answer = final(primary_action="escalate_to_human", risk_level="high", urgency="today")
+
+    checked = checker.check(answer, case, ConsentState(single_turn=False)).answer
+
+    assert checked.risk_level == "high"
+
+
 def test_a_password_change_is_never_low_risk(en_case):
     answer = final(primary_action="change_password_and_enable_mfa", risk_level="low")
 
