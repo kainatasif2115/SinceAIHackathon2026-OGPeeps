@@ -7,6 +7,7 @@ import type { ImageAttachment } from "@/lib/media";
 import type { ScenariosState } from "@/components/assistant/scenario-list";
 import { ChatLauncher, ChatPanel } from "./chat-panel";
 import { Hero } from "./hero";
+import { RedTeam } from "./red-team";
 import { BeforeAfter, HelpTopics, HowItWorks, ScamsNow, TrustBand } from "./sections";
 import { SiteFooter, SiteHeader, TopStrip } from "./site-chrome";
 
@@ -96,6 +97,7 @@ export function DnaHome() {
         <HelpTopics audience={audience} onOpen={openPanel} />
         <HowItWorks />
         <ScamsNow audience={audience} scenarios={scenarios} onPick={askScenario} />
+        <RedTeam />
         <TrustBand onOpen={openPanel} />
       </main>
 

@@ -10,10 +10,11 @@
 backend/tests
 frontend
 runs
-results
 docs
 .git
 .github
 .claude
 *.jsonl
 !simset/**/*.jsonl
+# Evaluator output (synthetic cases) for the staff console's Results, Cases and Twins tabs.
+!results/*.jsonl

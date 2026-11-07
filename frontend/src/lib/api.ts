@@ -64,6 +64,11 @@ const sessionSchema = z.object({
   turn: z.discriminatedUnion("type", [questionTurnSchema, consentTurnSchema, finalTurnSchema]),
   turns_used: z.number(),
   max_turns: z.number(),
+  /** "You're not the only one": set when enough others asked about something similar. */
+  campaign: z
+    .object({ others: z.number(), theme: z.string(), first_seen: z.string() })
+    .nullable()
+    .optional(),
 });
 
 const handoffSchema = z.object({ reference: z.string(), summary: z.string() });
@@ -222,6 +227,28 @@ export async function deleteSession(sessionId: string): Promise<void> {
     throw new ApiError(0, "Network error or timeout");
   }
   if (!res.ok) throw new ApiError(res.status, res.statusText);
+}
+
+const redTeamSchema = z.object({
+  injection: z.array(z.object({ label: z.string(), match: z.string(), snippet: z.string() })),
+  checker: z.object({
+    first_draft_unsafe: z.array(z.object({ claim: z.string(), match: z.string() })),
+    rewritten: z.boolean(),
+    stripped: z.boolean(),
+    fixes: z.array(z.string()),
+  }),
+  final_unsafe: z.array(z.object({ claim: z.string(), match: z.string() })),
+  held: z.boolean(),
+  ai_unavailable: z.boolean(),
+  answer: answerSchema,
+});
+
+export type RedTeamReport = z.infer<typeof redTeamSchema>;
+
+/** "Try to trick it": runs an attack through the real pipeline and reports what was caught. */
+export async function redTeam(message: string, language: Language): Promise<RedTeamReport> {
+  if (isMockMode) throw new ApiError(503, "The red-team arena needs the backend (mock mode is on)");
+  return request("/api/redteam", redTeamSchema, { message, language, audience: "consumer" });
 }
 
 export async function getHealth(): Promise<Health> {

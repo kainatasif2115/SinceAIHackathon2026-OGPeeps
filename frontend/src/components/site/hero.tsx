@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import {
   ArrowRight,
+  Ear,
   LockKeyhole,
   PhoneCall,
   ShieldCheck,
@@ -185,6 +187,15 @@ export function Hero({ audience, scenarios, onAsk, onTalk, onPickScenario }: Pro
             <PhoneCall aria-hidden className="size-4" />
             Rather talk? Have a hands-free conversation
           </button>
+
+          <Link
+            href="/call"
+            className="inline-flex items-center gap-2 self-start text-sm font-semibold underline-offset-4 hover:underline"
+          >
+            <Ear aria-hidden className="size-4" />
+            On a suspicious call right now? Let us listen with you
+            <ArrowRight aria-hidden className="size-4" />
+          </Link>
 
           {examples.length > 0 && (
             <div className="flex flex-col gap-2">

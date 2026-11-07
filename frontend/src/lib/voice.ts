@@ -201,3 +201,53 @@ export function parseYesNo(text: string, language: Language): boolean | null {
   if (yes === no) return null;
   return yes;
 }
+
+/**
+ * Listens until aborted (the call co-pilot): each finished phrase goes to
+ * `onPhrase`, words still being spoken to `onInterim`. Browsers stop after a
+ * pause, so recognition restarts until the signal aborts.
+ */
+export function listenContinuously(
+  language: Language,
+  onPhrase: (text: string) => void,
+  onInterim: (text: string) => void,
+  signal: AbortSignal,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const Ctor = recognitionCtor();
+    if (!Ctor) return reject(new ListenError("unavailable"));
+    let current: Recognition | null = null;
+
+    function start() {
+      if (signal.aborted) return resolve();
+      const rec = new Ctor!();
+      current = rec;
+      rec.lang = LOCALES[language];
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.onresult = (event) => {
+        let interim = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          if (result.isFinal) onPhrase(result[0].transcript.trim());
+          else interim += result[0].transcript;
+        }
+        onInterim(interim.trim());
+      };
+      rec.onerror = (event) => {
+        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          if (!signal.aborted) reject(new ListenError("denied"));
+        }
+      };
+      rec.onend = () => (signal.aborted ? resolve() : start());
+      try {
+        rec.start();
+      } catch {
+        reject(new ListenError("unavailable"));
+      }
+    }
+
+    signal.addEventListener("abort", () => current?.abort(), { once: true });
+    start();
+  });
+}

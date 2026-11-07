@@ -8,7 +8,19 @@ from ninja import File, Form, NinjaAPI, Schema, Status
 from ninja.errors import HttpError
 from ninja.files import UploadedFile
 
-from api import accounts, cases, db, presenter, results, sessions, tickets, voice
+from api import (
+    accounts,
+    campaigns,
+    cases,
+    db,
+    presenter,
+    redteam,
+    results,
+    sessions,
+    tickets,
+    twins,
+    voice,
+)
 from api import agent_auth as agent_auth_mod
 from api.accounts import customer_auth
 from api.agent_auth import agent_auth
@@ -20,6 +32,7 @@ from api.schemas import (
     ConversationOut,
     HandoffOut,
     LoginIn,
+    RedTeamIn,
     ReplyIn,
     ScenarioOut,
     SessionOut,
@@ -93,7 +106,10 @@ def start_session(request, body: StartIn):
     doc = {"scenario_id": body.scenario_id, "started_at": datetime.now(UTC)}
     if user := accounts.current_user(request):
         doc["user_id"] = user["_id"]  # so it shows on the account page
-    return _advance(session_id, conv, doc)
+    # Only the typed message is fingerprinted (screenshots are not), and the note
+    # is informational: it never changes the assistant's advice.
+    campaign = campaigns.check_and_record(body.message, body.language, body.audience)
+    return {**_advance(session_id, conv, doc), "campaign": campaign}
 
 
 @api.post("/sessions/{session_id}/reply", response=SessionOut)
@@ -219,6 +235,13 @@ def account_delete(request, response: HttpResponse):
 # in production this sits behind DNA's staff single sign-on.
 
 
+@api.post("/redteam")
+def red_team(request, body: RedTeamIn):
+    """ "Try to trick it": runs an attack through the real pipeline and reports what
+    the safety checker caught. Public, like the chat itself."""
+    return redteam.attack(body.message, body.language, body.audience)
+
+
 @api.post("/agent/login", response=AgentOut)
 def agent_login(request, response: HttpResponse, body: AgentLoginIn):
     if not agent_auth_mod.is_configured():
@@ -264,6 +287,20 @@ def list_cases(request, run: str = "multi"):
     if run not in cases.RUNS:
         raise HttpError(404, "Unknown run.")
     return {"run": run, "runs": cases.RUNS, "cases": cases.summaries(run)}
+
+
+@api.get("/agent/campaigns", auth=agent_auth)
+def campaign_radar(request):
+    """Recent chats grouped into campaigns (fingerprints only, never message text)."""
+    return {"min_reports": campaigns.MIN_REPORTS, "campaigns": campaigns.clusters()}
+
+
+@api.get("/agent/twins", auth=agent_auth)
+def twin_pairs(request, run: str = "twins"):
+    """Same message, different truth: each twin pair with both branches and verdicts."""
+    if run not in cases.RUNS:
+        raise HttpError(404, "Unknown run.")
+    return {"run": run, "pairs": twins.pairs(run)}
 
 
 @api.get("/agent/cases/{run}/{case_id}", auth=agent_auth)

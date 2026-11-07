@@ -13,6 +13,8 @@ COPY backend/requirements.txt backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
 
 COPY simset simset
+# Evaluator output for the staff console's Results, Cases and Twins tabs.
+COPY results results
 COPY backend backend
 
 RUN useradd --system --create-home app
