@@ -1,225 +1,197 @@
 # Design system: Security assistant
 
-The frontend (`frontend/`) is a single-page, phone-first assistant that sits inside an operator's
-app. It should feel like a bank or health app: calm, plain and trustworthy. It should not look like
-a hacker tool or a marketing page. This document records the choices and why we made them. The
-rules come from `.claude/skills/anti-ai-slop` and `.claude/skills/component-reference-design`.
+The frontend (`frontend/`) has two surfaces:
 
-Tokens live in `frontend/src/app/globals.css`, fonts in `frontend/src/app/layout.tsx`, components
-in `frontend/src/components/assistant/`.
+1. **`/`, a DNA-style homepage (prototype).** It shows how the assistant would sit inside an operator's website. Every entry point (hero box, examples, help topics, the floating "Ask security" button) opens the assistant in a slide-out chat panel. It's labelled "Prototype – synthetic data – not a live DNA service" at the top.
+2. **`/assistant`, the assistant on its own.** It's phone-first, as it would sit inside an operator's app.
 
-## Colour
+The assistant should feel like a bank or health app: calm, plain and trustworthy. Not a hacker tool, not a marketing page. The rules come from `.claude/skills/anti-ai-slop` and `.claude/skills/component-reference-design`.
 
-One brand hue (deep teal, OKLCH hue 195), warm neutral greys (hue 70–85, very low chroma), and a
-separate set of risk colours. We use a 60-30-10 split: warm off-white or near-black background
-(60), card and muted surfaces (30), teal for primary actions, selection and focus (10). There are
-no gradients, no glow and no glass effects. Dark mode follows `prefers-color-scheme`.
+Tokens live in `frontend/src/app/globals.css` and fonts in `frontend/src/app/layout.tsx`. The homepage is in `frontend/src/components/site/`, the assistant in `frontend/src/components/assistant/`.
 
-| Token                    | Light                           | Dark                            | Use                            |
-| ------------------------ | ------------------------------- | ------------------------------- | ------------------------------ |
-| `--background`           | `oklch(0.982 0.004 85)` #faf9f6 | `oklch(0.185 0.008 70)` #15120f | Page                           |
-| `--card`                 | `oklch(0.998 0.002 85)` #fffefd | `oklch(0.225 0.009 70)` #1f1b17 | Cards, header                  |
-| `--foreground`           | `oklch(0.24 0.012 70)` #231e19  | `oklch(0.945 0.006 85)` #efece8 | Body text                      |
-| `--muted-foreground`     | `oklch(0.47 0.013 70)` #605a53  | `oklch(0.74 0.012 80)` #afaaa3  | Secondary text                 |
-| `--primary` (brand teal) | `oklch(0.45 0.08 195)` #006363  | `oklch(0.76 0.085 195)` #6ac2c2 | Primary button, selected, ring |
-| `--accent`               | `oklch(0.95 0.022 195)` #dff3f3 | `oklch(0.28 0.035 195)` #112e2e | Permission card, handoff panel |
-| `--border`               | #dddad5                         | #393530                         | Dividers (decorative)          |
-| `--input`                | #8a857e                         | #6d6861                         | Text field outline             |
+## Colour: two themes
 
-### Contrast (WCAG 2.x, computed from the OKLCH values)
+| Theme | Where | Brand hue | Mode |
+|---|---|---|---|
+| **DNA theme** (`.theme-dna`) | Homepage and its chat panel | Magenta `#da0070`, near-black ink `#121212`, cool greys | Light only |
+| **Default theme** | `/assistant` | Deep teal `#006363` (OKLCH hue 195), warm greys | Light and dark (`prefers-color-scheme`) |
 
-| Pair                              | Light  | Dark   |
-| --------------------------------- | ------ | ------ |
-| foreground on background          | 15.6:1 | 15.9:1 |
-| muted-foreground on background    | 6.5:1  | 8.1:1  |
-| muted-foreground on muted         | 6.0:1  | 6.5:1  |
-| primary-foreground on primary     | 6.8:1  | 8.7:1  |
-| primary (links, icons) on card    | 7.1:1  | 8.3:1  |
-| accent-foreground on accent       | 9.1:1  | 9.6:1  |
-| input outline on card (UI, ≥ 3:1) | 3.6:1  | 3.1:1  |
+Both use a 60-30-10 split: plain background (60), cards and muted surfaces (30), and the brand colour only for primary actions, selection and focus (10). Neither uses gradients, glow or glass effects. Risk colours are separate from the brand in both themes.
 
-All body text pairs pass AA (4.5:1); most pass AAA. The focus ring is a solid 2px teal outline with
-a 2px offset (≥ 3:1 in both themes).
+### DNA theme tokens
+
+| Token | Value | Use |
+|---|---|---|
+| `--brand` / `--primary` | `oklch(0.56 0.225 358)` #da0070 | Primary buttons (Send, Check it), focus ring, selected segments |
+| `--brand-foreground` | white | Text on magenta (5.0:1) |
+| `--brand-soft` / `--accent` | #fdeef4 | Permission card, handoff panel tint |
+| `--accent-foreground` | #a1004f | Text on the soft tint |
+| `--foreground` | #121212 | Body text |
+| `--muted-foreground` | #5c5c63 | Secondary text (6.6:1 on white) |
+| `--input` | `oklch(0.62 0.006 286)` | Text field outline |
+
+### Default theme tokens (`/assistant`)
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--background` | #faf9f6 | #15120f | Page |
+| `--card` | #fffefd | #1f1b17 | Cards, header |
+| `--foreground` | #231e19 | #efece8 | Body text |
+| `--muted-foreground` | #605a53 | #afaaa3 | Secondary text |
+| `--primary` (teal) | #006363 | #6ac2c2 | Primary button, selected, ring |
+| `--accent` | #dff3f3 | #112e2e | Permission card, handoff panel |
+
+Contrast (computed from the OKLCH values): body text 15.6:1 light and 15.9:1 dark; muted text at least 6.0:1; text on teal 6.8:1 light and 8.7:1 dark. Every body-text pair passes AA, and most pass AAA. The focus ring is a solid 2px brand-colour outline with a 2px offset in both themes.
 
 ## Risk levels
 
-Colour is never the only signal. Every level has its own icon and a written label, and the answer
-card repeats the urgency in words.
+Colour is never the only signal. Every level has its own icon and a written label, and the answer card repeats the urgency in words.
 
-| Level      | Label (en)    | Icon (lucide)              | Colour | Text on tint (light / dark) | Outline on card |
-| ---------- | ------------- | -------------------------- | ------ | --------------------------- | --------------- |
-| `none`     | No risk found | `CircleCheck`              | Green  | 8.1 / 9.7                   | 3.4 / 4.2       |
-| `low`      | Low risk      | `Info`                     | Green  | 8.1 / 9.7                   | 3.4 / 4.2       |
-| `medium`   | Medium risk   | `CircleExclamationPoint`   | Amber  | 7.6 / 9.5                   | 4.0 / 5.9       |
-| `high`     | High risk     | `TriangleExclamationPoint` | Orange | 6.5 / 8.5                   | 3.3 / 5.7       |
-| `critical` | Critical risk | `OctagonExclamationPoint`  | Red    | 6.7 / 8.3                   | 4.7 / 5.1       |
+| Level | Label (en) | Icon (lucide) | Colour |
+|---|---|---|---|
+| `none` | No risk found | `CircleCheck` | Green |
+| `low` | Low risk | `Info` | Green |
+| `medium` | Medium risk | `CircleExclamationPoint` | Amber |
+| `high` | High risk | `TriangleExclamationPoint` | Orange |
+| `critical` | Critical risk | `OctagonExclamationPoint` | Red |
 
-Urgency labels: `none` Nothing to do · `routine` When you have time · `today` Today ·
-`immediate` Right now. The mapping is in `components/assistant/risk.tsx` and `lib/i18n.ts`.
+Urgency labels: `none` Nothing to do · `routine` When you have time · `today` Today · `immediate` Right now. The mapping is in `components/assistant/risk.tsx` and `lib/i18n.ts`. In the default theme, text on each risk tint is 6.5:1 or better.
 
 ## Typography
 
-- **Lexend** for headings. It was designed for reading ease and is calm without being generic.
-- **Source Sans 3** for body text. It is a humanist sans with good Nordic diacritics.
-- Both load through `next/font/google` with `latin` + `latin-ext` subsets for ä, ö and å.
-- Weights: 400 (body) and 500 (headings, labels, buttons). That makes two weights; the cap is three.
-- The scale is a minor third (1.2) on a 17px body:
-
-| Token       | Size   | Line height | Use                                |
-| ----------- | ------ | ----------- | ---------------------------------- |
-| `text-xs`   | 13px   | 1.45        | Meta, prototype note, footer       |
-| `text-sm`   | 15px   | 1.5         | Secondary text, labels             |
-| `text-base` | 17px   | 1.6         | Body                               |
-| `text-lg`   | 20.4px | 1.4         | Assistant questions, card headings |
-| `text-xl`   | 24.5px | 1.25        | Answer headline (`action_label`)   |
-| `text-2xl`  | 29.4px | 1.2         | Page heading "What happened?"      |
-
-Paragraphs are capped at `max-w-prose` (65ch) and always left-aligned.
+- **Lexend** for headings: designed for reading ease, calm without being generic.
+- **Source Sans 3** for body text: a humanist sans with good Nordic diacritics.
+- Both load through `next/font/google` with `latin` + `latin-ext` subsets, for ä, ö and å.
+- **The assistant** uses two weights: 400 for body text, 500 for headings, labels and buttons. The scale is a minor third (1.2) on a 17px body: 13 / 15 / 17 / 20.4 / 24.5 / 29.4px.
+- **The homepage** also uses 600 and 700 for its large marketing headings, to match an operator website's look.
+- Paragraphs are capped at `max-w-prose` (65ch) and always left-aligned.
 
 ## Radius, spacing, layout
 
-- Radius scale: `sm` 4px (segment thumbs, tags), `md` 6px (inputs, buttons, inner panels), `lg`
-  10px (cards, scenario list), `xl` 14px (reserved for dialogs). `rounded-full` is used only for
-  the step-number discs.
-- Single column, `max-w-2xl`, left-aligned, 16px side gutter. It works at 375px with no horizontal
-  scroll (we checked `scrollWidth`).
-- Gaps grow with structure: 4–8px inside a row, 12–16px inside a card, 24px between turns, 48px
-  between the start form and the examples.
-- Touch targets: primary buttons are 44px tall, other buttons 40px, segments 36px.
+- Radius scale: 4px (tags, segment thumbs), 6px (buttons, inner panels), 10px (cards, example list), 16px (`rounded-2xl`, for the message box card and the homepage's large cards). Pills (`rounded-full`) are used for the example-scam chips, the floating "Ask security" button and the icon buttons in the message box.
+- The assistant is a single column, `max-w-2xl`, with a 16px side gutter. Both surfaces work at 375px with no horizontal scroll (checked with `scrollWidth`).
+- Touch targets: primary buttons are 44px tall; icon buttons and other buttons are 40px.
 
 ## Motion
 
-- New turns enter with fade + 4px slide over 200ms, ease-out (`tw-animate-css`). Hover changes
-  take 150ms and touch colour only, or move the scenario arrow by 2px.
-- The only continuous animation is the 16px spinner shown while waiting.
-- New turns scroll into view instantly; we do not use smooth-scrolling across long cards.
-- A global `@media (prefers-reduced-motion: reduce)` block brings every animation and transition
-  down to ~0ms.
+- New chat turns enter with a fade plus a 4px slide over 200ms (ease-out). Hover changes take 150ms and touch colour only.
+- The only continuous animations are the waiting spinner and the pulse on the microphone while it's listening.
+- A global `@media (prefers-reduced-motion: reduce)` block brings every animation and transition down to about 0ms.
 
 ## Component anatomy
 
-### Header
+### Homepage (`components/site/`)
 
-Product name with a teal `ShieldCheck` icon. Two segmented controls follow: audience (Consumer /
-Small business) and language (FI / EN / SV). Both are native radio groups, so arrow keys work, and
-screen readers hear the full language name. Below sits a muted strip with "Prototype – synthetic
-data, not real DNA advice." The audience switch is locked during a conversation; "Start over"
-unlocks it.
+- **Top strip:** Private / Business switch (it sets the assistant's audience), plus the prototype notice.
+- **Header:** DNA wordmark with "Security", page-section links, and a "Check a message" button that opens the assistant.
+- **Hero** (magenta band):
+  - left side: the headline "Not sure about a message? Ask before you act.", a short explanation, a "What happened?" box (text, screenshot, microphone, "Check it") and example-scam chips;
+  - right side: a phone mock-up showing a sample scam SMS and the assistant's answer.
+- **Sections:**
+  - help topics (open the assistant);
+  - how it works (three steps);
+  - scams right now (example cases from `/api/scenarios`);
+  - a trust band ("what we never ask for");
+  - the footer.
+- **Chat panel:** a slide-out `role="dialog"` with `aria-modal`. It takes focus on open, closes on Escape, and returns focus to the button that opened it. Starting from the hero or an example opens it with that message already sent.
+
+### Header (inside the assistant)
+
+The product name with a shield icon, then two segmented controls: audience (Consumer / Small business) and language (FI / EN / SV). Both are native radio groups, so arrow keys work. A muted strip follows: "Prototype – synthetic data, not real DNA advice." The audience switch is locked during a conversation; "Start over" unlocks it.
+
+### Message box (the composer)
+
+Chat-app style: **one rounded card** (16px) holds the text area and a toolbar underneath.
+- The toolbar has an outlined **screenshot** button on the left, then the **microphone** and a square brand-colour **arrow Send** button on the right. All are 40px.
+- The whole card shows the focus ring while you type.
+- "Enter to send, Shift + Enter for a new line" is read by screen readers but not shown, as in chat apps. On touch devices Enter adds a line and you tap Send.
+- Near the 2,000-character limit a counter appears in the toolbar.
+- Screenshots can also be pasted or dragged onto the box; a dashed outline shows the drop zone.
+
+### Voice input
+
+- The microphone uses the browser's speech recognition in the selected language (fi-FI, sv-SE, en-GB).
+- While listening, the button turns red with a stop icon and a pulse, and a live status line says it's listening.
+- The words appear in the message box, so the user can check them before sending.
+- The button is hidden in browsers without speech recognition (e.g. Firefox).
+- Errors (permission denied, nothing heard) show a plain message under the box.
+
+### Screenshots
+
+- Up to three per message, by picking, pasting or dropping.
+- They're shown as thumbnails in a tray inside the card, each with a remove button.
+- The browser shrinks them to at most 1568px and re-encodes them, which strips EXIF location data.
+- They're kept with the conversation for 24 hours, like the text.
+- The privacy line reminds users never to type passwords, card numbers or codes.
 
 ### Start view
 
-Heading "What happened?", a one-line explanation, a text box labelled by the heading, and the send
-button. Next comes a muted privacy box: "We keep this conversation for 24 hours, then delete it.
-Never type passwords, card numbers or codes here." Last is "Or try an example": a divided list
-(not a card grid) of `/api/scenarios` for the selected audience, current language first, four
-shown plus "Show N more". Picking an example fills the box and sets `scenario_id`, audience and
-language. A removable "Using example: …" line shows that an example is active.
+- The heading "What happened?", a one-line explanation, the message box, then a muted privacy box: "We keep this conversation for 24 hours, then delete it. Never type passwords, card numbers or codes here."
+- Last comes "Or try an example": a divided list (not a card grid) from `/api/scenarios` for the selected audience. Four are shown, plus "Show N more".
 
 ### Question turn
 
-A small "Assistant" label with the shield icon, then the question in Lexend `text-lg`. The answer
-box below it is labelled "Your answer". Enter sends on devices with a fine pointer; on touch
-devices Enter adds a line and you tap the button to send.
+A small "Assistant" label with the shield icon, then the question in Lexend `text-lg`. The message box below it is labelled "Your answer".
 
 ### Permission card (`consent_request`)
 
-- A teal-tinted surface, set apart from the plain question turns.
-- A lock icon and the heading "Can I check this?".
-- The backend's `text` (why), then "What I would look at" with a bullet list of `fields[].label`.
-- The reassurance line: "Only used for this conversation. Saying no is fine: you still get advice,
-  it may just be less certain."
-- **Allow** and **Not now** are the same component, variant, size and width (a two-column grid).
-  Neither is pre-selected or highlighted. This avoids the dark pattern of making refusal harder.
-- After a choice, the buttons are replaced by a sentence saying what was chosen.
+- A tinted surface, set apart from the plain question turns, with a lock icon and the heading "Can I check this?".
+- The backend's reason, then "What I would look at" with a bullet list of what it would check.
+- "Only used for this conversation. Saying no is fine: you still get advice, it may just be less certain."
+- **Allow** and **Not now** are the same component, variant, size and width. Neither is pre-selected, which avoids the dark pattern of making refusal harder. After a choice, a sentence says what was chosen.
 
 ### Answer card (`final`)
 
-This is the one dominant element: a 2px risk-coloured outline and a small shadow.
+The one dominant element: a 2px risk-coloured outline and a small shadow.
 
-1. Risk strip: tinted band with icon + risk label + clock icon + "When: …" urgency.
-2. Headline: `action_label` in `text-xl` (receives focus on arrival).
-3. `advice_text` as a plain paragraph.
-4. Confidence in words: ≥ 0.8 "fairly sure", ≥ 0.6 "somewhat sure… talk to a person", below that
-   "not sure, please talk to a person" (amber text).
-5. If `escalation_required`, a handoff panel: "This needs a person", the `escalation_label` and a
-   primary **Talk to a person** button. When the handoff succeeds, the panel shows the reference
-   number and "This is what we will pass on" with the summary.
-6. "What to do": numbered `steps`, with teal number discs.
-7. "Where this advice comes from": `citations[].title`, plus a note that these are the organisers'
-   synthetic guidance texts, not official advice.
+1. Risk strip: icon, risk label, and "When: …" urgency.
+2. Headline: the action (receives focus on arrival).
+3. The advice as a plain paragraph.
+4. Confidence in words: "fairly sure", "somewhat sure… talk to a person", or "not sure, please talk to a person" (amber).
+5. If a handoff is needed: "This needs a person" with a **Talk to a person** button. Afterwards it shows the reference number and "This is what we will pass on".
+6. "What to do": numbered steps.
+7. "Where this advice comes from": source titles, noted as the organisers' synthetic guidance, not official advice.
 8. Footer: **Start over**.
 
 ### Waiting and errors
 
-- Waiting: `role="status"` reads "Thinking…". After 8 seconds it changes to "Still working on it.
-  This can take up to 20 seconds."
-- Errors: a `role="alert"` card with a plain cause, **Try again** (repeats the failed call) and
-  Start over. It always includes "If this is urgent, call your bank or the operator's customer
-  service directly." Each status has its own message: network or timeout, 503/502/429 busy, 404
-  expired, contract mismatch, and other server errors.
+- Waiting: a `role="status"` line reads "Thinking…". After 8 seconds it says "Still working on it. This can take up to 20 seconds."
+- Errors: a `role="alert"` card with a plain cause, **Try again** and Start over. It always includes "If this is urgent, call your bank or the operator's customer service directly."
 
 ### Accessibility
 
-- Semantic structure: one `h1`, landmarks (`header`, `main`, `footer`) and a skip link. The
-  conversation is an `ol`.
-- A polite live region announces each new assistant turn (question text, consent request, or risk
-  - action).
-- If the control you used disappears (consent buttons, handoff button), focus moves to the new
-  content.
-- While waiting, the text box is read-only, not disabled, so focus is not lost.
-- `<html lang>` follows the language switch, and example titles carry their own `lang`.
+- Semantic structure: landmarks, a skip link, and the conversation as a list.
+- A polite live region announces each new assistant turn.
+- If the control you used disappears (consent buttons, handoff button), focus moves to the new content.
+- While waiting, the text box is read-only, not disabled, so focus isn't lost.
+- `<html lang>` follows the language switch.
+- Every icon-only button has a screen-reader label and a tooltip.
 
 ## Do / don't
 
-| Do                                                        | Don't (anti-slop rule)                                 |
-| --------------------------------------------------------- | ------------------------------------------------------ |
-| One teal hue, warm greys, semantic risk colours           | Purple/indigo accents, gradients, glow, glassmorphism  |
-| Lexend + Source Sans 3, two weights, 1.2 scale            | Inter/Geist everywhere, extrabold tight-tracked titles |
-| One dominant answer card; examples as a plain list        | Three identical feature cards, uniform `rounded-2xl`   |
-| Icon + label + colour for risk                            | Colour-only status, emoji, decorative dots             |
-| Equal Allow / Not now                                     | Bright "Allow" next to a grey "No thanks" link         |
-| Plain verbs: "Call DNA customer service now", "Try again" | "Supercharge", "Get started", "Learn more", hype       |
-| ≤ 200ms, transform/opacity, reduced-motion honoured       | Scroll-triggered fade-ins, `hover:scale-105`, bounce   |
-| Solid header with a border                                | Floating blurred navbar, mega footer                   |
+| Do | Don't (anti-slop rule) |
+|---|---|
+| One brand hue per theme, plus semantic risk colours | Purple/indigo accents, gradients, glow, glassmorphism |
+| Lexend + Source Sans 3, a modular scale | Inter/Geist everywhere |
+| One dominant answer card; examples as a plain list | Three identical feature cards |
+| Icon + label + colour for risk | Colour-only status, emoji |
+| Equal Allow / Not now | A bright "Allow" next to a grey "No thanks" link |
+| Plain verbs: "Check it", "Talk to a person", "Start over" | "Supercharge", "Get started", hype |
+| ≤ 200ms, transform/opacity, reduced motion honoured | Scroll-triggered fade-ins, `hover:scale-105`, bounce |
 
-## Pre-delivery slop audit (run 2026-11-06)
+## Slop audit (updated 2026-11-07)
 
-**Colour & type**
+**Passes**
+- [x] No indigo, violet or purple. Brand hues are DNA magenta (homepage) and teal (`/assistant`).
+- [x] No gradient text or gradient elements, no glassmorphism, no emoji, no `border-l-4` accent cards.
+- [x] Body text ≥ 4.5:1 in every theme.
+- [x] No hype words. CTAs are specific.
+- [x] No invented metrics or testimonials. Prototype and synthetic-source notes are visible.
+- [x] Global reduced-motion support. Transitions ≤ 200ms, no scale on hover.
+- [x] A visible focus ring on every control, including the screenshot and microphone buttons (added 2026-11-07; they had none).
+- [x] Colour is never the only indicator.
 
-- [x] No indigo, violet or purple. Teal is the only brand hue.
-- [x] No gradient text or gradient elements.
-- [x] Display font is Lexend, not Inter/Geist. Two weights. Modular 1.2 scale.
-- [x] Body text ≥ 4.5:1 in light and dark (table above).
-
-**Layout & cards**
-
-- [x] Widths vary: content `max-w-2xl`, paragraphs `max-w-prose`, header strip full-bleed. Padding
-      differs between the start, conversation and footer.
-- [x] No repeated three-column grid. Each view has one dominant element (start: the text box;
-      result: the answer card).
-- [x] Radius is a scale (4/6/10/14px).
-- [x] No `border-l-4` accent, no glassmorphism, no emoji (checked by grep).
-
-**Copy**
-
-- [x] No hype words. CTAs are specific ("Talk to a person", "Start over", "Try again").
-- [x] No invented metrics or testimonials. The prototype and synthetic-source notes are explicit.
-- [x] No Lorem ipsum, placeholders or TODOs.
-
-**Motion & accessibility**
-
-- [x] Global `prefers-reduced-motion: reduce` block.
-- [x] Transitions 150–200ms, transform/opacity or colour only, no scale on hover.
-- [x] The form has a label, an empty or too-long error with `aria-invalid`, and a success path (the
-      message appears in the conversation). Focus is visible on every control.
-- [x] Colour is never the only indicator. There are no images.
-
-**Gestalt check**
-
-- [x] The product is specific (permission card, risk strip, handoff reference), so swapping the
-      logo would not make it look like a competitor's.
-- [x] None of the Instant-Death Signature tells are present.
-
-Known compromise: the start view is centred in a `max-w-2xl` column on desktop. This is
-deliberate, because the app is phone-first and embedded in another app, so there is no
-asymmetric hero.
+**Known deviations, kept on purpose**
+- The homepage uses four font weights (400–700) and several `rounded-2xl` cards, to read like an operator website. The assistant itself stays at two weights.
+- Pills are used for the example chips and the floating launcher. Both are tag- or chip-like, which the rules allow.
+- The DNA theme is light-only. `/assistant` keeps dark mode.

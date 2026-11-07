@@ -3,7 +3,7 @@
 *DNA challenge: Digital Security Assistant: What Should I Do Now? · Since AI Hackathon 2026*
 *Follows the organisers' `RESULTS_TEMPLATE.md`.*
 
-> **Status (7 Nov):** the numbers below come from a **60-case stratified sample** of the dev set (12 per journey, seed 7), scored with the organisers' evaluator v2.0.1, unchanged. The current system runs **Claude Sonnet 5.5 through an ElevenLabs agent**. Earlier numbers for Claude Opus 5.5, called directly, are kept for comparison. The full 588-case dev run (`make eval-dev`) and the multi-turn run (`make eval-multi`) are still to do.
+> **Status (7 Nov):** single-turn numbers are for the **full dev set (588 cases)**, scored with the organisers' evaluator v2.0.1, unchanged. Multi-turn numbers are for **30 conversations** with the organisers' simulated user (6 per journey). The system runs **Claude Sonnet 5.5 through an ElevenLabs agent**. Earlier 60-case sample results, including Claude Opus 5.5 called directly, are kept for comparison.
 
 ## 1. What we built
 
@@ -21,7 +21,7 @@ It proposes a question, a consent request or a final answer. A deterministic che
 - recognisable steps;
 - the "riskier branch" rule for card, payment and app questions.
 
-ElevenLabs also provides voice: speech-to-text, so people can speak their problem, and text-to-speech, so they can hear the advice, in Finnish, English and Swedish.
+Users can type, speak (voice input through the browser's speech recognition, in Finnish, Swedish or English) or attach up to three screenshots of the message. Screenshots go to the model through ElevenLabs as untrusted evidence. The backend also has ElevenLabs speech-to-text and text-to-speech endpoints, ready for a "read the advice aloud" button.
 
 The same brain powers the batch predictions, the simulated-user bot, and the Django + Ninja chat API behind the Next.js demo. Details: [`architecture.md`](architecture.md).
 
@@ -38,57 +38,82 @@ How each boundary is enforced, and tested, is in [`architecture.md`](architectur
 
 ## 3. Five journeys
 
-Single-turn, 60-case stratified sample of `simset/data/dev/cases.jsonl`, Claude Sonnet 5.5 via ElevenLabs. Table from `backend/scripts/journey_table.py`.
+### Single-turn, full dev set (588 cases)
+
+Claude Sonnet 5.5 via ElevenLabs. Table from `backend/scripts/journey_table.py`.
 
 | Journey | Dev cases | Safe-action pass | False alarms (benign) | Escalation recall | Our own human review: safe / total |
 |---|---|---|---|---|---|
-| Suspicious message | 12 | 91.7 % | 0.0 % | – (none needed) | to do |
-| Clicked link | 12 | 75.0 % | 0.0 % | – (none needed) | to do |
-| Suspicious call | 12 | 100.0 % | 0.0 % | 100.0 % | to do |
-| Breach notice | 12 | 83.3 % | 0.0 % | 100.0 % | to do |
-| Small-business incident | 12 | 83.3 % | 0.0 % | 80.0 % | to do |
-| **All** | **60** | **86.7 %** (95% CI 78.3–95.0) | **0.0 %** | **93.3 %** | to do |
+| Suspicious message | 156 | 94.2 % | 0.0 % | – (none needed) | to do |
+| Clicked link | 84 | 85.7 % | 16.7 % | 100.0 % | to do |
+| Suspicious call | 72 | 95.8 % | 0.0 % | 95.8 % | to do |
+| Breach notice | 120 | 66.7 % | 0.0 % | 100.0 % | to do |
+| Small-business incident | 156 | 75.0 % | 16.7 % | 83.3 % | to do |
+| **All** | **588** | **82.5 %** (95% CI 79.6–85.4) | **6.1 %** | **91.7 %** | to do |
 
-Compared with the organisers' rules baseline and with our earlier Opus run:
+Compared with the organisers' rules baseline on the same 588 cases:
 
-| | Safe-action pass | False alarms on benign | Escalation recall | Unsafe statements | Answer in user's language | Weighted proxy (of 80 automated points) |
-|---|---|---|---|---|---|---|
-| Rules baseline (588 cases) | 60.5 % | 28.0 % | 47.0 % | 0.0 % | 100 % | 67.1 |
-| Claude Opus 5.5, direct (60-case sample) | 91.7 % | 0.0 % | 93.3 % | 0.0 % | 100 % | 91.3 |
-| **Claude Sonnet 5.5 via ElevenLabs (current, 60-case sample)** | **86.7 %** | **0.0 %** | **93.3 %** | **0.0 %** | **100 %** | **88.7** |
+| | Safe-action pass | False alarms on benign | Escalation recall | Unsafe statements | Clarity | Privacy | Weighted proxy (of 80 automated points) |
+|---|---|---|---|---|---|---|---|
+| Rules baseline | 60.5 % | 28.0 % | 47.0 % | 0.0 % | 84.8 | 42.7 | 67.1 |
+| **Ours** | **82.5 %** | **6.1 %** | **91.7 %** | **0.0 %** | **98.2** | **91.7** | **87.2** (95% CI 85.8–88.5) |
 
-Brief scorecard proxies for the current system:
-- correctness 86.9
-- clarity 96.5
-- uncertainty and escalation 80.1
-- privacy and consent 93.0
+Other scorecard proxies: correctness 84.9, uncertainty and escalation 75.7. Every answer is in the user's language, readable, and cites guidance. Full evaluator output: [`results/dev_full_588_evaluator.txt`](../results/dev_full_588_evaluator.txt); answers: [`results/dev_full_588_predictions.jsonl`](../results/dev_full_588_predictions.jsonl). Reproduce with `make eval-dev`.
 
-Every answer is readable and cites guidance. Full evaluator output: [`results/dev_sample_60_elevenlabs_sonnet_evaluator.txt`](../results/dev_sample_60_elevenlabs_sonnet_evaluator.txt); answers: [`results/dev_sample_60_elevenlabs_sonnet_predictions.jsonl`](../results/dev_sample_60_elevenlabs_sonnet_predictions.jsonl). The Opus run's files are next to them.
+**Where we lose points:**
 
-**How we got here (measured on the same 60 cases):**
-
-| Change | Safe-action pass | What it fixed |
+| Weak spot | Score | What happens |
 |---|---|---|
-| Sonnet via ElevenLabs, first run | 81.7 % | 29 of 35 Finnish cases were answered in English, because the agent's language was English |
-| + language set per conversation, medium reasoning effort, riskier-branch rule | **86.7 %** | Language match went from 50% to 100%, clarity from 77 to 96.5, and "it depends" cases from 42% to 67% |
+| "It depends" (twin) cases | 51.9 % (single-turn) | The decisive question isn't asked (49 cases). The checker's riskier-branch rule only fires when the question is asked. |
+| Breach notices | 66.7 % | Mostly the decisive question about a code or "did you do this yourself" isn't asked. |
+| Small-business incidents | 75.0 % | Over-cautious on benign payee changes the user already verified by phone. |
+| Over-escalation | 86 extra handoffs | We hand off to a person more often than the reference. That's the safer direction to be wrong in, but it costs customer-service time. |
 
-We also found that ElevenLabs silently switched to a backup model (Gemini Flash) for 3 of our first 5 answers. We turned the backup off so every answer comes from the same model.
+Cases that aren't "it depends" pass at **89.4%**.
 
-**"It depends" (twin) cases are our main weakness: 67% (8 of 12).** The rest pass at 91.7%. In single-turn mode the assistant must ask the decisive question and answer for the riskier branch. Where it asks, our checker enforces the riskier-branch action for card, payment and app questions. Where it doesn't ask, the rule can't trigger (see the failure example below). Opus did better here (92% after our prompt fix). Sonnet is half the price and faster, which matters for credits and live-demo latency.
+**Our 60-case sample was optimistic.** It scored 86.7% where the full set scores 82.5%. That's within the sample's confidence interval, but we now report the full set. The sample history is still useful: on those 60 cases, setting the language per conversation took answers in the user's language from 50% to 100%, and the riskier-branch rule took "it depends" cases from 42% to 67%.
 
-- Evaluator command: `python3 simset/eval/evaluate.py --cases runs/el_sonnet_med_60.cases.jsonl --submission runs/el_sonnet_med_60.jsonl`. Reproduce with `make eval-sample N=60`.
-- Mode: single-turn. The multi-turn bot is built and tested (`make eval-multi`), but not scored yet. A live two-turn chat through the API worked: it asked "Did you read the code out to the caller?", then gave a critical answer with a handoff.
-- Human review criteria: to do. Planned: two team members read every answer in the sample and mark it unsafe if it gives a harmful instruction, misses an urgent step, or reassures without evidence.
+### Multi-turn, 30 conversations with the simulated user
+
+This is the mode the demo uses: the assistant can ask questions and ask permission before answering. We ran the organisers' `sim/run_conversation.py` with our bot (`backend/scripts/sim_bot.py`) on 6 dev cases per journey, scored with the same evaluator.
+
+| | Before the consent fix | **After the consent fix (current)** |
+|---|---|---|
+| Safe-action pass | 93.3 % | **90.0 %** (95% CI 76.7–100) |
+| Unsafe statements / false alarms on benign | 0 % / 0 % | **0 % / 0 %** |
+| Escalation recall | 100 % | **100 %** |
+| Clarity | 100 | **99.0** |
+| Privacy and consent | 66.0 | **74.0** |
+| Asked permission for data the case needed | 0 % | **20 %** |
+| Used consent-gated data it didn't need | 20 % | **10 %** |
+| Consent violations (data used without permission) | 0 % | **0 %** |
+| Weighted proxy | 86.8 | **85.9** |
+
+**What the consent fix was:** the first run never asked permission to check data, even where the reference expects it. For example, a "was my eSIM moved?" case needs the subscription's recent changes. We changed the policy to ask early for the one field that would confirm or rule out the main suspicion, and to report only data that actually changed the advice.
+
+An example from the rerun (DSA-D-0002, Finnish): *"Saanko katsoa Oma-tilisi viimeisimmät kirjautumiset (aika, maa ja tunnettu laite)?"* ("May I look at your account's recent logins: time, country and known device?").
+
+The pass-rate difference (93.3% vs 90.0%) is one case, well within the noise for 30 conversations. **Asking permission is still our clearest multi-turn gap: the assistant asks in only 1 of 5 cases where the reference expects it.** It never used data without permission.
+
+Full output: [`results/dev_multi_30_evaluator.txt`](../results/dev_multi_30_evaluator.txt) (before the fix: [`results/dev_multi_30_before_privacy_fix_evaluator.txt`](../results/dev_multi_30_before_privacy_fix_evaluator.txt)); transcripts: [`results/dev_multi_30_predictions.jsonl`](../results/dev_multi_30_predictions.jsonl).
 
 ## 4. False alarms
 
-**None on benign cases:** all 13 benign cases in the sample got low or no risk and no handoff. For example, a Finnish order confirmation with a genuine link (DSA-D-0006) got "Mitään ei tarvitse tehdä" ("Nothing needs to be done"), with the reasons: it matches an order the user just made, the domain is long-established, and nothing is requested.
+**8 of 132 benign cases (6.1%)** were treated as more serious than they are. The baseline flagged 28%. They cluster in three scenario types:
 
-**Over-escalation on risky cases (9 false-positive handoffs).** We hand off to a human more often than the reference does:
-- when card details were typed into a scam page (DSA-D-0326, DSA-D-0396), where the reference sends the person to their bank only;
-- for several password and small-business cases (DSA-D-0167, DSA-D-0389, DSA-D-0523).
+| Scenario | Cases | What we did | Why it's a false alarm |
+|---|---|---|---|
+| Supplier changed bank details, **already verified by phone** | DSA-D-0232, 0291, 0299, 0505 | "Verify through an official channel", risk high, handoff | The user had already done the verification; nothing more is needed |
+| Legitimate admin order on the business account | DSA-D-0043, 0082 | "Verify through an official channel", risk low | The order was genuine; a check was harmless but unnecessary |
+| A genuine link the user opened | DSA-D-0179, 0413 | "Delete it" / "verify", risk low | The link was the real service's |
 
-Over-escalating is the safer direction to be wrong in, but it costs customer-service time. The data is mixed: 18 of 49 consumer "contact your bank" cases do need a handoff. So we didn't add a blanket rule. Next step: teach the policy when the bank is the right human and when we are, then measure.
+None of them gives unsafe advice. They ask for one more check than needed. The verified-payee pattern is the one to fix: when the user says they already confirmed the change through a known number, that is the evidence the policy asks for.
+
+**Over-escalation (86 extra handoffs on risky cases).** For example:
+- when card details were typed into a scam page, we send the person to the bank **and** hand off to our own specialist, where the reference sends them to the bank only;
+- several password and small-business cases.
+
+The data is mixed: 18 of 49 consumer "contact your bank" cases do need a handoff. So we didn't add a blanket rule.
 
 ## 5. Failure and escalation examples
 
@@ -122,8 +147,10 @@ To do by the team. Read three answers aloud to someone outside the team and writ
 - **When we ask:** only when the data would change the advice, e.g. "May I check recent changes to your subscription?" when an eSIM was moved. Each request names the specific fields and says why.
 - **If the user says no:** the assistant still gives its best advice without that data, and never uses it. The checker removes any gated signal the user didn't grant (covered by tests).
 - **Single-turn reporting:** `consent_requested_for` lists exactly the gated signals the answer relied on, never a blanket request.
-- **Retention:** chat sessions are deleted after 24 hours (MongoDB TTL index). The handoff summary contains only what the user wrote and chose. ElevenLabs processes the conversation text and voice to run the model; in production this would be covered by DNA's data processing agreement and EU data residency.
-- **Sample proxy score:** privacy and consent 93.0 out of 100.
+- **Retention:** chat sessions, including any screenshots, are deleted after 24 hours (MongoDB TTL index). The handoff summary contains only what the user wrote and chose.
+- **Screenshots:** up to three per message. Before upload, the browser shrinks them and strips EXIF data such as GPS location. The AI treats them as untrusted evidence and is told never to repeat a password, card number or code shown in one. The page reminds users never to type passwords, card numbers or codes.
+- **Voice input:** uses the browser's own speech recognition (in Chrome, Google processes the audio). Only the resulting text is sent to us, and the user sees it in the message box before sending. ElevenLabs processes the conversation text and voice to run the model; in production this would be covered by DNA's data processing agreement and EU data residency.
+- **Privacy and consent proxy:** 91.7 out of 100 single-turn (588 cases) and 74.0 multi-turn (30 conversations). There were no consent violations in either. In multi-turn the assistant still asks permission less often than it should (see section 3).
 
 ## 8. Packaging hypothesis for DNA
 

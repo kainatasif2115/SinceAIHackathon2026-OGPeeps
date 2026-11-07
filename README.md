@@ -6,6 +6,12 @@ A prototype assistant that helps consumers and small businesses who have run int
 
 > Prototype only, not a live DNA security service. Uses synthetic data; no DNA production systems or real customer data.
 
+**What it does:**
+- A DNA-style homepage (prototype) with the assistant in a slide-out chat panel. It's also available on its own at `/assistant`.
+- Users describe what happened by typing, **speaking** (voice input in Finnish, Swedish or English), or attaching up to three **screenshots** of the message.
+- The assistant asks at most a couple of questions, asks permission before looking at personal data, and gives one clear next step with steps, sources and a human handoff when needed.
+- In Finnish, English or Swedish, for consumers and small businesses.
+
 - Challenge summary and judging criteria: [`docs/challenge-brief.md`](docs/challenge-brief.md)
 - Architecture and safety boundaries: [`docs/architecture.md`](docs/architecture.md)
 - Results (five journeys, false alarms, failures): [`docs/results.md`](docs/results.md)
@@ -114,8 +120,10 @@ backend/
   scripts/            predict.py (batch answers), sim_bot.py (simulated-user bot), journey_table.py
   tests/              pytest tests (Claude replaced by scripted fakes, so they run offline)
 frontend/
-  src/app/            Next.js pages
-  src/components/ui/  shadcn/ui components
+  src/app/                   Next.js pages: / (DNA-style homepage), /assistant (assistant only)
+  src/components/site/       Homepage: header, hero, sections, chat panel
+  src/components/assistant/  The assistant: chat, message box, voice input, screenshots, answer card
+  src/components/ui/         shadcn/ui components
 docs/                 Brief summary, architecture, results, design, packaging, decisions
 .claude/skills/       Anti-AI-UI design rulebooks (MIT), used by AI coding tools in this repo
 simset/               Organisers' pack, unchanged (code MIT, data CC BY 4.0, © 2026 Since AI ry)
@@ -126,7 +134,7 @@ Makefile              Common commands
 ## Deliverables checklist
 
 - [x] `test_predictions.jsonl` at the repo root: answers for all 335 test inputs, validated OK (Claude Sonnet via ElevenLabs). Regenerate with `make predict-test`.
-- [x] Evaluator results on dev cases: a 60-case sample so far, in [`docs/results.md`](docs/results.md) and [`results/`](results/). The full run is `make eval-dev`; multi-turn is `make eval-multi`.
+- [x] Evaluator results on dev cases: the full 588 single-turn cases (82.5% safe-action pass vs the baseline's 60.5%) and 30 multi-turn conversations (90.0%). See [`docs/results.md`](docs/results.md) and [`results/`](results/).
 - [x] Results template filled in ([`docs/results.md`](docs/results.md)), with the human review and comprehension check still to do by the team
 - [x] At least one failure and one escalation example ([`docs/results.md`](docs/results.md#5-failure-and-escalation-examples))
 - [x] Architecture and safety boundaries ([`docs/architecture.md`](docs/architecture.md))
