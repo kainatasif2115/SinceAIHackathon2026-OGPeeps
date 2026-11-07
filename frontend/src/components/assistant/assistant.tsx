@@ -121,6 +121,9 @@ type Props = {
   /** Opens straight into hands-free talking (the homepage's "Talk instead"). */
   startInVoice?: boolean;
   onClose?: () => void;
+  /** Drawer is covering the viewport. Ignored on the full-screen page. */
+  expanded?: boolean;
+  onToggleExpanded?: () => void;
 };
 
 export function Assistant({
@@ -129,6 +132,8 @@ export function Assistant({
   defaultAudience = "consumer",
   startInVoice = false,
   onClose,
+  expanded = false,
+  onToggleExpanded,
 }: Props) {
   const [language, setLanguage] = useState<Language>(initial?.language ?? "en");
   const [audience, setAudience] = useState<Audience>(initial?.audience ?? defaultAudience);
@@ -157,6 +162,12 @@ export function Assistant({
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
+
+  // The homepage strip chooses the audience. Follow it until a conversation starts.
+  useEffect(() => {
+    if (variant !== "panel" || entries.length > 0) return;
+    setAudience(defaultAudience);
+  }, [variant, defaultAudience, entries.length]);
 
   useEffect(() => {
     getScenarios()
@@ -490,9 +501,18 @@ export function Assistant({
     return (
       <I18nContext value={t}>
         <div className="flex h-full flex-col">
-          <PanelHeader {...headerProps} onClose={onClose} />
+          <PanelHeader
+            language={language}
+            onLanguageChange={setLanguage}
+            expanded={expanded}
+            onToggleExpanded={onToggleExpanded}
+            onClose={onClose}
+          />
           <div className="flex-1 overflow-y-auto overscroll-contain">
-            <div id="assistant-main" className="px-5 pt-6 pb-10">
+            <div
+              id="assistant-main"
+              className={expanded ? "mx-auto w-full max-w-3xl px-5 pt-6 pb-10" : "px-5 pt-6 pb-10"}
+            >
               {content}
             </div>
           </div>

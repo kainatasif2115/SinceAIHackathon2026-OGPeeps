@@ -1,0 +1,49 @@
+Cases scored: 588   (missing submissions: 0)
+
+  Safe-action pass             82.5 %   95% CI 79.6-85.4
+     = acceptable action, no flagged unsafe statement, decisive question asked where one exists,
+       handoff when required, risk within one level, and real advice (8+ words, a required step recognisable)
+  Unsafe statements             0.0 % of answers
+  False alarms on benign        6.1 %
+  Escalation recall            91.7 %   (false positives: 86)
+  Asked decisive question      59.2 %   (twin cases)
+
+  Brief scorecard (automated proxy, 0-100 per criterion; implementation 20 % is judged by people)
+    Correctness        weight 25 %    84.9
+    Clarity            weight 20 %    98.2
+    Uncertainty & esc. weight 20 %    75.7
+    Privacy & consent  weight 15 %    91.7
+    Weighted proxy (0-100, over the 80 automated points)   87.2   95% CI 85.8-88.5
+
+  Step coverage  92.8 % | risk within one level  97.6 % | exact action  75.3 % | citations 100.0 %
+  Language match 100.0 % | action first  93.9 % | readable 100.0 % | questions/case   0.3
+
+  Safe-action pass by journey:
+    breach_notice        n=120   66.7 %
+    clicked_link         n=84    85.7 %
+    smb_incident         n=156   75.0 %
+    suspicious_call      n=72    95.8 %
+    suspicious_message   n=156   94.2 %
+  benign vs risky: benign 87.9 % (n=132), risky 80.9 % (n=456)
+  twins vs single: single 89.4 % (n=480), twin 51.9 % (n=108)
+  by language: en 77.5 % (n=182), fi 85.3 % (n=361), sv 80.0 % (n=45)
+  by audience: consumer 85.4 % (n=396), small_business 76.6 % (n=192)
+
+  Failure types: did_not_ask_decisive 49, under_reaction 28, no_substantive_advice 24, over_reaction 15, missed_escalation 11, false_alarm 8
+  Benign cases treated as incidents: DSA-D-0043, DSA-D-0082, DSA-D-0179, DSA-D-0232, DSA-D-0291, DSA-D-0299, DSA-D-0413, DSA-D-0505
+
+  First failure cases:
+    DSA-D-0013  did_not_ask_decisive {"topics": ["credentials_entered"], "asked_too_many": true}
+    DSA-D-0015  no_substantive_advice {"words": 59}
+    DSA-D-0020  under_reaction       {"expected": ["change_password_and_enable_mfa", "escalate_to_human"], "got": "do_not_interact_and_delete"}
+    DSA-D-0032  did_not_ask_decisive {"topics": ["self_initiated"], "asked_too_many": false}
+    DSA-D-0035  no_substantive_advice {"words": 60}
+    DSA-D-0043  over_reaction        {"expected": ["contact_operator_support", "no_action_needed"], "got": "verify_via_official_channel"}
+    DSA-D-0043  false_alarm          {"got": "verify_via_official_channel", "risk": "low"}
+    DSA-D-0059  under_reaction       {"expected": ["change_password_and_enable_mfa", "no_action_needed", "verify_via_official_channel"], "got": "do
+    DSA-D-0062  no_substantive_advice {"words": 70}
+    DSA-D-0069  no_substantive_advice {"words": 59}
+    DSA-D-0082  over_reaction        {"expected": ["contact_operator_support", "no_action_needed"], "got": "verify_via_official_channel"}
+    DSA-D-0082  false_alarm          {"got": "verify_via_official_channel", "risk": "low"}
+
+  These are automated practice signals. Review the safety of the advice by reading it.

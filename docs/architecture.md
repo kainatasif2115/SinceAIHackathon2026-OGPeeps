@@ -13,13 +13,14 @@ It proposes one of three things: a question, a consent request or a final answer
 A deterministic **safety checker** then corrects or blocks the answer before anyone sees it. It uses the organisers' own `dsakit` text checks. The same brain serves three uses:
 - a **batch script** that writes `test_predictions.jsonl`;
 - a **bot** for the organisers' simulated user;
-- a **Django + Ninja chat API** behind the **Next.js chat page**.
+- a **Django + Ninja chat API** behind the **Next.js frontend**: a DNA-style homepage (prototype) with the assistant in a slide-out chat panel, plus the assistant on its own at `/assistant`.
 
-Conversations are stored in **MongoDB** and deleted automatically after 24 hours.
+Users can type, **speak** (voice input), attach up to three **screenshots**, and have any answer **read aloud** (ElevenLabs voice) of the message that worries them. Conversations, including screenshots, are stored in **MongoDB** and deleted automatically after 24 hours.
 
 ```
-user ─▶ Next.js page ─/api─▶ Django + Ninja API ─▶ engine ─▶ brain: Claude + cached policy prompt
-                                    │                  │        └─▶ proposal: question | consent | final
+user ─▶ Next.js page ─/api─▶ Django + Ninja API ─▶ engine ─▶ brain ─▶ ElevenLabs agent ─▶ Claude Sonnet
+ (text, voice,                      │                  │        (policy prompt, text + screenshots)
+  screenshots)                      │                  │        └─▶ proposal: question | consent | final
                                     │                  └─▶ checker: dsakit text checks + hard rules ─▶ answer
                                     └─▶ MongoDB sessions (deleted after 24 h)
 
@@ -31,14 +32,18 @@ sim:    simset/sim/run_conversation.py ⇄ scripts/sim_bot.py ─▶ engine.Conv
 
 | Part | Where | What it does |
 |---|---|---|
-| Chat page | `frontend/` | Next.js + shadcn/ui. Question bubbles, a permission card (Allow / Not now at equal weight), and an answer card (risk, action, steps, why, sources, "Talk to a person"). Has a mock mode for working without the backend. |
+| Homepage | `frontend/src/components/site/` | DNA-style operator homepage (prototype, clearly labelled): a hero with its own "What happened?" box and example scams, help topics, "how it works", current scams and a trust band. Every entry point opens the assistant in a slide-out chat panel. |
+| Assistant | `frontend/src/components/assistant/`, also at `/assistant` | The chat: question bubbles, a permission card (Allow / Not now at equal weight), and an answer card (risk, action, steps, why, sources, "Talk to a person"). The message box is one card with a toolbar: screenshot, microphone, send. Has a mock mode for working without the backend. |
+| Voice input | `frontend/src/components/assistant/use-speech-input.ts` | Speak instead of type, using the browser's speech recognition in Finnish, Swedish or English. The text lands in the message box to check before sending. The button is hidden where the browser doesn't support it. |
+| Screenshots | `frontend/src/lib/media.ts`, `api/schemas.py` | Up to three per message, by picking, pasting or dropping. They're shrunk to at most 1568 px in the browser, which also strips EXIF data such as GPS location, then sent to the AI as untrusted evidence, like a forwarded message. |
 | API | `backend/api/` | Django + Django Ninja. `POST /api/sessions`, `/reply`, `/consent`, `/handoff`, `GET /api/scenarios`, `/health`. Interactive docs at `/api/docs`. |
 | Policy prompt | `backend/assistant/prompt.py` | How to decide (risk levels, benign look-alikes, decisive questions, escalation targets, consent, special cases) and how to write the answer. It also includes the organisers' vocabularies and all guidance passages. About 13k tokens, cached. |
 | Brain | `backend/assistant/brain.py` | One model call per step. By default Claude Sonnet 5.5 runs through an ElevenLabs agent in text-only mode (`elevenlabs_llm.py`): the agent holds the policy prompt, and we parse its JSON reply with Pydantic, retrying once if it's invalid. Screenshots are uploaded to the conversation and sent as one multimodal message. Alternatively the Anthropic API with structured outputs. |
-| Voice | `backend/api/voice.py` | ElevenLabs speech-to-text (`POST /api/voice/transcribe`, multipart `audio` + `language`) and text-to-speech (`POST /api/voice/speak`, JSON `{text, language}` → MP3). The key stays on the backend. The UI buttons are up to the UI owner; a reference implementation is on the local branch `feat/voice-ui`. |
+| Voice API | `backend/api/voice.py` | ElevenLabs text-to-speech (`POST /api/voice/speak`, JSON `{text, language}` → MP3) powers **"Read aloud"** under every assistant message and on the answer card, with the browser's own voice as a fallback. ElevenLabs speech-to-text (`POST /api/voice/transcribe`) is ready too; the microphone currently uses the browser's recognition. Both are tested in Finnish, and the key stays on the backend. |
 | Checker | `backend/assistant/checker.py` | Deterministic rules applied to every answer (see below). |
 | Engine | `backend/assistant/engine.py` | Single-turn answers and multi-turn conversations. Retries once if the answer contains unsafe wording. Gives a safe fallback answer if Claude is unavailable. |
 | Step phrasings | `backend/scripts/build_step_phrases.py` → `assistant/data/step_phrases.json` | Short Finnish and English example sentences for each of the 38 steps, mined from the dev reference answers. They help the advice use wording the evaluator recognises. |
+| Live risk signals | `backend/api/link_check.py`, `api/sessions.py` | For situations typed live (not the dataset's examples): any link in the message or a later reply gets a **simulated link-reputation check** in the dataset's format, marked `simulated_demo_check`. Official Finnish domains are clean; shorteners are unknown; brand look-alikes, lure words, risky endings, raw IPs and disguised characters are suspicious or malicious; anything else is unknown, never clean. The demo customer's account data behind the permission card is realistic but unremarkable: a paid invoice, logins from a known device, everyday apps. In production, DNA's real systems would supply these signals. |
 | Storage | MongoDB via `pymongo` (`api/sessions.py`) | Session state with a 24-hour TTL index. Falls back to process memory when `MONGODB_URI` is not set. |
 | Data and scoring | `simset/` | The organisers' SimSet v2.0.1, unchanged. |
 
@@ -59,8 +64,8 @@ sim:    simset/sim/run_conversation.py ⇄ scripts/sim_bot.py ─▶ engine.Conv
 | Uses optional data only with consent | Consent-gated signals are hidden (shown as `available_with_consent`, using the organisers' own `visible_case`) until the user taps Allow. The checker removes any gated signal the user didn't grant from `signals_used`. Single-turn answers report consent only for data actually used, never as a blanket request. |
 | No irreversible action without human approval | The assistant only gives advice. It can't block cards, move numbers or change accounts. Those actions go to a human through the handoff. |
 | Shows the source or reason | Every answer cites guidance passage ids, shown as titles on the answer card. The advice explains why in plain words. The sources are labelled as the organisers' synthetic guidance, not official advice. |
-| Untrusted content | Forwarded messages and user replies are marked as data in the prompt. Text addressed to AI assistants inside a scam message is treated as a red flag, never as an instruction. |
-| Data minimisation | MongoDB keeps a session for 24 hours (TTL index), then deletes it. Nothing is used for training. The handoff summary contains only what the user wrote and chose in the chat. |
+| Untrusted content | Forwarded messages, screenshots and user replies are marked as data in the prompt. Text addressed to AI assistants inside a scam message or screenshot is treated as a red flag, never as an instruction. If a screenshot shows a password, card number or one-time code, the assistant must not repeat it. |
+| Data minimisation | MongoDB keeps a session, including any screenshots, for 24 hours (TTL index), then deletes it. Screenshots are shrunk and stripped of EXIF location data in the browser before upload. Nothing is used for training. The handoff summary contains only what the user wrote and chose in the chat. |
 
 ## Integration path (how this would plug into DNA)
 

@@ -14,7 +14,7 @@ from functools import cache
 from assistant import simset, vocab
 from assistant.engine import Conversation
 
-from . import db
+from . import db, link_check
 
 RETENTION = timedelta(hours=24)
 GATED_SIGNALS = [
@@ -84,6 +84,7 @@ def build_case(audience: str, language: str, message: str, scenario_id: str | No
         case = {k: base[k] for k in base if k not in ("ground_truth", "simulation")}
     else:
         case = _demo_customer(audience)
+        add_link_check(case, message)
     case.update(
         case_id=f"DEMO-{secrets.token_hex(4).upper()}",
         audience=audience,
@@ -95,15 +96,29 @@ def build_case(audience: str, language: str, message: str, scenario_id: str | No
     return case
 
 
+def add_link_check(case: dict, text: str) -> None:
+    """Check a link the user typed, unless the case already has a link check."""
+    if case["signals"].get("link_check"):
+        return
+    result = link_check.check_text(text)
+    if result:
+        case["signals"]["link_check"] = result
+        case.setdefault("signal_availability", {})["link_check"] = "available"
+
+
 def _demo_customer(audience: str) -> dict:
-    """An ordinary identified customer with nothing unusual on their account."""
+    """An ordinary identified customer. The account data behind the permission card is
+    realistic but unremarkable, like most real checks: a paid invoice, logins from a
+    known device in Finland, everyday apps."""
     signals = {
         "artifact": None,
         "link_check": None,
         "call_warning": None,
         "subscription": {
             "products": [{"type": "mobile", "count": 1}, {"type": "home_broadband"}],
-            "recent_events": [],
+            "recent_events": [
+                {"type": "invoice_issued", "days_ago": 12, "status": "paid", "channel": "e-invoice"}
+            ],
             "network_status": {"service": "normal"},
         },
         "device": {
@@ -113,7 +128,20 @@ def _demo_customer(audience: str) -> dict:
                 "patch_status": "current",
                 "security_app": "operator_security",
             },
-            "recent_app_installs": [],
+            "recent_app_installs": [
+                {
+                    "name": "Kauppalista",
+                    "source": "official_store",
+                    "days_ago": 9,
+                    "permissions": ["notifications"],
+                },
+                {
+                    "name": "HSL",
+                    "source": "official_store",
+                    "days_ago": 21,
+                    "permissions": ["location"],
+                },
+            ],
             "security_findings": {
                 "unknown_profiles": [],
                 "remote_access_apps": [],
@@ -122,7 +150,9 @@ def _demo_customer(audience: str) -> dict:
         },
         "operator_account": {
             "recent_logins": [
-                {"days_ago": 3, "country": "FI", "device_known": True, "result": "success"}
+                {"days_ago": 1, "country": "FI", "device_known": True, "result": "success"},
+                {"days_ago": 4, "country": "FI", "device_known": True, "result": "success"},
+                {"days_ago": 9, "country": "FI", "device_known": True, "result": "success"},
             ]
         },
         "credential_exposure": None,
@@ -147,7 +177,7 @@ def _demo_customer(audience: str) -> dict:
         "journey": "unknown",
         "persona": {"segment": "adult" if audience == "consumer" else "small_business_owner"},
         "signals": signals,
-        "signal_availability": {},
+        "signal_availability": {"link_check": "not_applicable", "call_warning": "not_provided"},
         "consent": {"requires_consent": gated, "pre_granted": []},
     }
 

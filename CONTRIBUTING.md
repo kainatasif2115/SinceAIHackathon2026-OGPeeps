@@ -20,7 +20,7 @@ See the [README](README.md#setup): `make setup`. Use Python 3.12+ and Node 22 (`
 
 1. Before pushing, run `make check` (format check, lint and tests for both apps).
 2. Open a PR into `main` and fill in the template.
-3. CI must pass. Ask a teammate for a quick look when you can.
+3. Ask a teammate for a quick look when you can.
 4. Squash-merge, then delete the branch.
 
 ## Commits

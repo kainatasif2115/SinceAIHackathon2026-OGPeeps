@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageCircle, ShieldCheck } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import type { Audience } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -56,15 +56,13 @@ const NAV = [
 export function SiteHeader({ onOpenAssistant }: { onOpenAssistant: () => void }) {
   return (
     <header className="border-border sticky top-0 z-30 border-b bg-white/95 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-6 px-4 sm:px-6">
-        <a href="#main" className="flex items-center gap-2.5 rounded-sm">
-          <span className="font-heading text-brand text-2xl leading-none font-bold tracking-tight">
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-2 px-3 sm:gap-6 sm:px-6">
+        <a href="#main" className="flex min-w-0 items-center gap-2 rounded-sm sm:gap-2.5">
+          <span className="font-heading text-brand shrink-0 text-xl leading-none font-bold tracking-tight sm:text-2xl">
             DNA
           </span>
-          <span className="bg-border h-6 w-px" aria-hidden />
-          <span className="font-heading flex items-center gap-1.5 text-base font-semibold">
-            <ShieldCheck aria-hidden className="text-brand size-4.5" />
-            Security
+          <span className="font-heading min-w-0 text-sm font-semibold whitespace-nowrap sm:text-base">
+            - Security Assistant
           </span>
         </a>
 
@@ -86,10 +84,10 @@ export function SiteHeader({ onOpenAssistant }: { onOpenAssistant: () => void })
         <button
           type="button"
           onClick={onOpenAssistant}
-          className="bg-brand text-brand-foreground hover:bg-brand/90 inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-semibold whitespace-nowrap transition-colors duration-150"
+          className="bg-brand text-brand-foreground hover:bg-brand/90 inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full px-0 text-sm font-semibold whitespace-nowrap transition-colors duration-150 min-[380px]:w-auto min-[380px]:px-4"
         >
           <MessageCircle aria-hidden className="size-4" />
-          <span className="sm:hidden">Check</span>
+          <span className="sr-only min-[380px]:not-sr-only sm:hidden">Check</span>
           <span className="hidden sm:inline">Check a message</span>
         </button>
       </div>

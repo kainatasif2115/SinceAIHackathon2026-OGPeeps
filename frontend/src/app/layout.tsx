@@ -17,7 +17,7 @@ const body = Source_Sans_3({
 });
 
 export const metadata: Metadata = {
-  title: "Security assistant: what should I do now?",
+  title: "DNA - Security Assistant",
   description:
     "Describe a worrying message, call or account change and get one clear next step. Prototype for DNA × Since AI Hackathon 2026, using synthetic data.",
 };
