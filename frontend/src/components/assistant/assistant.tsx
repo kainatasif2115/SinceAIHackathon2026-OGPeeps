@@ -26,6 +26,7 @@ import { ConsentCard } from "./consent-card";
 import { ErrorNotice } from "./error-notice";
 import { PanelHeader } from "./panel-header";
 import { I18nContext } from "./i18n-context";
+import { MessageActions, answerText } from "./message-actions";
 import { AssistantTurn, QuestionMessage, UserMessage } from "./messages";
 import type { ScenariosState } from "./scenario-list";
 import { ServiceStatus } from "./service-status";
@@ -60,6 +61,24 @@ function entryFromSession(session: Session): Entry {
       return { id: nextId(), kind: "consent", turn, choice: null };
     case "final":
       return { id: nextId(), kind: "final", answer: turn.answer };
+  }
+}
+
+/** An assistant turn as plain text, for copying and reading aloud. */
+function entryText(entry: Entry, t: Dictionary): string {
+  switch (entry.kind) {
+    case "question":
+      return entry.turn.text;
+    case "consent":
+      return [
+        entry.turn.text,
+        `${t.consentWhat}:`,
+        ...entry.turn.fields.map((field) => `- ${field.label}`),
+      ].join("\n");
+    case "final":
+      return answerText(entry.answer, t);
+    default:
+      return "";
   }
 }
 
@@ -309,12 +328,12 @@ export function Assistant({
                     {entry.kind === "final" && session && (
                       <AnswerCard
                         answer={entry.answer}
-                        language={language}
                         sessionId={session.id}
                         headingId={`${entry.id}-heading`}
                         onStartOver={startOver}
                       />
                     )}
+                    <MessageActions text={entryText(entry, t)} language={language} />
                   </AssistantTurn>
                 )}
               </li>
