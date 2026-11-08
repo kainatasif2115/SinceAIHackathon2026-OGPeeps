@@ -12,6 +12,7 @@ import {
   AttachButton,
   AttachmentTray,
   MicButton,
+  VoiceLive,
   VoiceStatus,
   useImageAttachments,
   useImageDrop,
@@ -150,14 +151,17 @@ export function Composer({
             onFiles={(files) => void attachments.add(files)}
             disabled={busy || attachments.full}
           />
-          <p id={`${id}-hint`} className="text-muted-foreground mr-auto pl-2 text-xs">
-            <span className="sr-only">{t.sendHint}</span>
-            {nearLimit && (
-              <span className={cn("tabular-nums", tooLong && "text-destructive")}>
-                {value.length}/{MAX_MESSAGE_LENGTH}
-              </span>
-            )}
-          </p>
+          <div className="mr-auto flex min-w-0 items-center gap-2 pl-2">
+            <VoiceLive listening={speech.listening} transcribing={speech.transcribing} />
+            <p id={`${id}-hint`} className="text-muted-foreground text-xs">
+              <span className="sr-only">{t.sendHint}</span>
+              {nearLimit && (
+                <span className={cn("tabular-nums", tooLong && "text-destructive")}>
+                  {value.length}/{MAX_MESSAGE_LENGTH}
+                </span>
+              )}
+            </p>
+          </div>
           <MicButton
             supported={speech.supported}
             listening={speech.listening}
@@ -180,11 +184,7 @@ export function Composer({
           </Button>
         </div>
       </div>
-      <VoiceStatus
-        listening={speech.listening}
-        transcribing={speech.transcribing}
-        error={speech.error}
-      />
+      <VoiceStatus error={speech.error} />
       {error && (
         <p
           id={`${id}-error`}

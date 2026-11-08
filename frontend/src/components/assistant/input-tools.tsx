@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ImagePlus, Mic, Square, X } from "lucide-react";
+import { CircleExclamationPoint, ImagePlus, LoaderCircle, Mic, Square, X } from "lucide-react";
 import {
   ImageError,
   MAX_IMAGES,
@@ -175,37 +175,57 @@ export function MicButton({
   );
 }
 
-/** Live status under the box: listening, or why voice input failed. */
-export function VoiceStatus({
+/** While recording or transcribing: a small status pill in the box's toolbar. */
+export function VoiceLive({
   listening,
   transcribing = false,
-  error,
 }: {
   listening: boolean;
   transcribing?: boolean;
-  error: SpeechError | null;
 }) {
   const t = useT();
-  const message = listening
-    ? t.voiceListening
-    : transcribing
-      ? t.voiceTranscribing
-      : error === "denied"
-        ? t.voiceDenied
-        : error === "no-speech"
-          ? t.voiceNoSpeech
-          : error === "unavailable"
-            ? t.voiceUnavailable
-            : null;
+  const message = listening ? t.voiceListening : transcribing ? t.voiceTranscribing : null;
+  return (
+    <span aria-live="polite" className={cn("min-w-0", !message && "sr-only")}>
+      {message && (
+        <span
+          className={cn(
+            "inline-flex max-w-full items-center gap-2 rounded-full px-3 py-1 text-xs font-medium",
+            listening ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground",
+          )}
+        >
+          {listening ? (
+            <span aria-hidden className="relative flex size-2 shrink-0">
+              <span className="bg-destructive absolute inline-flex size-full animate-ping rounded-full opacity-60 motion-reduce:animate-none" />
+              <span className="bg-destructive relative inline-flex size-2 rounded-full" />
+            </span>
+          ) : (
+            <LoaderCircle aria-hidden className="size-3.5 shrink-0 animate-spin" />
+          )}
+          <span className="truncate">{message}</span>
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** Why voice input failed, under the box. */
+export function VoiceStatus({ error }: { error: SpeechError | null }) {
+  const t = useT();
+  const message =
+    error === "denied"
+      ? t.voiceDenied
+      : error === "no-speech"
+        ? t.voiceNoSpeech
+        : error === "unavailable"
+          ? t.voiceUnavailable
+          : null;
   return (
     <p
       aria-live="polite"
-      className={cn(
-        "text-sm",
-        listening || transcribing ? "text-foreground" : "text-destructive",
-        !message && "sr-only",
-      )}
+      className={cn("text-destructive flex items-center gap-1.5 text-sm", !message && "sr-only")}
     >
+      {message && <CircleExclamationPoint aria-hidden className="size-4 shrink-0" />}
       {message}
     </p>
   );
