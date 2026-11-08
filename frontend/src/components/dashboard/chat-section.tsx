@@ -15,9 +15,11 @@ export function ChatSection() {
   if (!resume && !initial && !voice) return <DashboardWelcome key={chatKey} />;
 
   return (
-    // relative + overflow-hidden: screen-reader-only text inside the chat is positioned
-    // against this clipped box, so it can't stretch the page below the screen.
-    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+    // relative + overflow-clip: screen-reader-only text inside the chat is positioned
+    // against this clipped box, so it can't stretch the page below the screen. Clip, not
+    // hidden: a hidden box can still be scrolled when something in it gets focus (a
+    // checklist tick did that), which slid the whole chat out of view.
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-clip">
       <Assistant
         key={chatKey}
         variant="panel"

@@ -68,7 +68,7 @@ export function StepChecklist({
           const checked = done.includes(index);
           return (
             <li key={index}>
-              <label className="hover:bg-muted/60 has-focus-visible:ring-ring -mx-2 flex cursor-pointer gap-3 rounded-md px-2 py-1.5 transition-colors duration-150 has-focus-visible:ring-2">
+              <label className="hover:bg-muted/60 has-focus-visible:ring-ring relative -mx-2 flex cursor-pointer gap-3 rounded-md px-2 py-1.5 transition-colors duration-150 has-focus-visible:ring-2">
                 <input
                   type="checkbox"
                   checked={checked}
